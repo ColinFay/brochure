@@ -18,6 +18,8 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
+__THIS IS A WORK IN PROGRESS, DO NOT USE__
+
 The goal of `{brochure}` is to provide a mechanism for deploying multi-page `{shiny}` application, _i.e_ that can serve content on multiple endpoints.
 
 ## Installation
@@ -70,15 +72,15 @@ server <- function(
   session
 ){
   
-   brochure_enable()
+  brochure_enable()
   
   output$plota <- renderPlot({
-      plot(mtcars)
-    })
+    plot(mtcars)
+  })
   
   output$plotb <- renderPlot({
-      plot(airquality)
-    })
+    plot(airquality)
+  })
   
 }
 

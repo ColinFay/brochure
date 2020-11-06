@@ -7,6 +7,8 @@
 
 <!-- badges: end -->
 
+**THIS IS A WORK IN PROGRESS, DO NOT USE**
+
 The goal of `{brochure}` is to provide a mechanism for deploying
 multi-page `{shiny}` application, *i.e* that can serve content on
 multiple endpoints.
@@ -61,15 +63,15 @@ server <- function(
   session
 ){
   
-   brochure_enable()
+  brochure_enable()
   
   output$plota <- renderPlot({
-      plot(mtcars)
-    })
+    plot(mtcars)
+  })
   
   output$plotb <- renderPlot({
-      plot(airquality)
-    })
+    plot(airquality)
+  })
   
 }
 
