@@ -37,12 +37,14 @@ This is a basic example which shows you how to solve a common problem:
 ```{r example, eval = FALSE}
 library(brochure)
 library(shiny)
+
 ui <- function(request){
   brochure(
     page(
       href = "/",
       ui = tagList(
         h1("This is my first page"),
+        tags$button(onclick = "window.location.href='page2'", "Next"),
         plotOutput("plota")
       )
     ),
@@ -50,6 +52,10 @@ ui <- function(request){
       href = "/page2",
       ui =  tagList(
         h1("This is my second page"),
+        fluidRow(
+          tags$button(onclick = "window.location.href='/'", "Previous"),
+          tags$button(onclick = "window.location.href='contact'", "Next")
+        ),
         plotOutput("plotb")
       )
     ),
@@ -57,6 +63,7 @@ ui <- function(request){
       href = "/contact",
       ui =  tagList(
         h1("Contact us"),
+        tags$button(onclick = "window.location.href='page2'", "Previous"),
         tags$ul(
           tags$li("Here"),
           tags$li("There")
