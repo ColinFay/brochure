@@ -120,11 +120,19 @@ brochure <- function(
 
 #' Enable Multipage via Brochure
 #'
+#' @param basepath The base path of your app. This pattern will be removed from the
+#' url, so that it matches the href of your `page()`. For example, it you have
+#' an app at `http://connect.thinkr.fr/brochure/`, and your page is names `page1`,
+#' use `basepath = "brochure"`
+#'
 #' @return Used for sided effect
 #'
 #' @importFrom shiny getDefaultReactiveDomain renderUI tagList h1
 #' @export
-brochure_enable <- function(){
+brochure_enable <- function(
+  basepath = ""
+){
+
   # Stop if we're not in a brochureApp
   if (
     is.null(...multipage$enabled) ||
@@ -143,6 +151,10 @@ brochure_enable <- function(){
     if (url_hash == ""){
       url_hash <- "/"
     }
+    # Removing the basepath
+    url_hash <- gsub(basepath, "", url_hash)
+    # Make sure you don't have multiple //
+    url_hash <- gsub("/{2,}", "/", url_hash)
 
     # We throw a NOT FOUND if the page isn't linked
     if (

@@ -4,7 +4,13 @@
 \alias{brochure_enable}
 \title{Enable Multipage via Brochure}
 \usage{
-brochure_enable()
+brochure_enable(basepath = "")
+}
+\arguments{
+\item{basepath}{The base path of your app. This pattern will be removed from the
+url, so that it matches the href of your \code{page()}. For example, it you have
+an app at \verb{http://connect.thinkr.fr/brochure/}, and your page is names \code{page1},
+use \code{basepath = "brochure"}}
 }
 \value{
 Used for sided effect

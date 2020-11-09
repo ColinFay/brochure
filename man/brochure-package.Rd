@@ -11,7 +11,7 @@ Build multipage 'shiny' apps.
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/colinfay/brocchure}
+  \item \url{https://github.com/colinfay/brochure}
 }
 
 }
