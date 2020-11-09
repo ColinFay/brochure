@@ -26,12 +26,26 @@ remotes::install_github("ColinFay/brochure")
 ``` r
 library(brochure)
 library(shiny)
+
+nav_links <- tags$ul(
+  tags$li(
+    tags$a(href = "/", "home"), 
+  ),
+  tags$li(
+    tags$a(href = "/page2", "page2"), 
+  ),
+  tags$li(
+    tags$a(href = "/contact", "contact"), 
+  )
+)
+
 ui <- function(request){
   brochure(
     page(
       href = "/",
       ui = tagList(
         h1("This is my first page"),
+        nav_links,
         plotOutput("plota")
       )
     ),
@@ -39,6 +53,7 @@ ui <- function(request){
       href = "/page2",
       ui =  tagList(
         h1("This is my second page"),
+        nav_links,
         plotOutput("plotb")
       )
     ),
@@ -46,6 +61,7 @@ ui <- function(request){
       href = "/contact",
       ui =  tagList(
         h1("Contact us"),
+        nav_links,
         tags$ul(
           tags$li("Here"),
           tags$li("There")
@@ -61,6 +77,7 @@ server <- function(
   session
 ){
   
+  # RENDERED ON ALL PAGES
   brochure_enable()
   
   # THIS PART WILL ONLY BE RENDERED ON /
@@ -108,6 +125,19 @@ library(shiny)
 # Creating a storage system
 cache_system <- cachem::cache_disk("inst/cache")
 
+nav_links <- tags$ul(
+  tags$li(
+    tags$a(href = "/", "home"), 
+  ),
+  tags$li(
+    tags$a(href = "/page2", "page2"), 
+  ),
+  tags$li(
+    tags$a(href = "/contact", "contact"), 
+  )
+)
+
+
 ui <- function(request){
   brochure(
     # We add an extra dep to the brochure page, here {glouton}
@@ -116,6 +146,7 @@ ui <- function(request){
       href = "/",
       ui = tagList(
         h1("This is my first page"),
+        nav_links,
         # The text enter on page 1 will be available on page 2, using 
         # a session cookie and a storage system
         textInput("textenter", "Enter a text"),
@@ -126,6 +157,7 @@ ui <- function(request){
       href = "/page2",
       ui =  tagList(
         h1("This is my second page"),
+        nav_links,
         # The text enter on page 1 will be available here, reading 
         # the storage system
         verbatimTextOutput("textdisplay"),
@@ -136,6 +168,7 @@ ui <- function(request){
       href = "/contact",
       ui =  tagList(
         h1("Contact us"),
+        nav_links,
         tags$ul(
           tags$li("Here"),
           tags$li("There")
@@ -151,8 +184,7 @@ server <- function(
   session
 ){
   
-    
-  # THIS PART WILL ONLY BE RENDERED ON ALL PAGES
+  # THIS PART WILL BE RENDERED ON ALL PAGES
   
   # Enabling the brochure mechanism
   brochure_enable()
