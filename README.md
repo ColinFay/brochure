@@ -192,7 +192,7 @@ server <- function(
   r <- reactiveValues()
   
   observeEvent(TRUE, {
-    # Load the cookies using {gloutong}
+    # Fetch the cookies using {glouton}
     r$cook <- fetch_cookies()
     
     # If there is no stored cookie for {brochure}, we generate it
@@ -202,7 +202,6 @@ server <- function(
       # Add this id as a cookie
       add_cookie("brochure_cookie", session_id)
       # Store in in the reactiveValues list
-      # If present as a cookie, will be in the list
       r$cook$brochure_cookie <- session_id
     }
     # For debugging purpose
