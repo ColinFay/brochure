@@ -3,6 +3,7 @@
 #' Create a brochureApp
 #'
 #' @inheritParams shiny::shinyApp
+#' @importFrom shiny shinyApp
 #'
 #' @return A shiny.appobj
 #' @export

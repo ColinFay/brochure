@@ -8,7 +8,7 @@ Authors@R:
            email = "contact@colinfay.me",
            comment = c(ORCID = "0000-0001-7343-1846"))
 Description: Build multipage 'shiny' apps.
-URL: https://github.com/colinfay/brocchure
+URL: https://github.com/colinfay/brochure
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
