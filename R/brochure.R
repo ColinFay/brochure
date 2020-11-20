@@ -1,4 +1,5 @@
 ...multipage <- new.env()
+...multipage_enabled <- new.env()
 
 #' Create a brochureApp
 #'
@@ -17,8 +18,12 @@ brochureApp <- function(
   # We add this enabled, just to be sure
   # `brochure_enable` is called inside a
   # `brochureApp`
-  ...multipage$enabled <- TRUE
-  shinyApp(
+  ...multipage_enabled$enabled <- TRUE
+  # Force UI if it hasn't been evaluated yet
+  # So that we are sure `...multipage` are
+  # enable
+  if (is.function(ui)) ui()
+  res <- shinyApp(
     ui = ui,
     server = server,
     onStart = onStart,
@@ -26,6 +31,21 @@ brochureApp <- function(
     uiPattern = ".*",
     enableBookmarking = enableBookmarking
   )
+  old_httpHandler <- res$httpHandler
+  res$httpHandler <- function(req){
+    # Returning a 404 if the page doesn't exist
+    if (!req$PATH_INFO %in% names(...multipage)){
+      httpResponse <- getFromNamespace("httpResponse", "shiny")
+      return(httpResponse(
+        status = 404,
+        content = "Not found"
+      ))
+    }
+    # Note to self:
+    # req$HTTP_COOKIE
+    old_httpHandler(req)
+  }
+  res
 }
 
 #' A Brochure Page
@@ -135,8 +155,8 @@ brochure_enable <- function(
 
   # Stop if we're not in a brochureApp
   if (
-    is.null(...multipage$enabled) ||
-    !...multipage$enabled
+    is.null(...multipage_enabled$enabled) ||
+    !...multipage_enabled$enabled
   ){
     stop("Brochure not enabled. \nHave you used `brochureApp()` to run your app?")
   }
@@ -156,24 +176,14 @@ brochure_enable <- function(
     # Make sure you don't have multiple //
     url_hash <- gsub("/{2,}", "/", url_hash)
 
-    # We throw a NOT FOUND if the page isn't linked
-    if (
-      !url_hash %in% names(...multipage)
-    ){
-      output$multipageui <- renderUI({
-        tagList(
-          h1("Not found")
-        )
-      })
-    } else {
-      # Look for the page and render it
-      output$multipageui <- ...multipage[[
+    # Look for the page and render it
+    output$multipageui <- ...multipage[[
+      url_hash
+    ]]$renderFunc(
+      ...multipage[[
         url_hash
-      ]]$renderFunc(
-        ...multipage[[
-          url_hash
-        ]]$ui
-      )
-    }
+      ]]$ui
+    )
+
   })
 }
