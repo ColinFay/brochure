@@ -4,10 +4,15 @@
 \alias{brochure}
 \title{Create the UI for a Brochure}
 \usage{
-brochure(..., wrapped = shiny::fluidPage)
+brochure(..., basepath = "", wrapped = shiny::fluidPage)
 }
 \arguments{
 \item{...}{a list of \code{Page()}}
+
+\item{basepath}{The base path of your app. This pattern will be removed from the
+url, so that it matches the href of your \code{page()}. For example, it you have
+an app at \verb{http://connect.thinkr.fr/brochure/}, and your page is names \code{page1},
+use \code{basepath = "brochure"}}
 
 \item{wrapped}{A UI function wrapping the Brochure UI.
 Default is \code{shiny::fluidPage}.}

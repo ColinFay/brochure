@@ -32,7 +32,6 @@ remotes::install_github("ColinFay/brochure")
 
 ## Example
 
-
 ```{r example, eval = FALSE}
 library(brochure)
 library(shiny)
@@ -87,9 +86,6 @@ server <- function(
   session
 ){
   
-  # RENDERED ON ALL PAGES
-  brochure_enable()
-  
   # THIS PART WILL ONLY BE RENDERED ON /
   output$plota <- renderPlot({
     print("In /")
@@ -127,13 +123,13 @@ cache_system <- cachem::cache_disk("inst/cache")
 
 nav_links <- tags$ul(
   tags$li(
-    tags$a(href = "/", "home"), 
+    tags$a(href = "/", "home"),
   ),
   tags$li(
-    tags$a(href = "/page2", "page2"), 
+    tags$a(href = "/page2", "page2"),
   ),
   tags$li(
-    tags$a(href = "/contact", "contact"), 
+    tags$a(href = "/contact", "contact"),
   )
 )
 
@@ -147,7 +143,7 @@ ui <- function(request){
       ui = tagList(
         h1("This is my first page"),
         nav_links,
-        # The text enter on page 1 will be available on page 2, using 
+        # The text enter on page 1 will be available on page 2, using
         # a session cookie and a storage system
         textInput("textenter", "Enter a text"),
         plotOutput("plota")
@@ -158,7 +154,7 @@ ui <- function(request){
       ui =  tagList(
         h1("This is my second page"),
         nav_links,
-        # The text enter on page 1 will be available here, reading 
+        # The text enter on page 1 will be available here, reading
         # the storage system
         verbatimTextOutput("textdisplay"),
         plotOutput("plotb")
@@ -179,22 +175,22 @@ ui <- function(request){
 }
 
 server <- function(
-  input, 
-  output, 
+  input,
+  output,
   session
 ){
-  
+
   # THIS PART WILL BE RENDERED ON ALL PAGES
-  
+
   # Enabling the brochure mechanism
-  brochure_enable()
-  
+  # brochure_enable()
+
   r <- reactiveValues()
-  
+
   observeEvent(TRUE, {
     # Fetch the cookies using {glouton}
     r$cook <- fetch_cookies()
-    
+
     # If there is no stored cookie for {brochure}, we generate it
     if (is.null(r$cook$brochure_cookie)){
       # Generate a random id
@@ -206,52 +202,51 @@ server <- function(
     }
     # For debugging purpose
     print(r$cook$brochure_cookie )
-  }, 
+  },
   # We only need to do it once doing it once
   once = TRUE
   )
-  
+
   # THIS PART WILL ONLY BE RENDERED ON /
-  
+
   observeEvent( input$textenter , {
     # Use the session id to save on the cache system
     cache_system$set(
       paste0(
-        r$cook$brochure_cookie, 
+        r$cook$brochure_cookie,
         "text"
-      ), 
+      ),
       input$textenter
     )
   })
-  
-  
-  
+
+
+
   output$plota <- renderPlot({
     print("In /")
     plot(mtcars)
   })
-  
+
   # THIS PART WILL ONLY BE RENDERED ON /page2
-  
+
   output$textdisplay <- renderPrint({
     # Getting the content value based on the session cookie
     cache_system$get(
       paste0(
-        r$cook$brochure_cookie, 
+        r$cook$brochure_cookie,
         "text"
       )
     )
   })
-  
+
   output$plotb <- renderPlot({
     print("In /page2")
     plot(airquality)
   })
-  
+
 }
 
 brochureApp(ui, server)
+
 ```
-
-
 

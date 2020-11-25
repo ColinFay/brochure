@@ -1,0 +1,12 @@
+name: brochure2
+title: brochure
+username: Colin
+account: Colin
+server: connect.thinkr.fr
+hostUrl: http://connect.thinkr.fr/__api__
+appId: 370
+bundleId: 1253
+url: http://connect.thinkr.fr/brochure/
+when: 1604934123.14018
+asMultiple: FALSE
+asStatic: FALSE

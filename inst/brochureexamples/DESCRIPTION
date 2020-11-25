@@ -1,0 +1,25 @@
+Package: brochureexamples
+Title: An Amazing Shiny App
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "firstname",
+           family = "lastname",
+           role = c("aut", "cre"),
+           email = "your@email.com")
+Description: What the package does (one paragraph).
+License: What license is it under?
+Imports: 
+    config (>= 0.3),
+    golem (>= 0.3.0),
+    shiny (>= 1.5.0),
+    brochure (>= 0.0.0.9001),
+    glouton (>= 0.0.0.9000),
+    cachem (>= 0.0.0.9000),
+    pkgload
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.0
+Remotes: 
+    ColinFay/brochure,
+    ColinFay/glouton,
+    r-lib/cachem
