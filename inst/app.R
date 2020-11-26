@@ -22,6 +22,7 @@ nav_links <- tags$ul(
 
 ui <- function(request){
   brochure(
+    basepath = "brochure",
     # We add an extra dep to the brochure page, here {glouton}
     use_glouton(),
     page(
