@@ -44,7 +44,7 @@ brochureApp <- function(
       httpResponse <- getFromNamespace("httpResponse", "shiny")
       return(httpResponse(
         status = 404,
-        content = content_404
+        content = as.character(content_404)
       ))
     }
     # Setting the path info for reuse in brochure()
