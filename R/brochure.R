@@ -62,6 +62,8 @@ brochureApp <- function(
 #' @return A list
 #' @export
 #'
+#' @importFrom shiny tagList
+#'
 #' @examples
 #' page(
 #'  href = "/page2",
