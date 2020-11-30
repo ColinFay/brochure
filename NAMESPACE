@@ -3,6 +3,5 @@
 export(brochure)
 export(brochureApp)
 export(page)
-importFrom(shiny,renderUI)
 importFrom(shiny,shinyApp)
-importFrom(shiny,uiOutput)
+importFrom(shiny,tagList)

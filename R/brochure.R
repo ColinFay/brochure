@@ -93,7 +93,7 @@ page <- function(
 #'
 #' @return
 #' @export
-#' @importFrom shiny uiOutput renderUI
+#' @importFrom shiny tagList
 brochure <- function(
   ...,
   basepath = "",
