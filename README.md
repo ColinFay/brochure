@@ -249,3 +249,56 @@ server <- function(
 
 brochureApp(ui, server)
 ```
+
+## With golem
+
+To adapt your `{golem}` based application to `{brochure}`, here are the
+two steps to follow:
+
+  - Build the ui with `brochure()` and `page()` in `app_ui()` :
+
+<!-- end list -->
+
+``` r
+app_ui <- function(request) {
+  tagList(
+    # Leave this function for adding external resources
+    golem_add_external_resources(),
+    # Your application UI logic 
+    brochure(
+      page(
+        href = "/",
+        ui = mod_home_ui("home_ui_1") 
+      ), 
+      page(
+        href = "/01",
+        ui = mod_01_ui("01_ui_1")
+      )
+    )
+  )
+}
+```
+
+  - Replace `shinyApp` with `brochureApp` in `app_server()`:
+
+<!-- end list -->
+
+``` r
+run_app <- function(
+  onStart = NULL,
+  options = list(), 
+  enableBookmarking = NULL,
+  ...
+) {
+  with_golem_options(
+    app = brochureApp(
+      ui = app_ui,
+      server = app_server,
+      onStart = onStart,
+      options = options, 
+      enableBookmarking = enableBookmarking
+    ), 
+    golem_opts = list(...)
+  )
+}
+```
