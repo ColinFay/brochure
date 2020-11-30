@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 
 __THIS IS A WORK IN PROGRESS, DO NOT USE__
 
-The goal of `{brochure}` is to provide a mechanism for deploying multi-page `{shiny}` application, _i.e_ that can serve content on multiple endpoints.
+The goal of `{brochure}` is to provide a mechanism for creating natively multi-page `{shiny}` applications, _i.e_ that can serve content on multiple endpoints.
 
 ## Installation
 
@@ -31,6 +31,43 @@ remotes::install_github("ColinFay/brochure")
 ```
 
 ## Example
+
+Here is the minimal working example: 
+
+```{r eval = FALSE}
+library(brochure)
+library(shiny)
+
+ui <- function(request){
+  brochure(
+    page(
+      href = "/",
+      ui = tagList(
+        h1("This is my first page")
+      )
+    ),
+    page(
+      href = "/page2",
+      ui =  tagList(
+        h1("This is my second page")
+      )
+    )
+  )
+}
+
+server <- function(
+  input, 
+  output, 
+  session
+){
+
+}
+
+brochureApp(ui, server)
+```
+
+
+And a more elaborate one: 
 
 ```{r example, eval = FALSE}
 library(brochure)

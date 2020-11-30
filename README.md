@@ -9,8 +9,8 @@
 
 **THIS IS A WORK IN PROGRESS, DO NOT USE**
 
-The goal of `{brochure}` is to provide a mechanism for deploying
-multi-page `{shiny}` application, *i.e* that can serve content on
+The goal of `{brochure}` is to provide a mechanism for creating natively
+multi-page `{shiny}` applications, *i.e* that can serve content on
 multiple endpoints.
 
 ## Installation
@@ -22,6 +22,42 @@ remotes::install_github("ColinFay/brochure")
 ```
 
 ## Example
+
+Here is the minimal working example:
+
+``` r
+library(brochure)
+library(shiny)
+
+ui <- function(request){
+  brochure(
+    page(
+      href = "/",
+      ui = tagList(
+        h1("This is my first page")
+      )
+    ),
+    page(
+      href = "/page2",
+      ui =  tagList(
+        h1("This is my second page")
+      )
+    )
+  )
+}
+
+server <- function(
+  input, 
+  output, 
+  session
+){
+
+}
+
+brochureApp(ui, server)
+```
+
+And a more elaborate one:
 
 ``` r
 library(brochure)
