@@ -3,6 +3,9 @@
 
 #' Create a brochureApp
 #'
+#' This function  is to be used in place of
+#' `shinyApp()`.
+#'
 #' @inheritParams shiny::shinyApp
 #' @importFrom shiny shinyApp
 #'

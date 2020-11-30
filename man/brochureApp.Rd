@@ -42,5 +42,6 @@ for more information on bookmarking your app.}
 A shiny.appobj
 }
 \description{
-Create a brochureApp
+This function  is to be used in place of
+\code{shinyApp()}.
 }
