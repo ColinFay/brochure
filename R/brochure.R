@@ -7,6 +7,7 @@
 #' `shinyApp()`.
 #'
 #' @inheritParams shiny::shinyApp
+#' @param content_404 The content to dislay when a 404 is sent
 #' @importFrom shiny shinyApp
 #'
 #' @return A shiny.appobj
@@ -16,7 +17,8 @@ brochureApp <- function(
   server,
   onStart = NULL,
   options = list(),
-  enableBookmarking = NULL
+  enableBookmarking = NULL,
+  content_404 = "Not found"
 ){
   # We add this enabled, just to be sure
   # `brochure_enable` is called inside a
@@ -42,7 +44,7 @@ brochureApp <- function(
       httpResponse <- getFromNamespace("httpResponse", "shiny")
       return(httpResponse(
         status = 404,
-        content = "Not found"
+        content = content_404
       ))
     }
     # Setting the path info for reuse in brochure()
@@ -142,7 +144,6 @@ brochure <- function(
     }
   )
 
-
   if (is.null(...multipage_opts$path)) {
     # Ignore the first time brochure() is called
     return()
@@ -151,7 +152,13 @@ brochure <- function(
     url_hash <- gsub(basepath, "", ...multipage_opts$path)
     # Make sure you don't have multiple //
     url_hash <- gsub("/{2,}", "/", url_hash)
-    id <- vapply(pages, function(x) x$href == url_hash, FUN.VALUE = logical(1))
+
+    id <- vapply(
+      pages,
+      function(x) x$href == url_hash,
+      FUN.VALUE = logical(1)
+    )
+
     wrapped(
       tagList(
         extra,
