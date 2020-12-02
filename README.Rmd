@@ -73,6 +73,7 @@ And a more elaborate one:
 library(brochure)
 library(shiny)
 
+# Creating a navlink
 nav_links <- tags$ul(
   tags$li(
     tags$a(href = "/", "home"), 
@@ -87,6 +88,7 @@ nav_links <- tags$ul(
 
 ui <- function(request){
   brochure(
+    # Pages
     page(
       href = "/",
       ui = tagList(
@@ -113,6 +115,15 @@ ui <- function(request){
           tags$li("There")
         )
       )
+    ),
+    # Redirections
+    redirect(
+      from = "/page3",
+      to =  "/page2"
+    ),
+    redirect(
+      from = "/page4",
+      to =  "/"
     )
   )
 }
@@ -123,13 +134,13 @@ server <- function(
   session
 ){
   
-  # THIS PART WILL ONLY BE RENDERED ON /
+  # THIS PART WILL BE RENDERED ON /
   output$plota <- renderPlot({
     print("In /")
     plot(mtcars)
   })
   
-  # THIS PART WILL ONLY BE RENDERED ON /page2
+  # THIS PART WILL BE RENDERED ON /page2
   output$plotb <- renderPlot({
     print("In /page2")
     plot(airquality)
