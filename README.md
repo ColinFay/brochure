@@ -51,7 +51,46 @@ server <- function(
   output, 
   session
 ){
+  
+}
 
+brochureApp(ui, server)
+```
+
+Redirection can be used to redirect from one endpoint to the other:
+
+``` r
+ui <- function(request){
+  brochure(
+    page(
+      href = "/",
+      ui = tagList(
+        h1("This is my first page")
+      )
+    ),
+    page(
+      href = "/page2",
+      ui =  tagList(
+        h1("This is my second page")
+      )
+    ),
+    redirect(
+      from = "/page3",
+      to =  "/page2"
+    ),
+    redirect(
+      from = "/page4",
+      to =  "/"
+    )
+  )
+}
+
+server <- function(
+  input, 
+  output, 
+  session
+){
+  
 }
 
 brochureApp(ui, server)
@@ -227,18 +266,18 @@ server <- function(
   output,
   session
 ){
-
+  
   # THIS PART WILL BE RENDERED ON ALL PAGES
-
+  
   # Enabling the brochure mechanism
   # brochure_enable()
-
+  
   r <- reactiveValues()
-
+  
   observeEvent(TRUE, {
     # Fetch the cookies using {glouton}
     r$cook <- fetch_cookies()
-
+    
     # If there is no stored cookie for {brochure}, we generate it
     if (is.null(r$cook$brochure_cookie)){
       # Generate a random id
@@ -254,9 +293,9 @@ server <- function(
   # We only need to do it once doing it once
   once = TRUE
   )
-
+  
   # THIS PART WILL ONLY BE RENDERED ON /
-
+  
   observeEvent( input$textenter , {
     # Use the session id to save on the cache system
     cache_system$set(
@@ -267,16 +306,16 @@ server <- function(
       input$textenter
     )
   })
-
-
-
+  
+  
+  
   output$plota <- renderPlot({
     print("In /")
     plot(mtcars)
   })
-
+  
   # THIS PART WILL ONLY BE RENDERED ON /page2
-
+  
   output$textdisplay <- renderPrint({
     # Getting the content value based on the session cookie
     cache_system$get(
@@ -286,12 +325,12 @@ server <- function(
       )
     )
   })
-
+  
   output$plotb <- renderPlot({
     print("In /page2")
     plot(airquality)
   })
-
+  
 }
 
 brochureApp(ui, server)
