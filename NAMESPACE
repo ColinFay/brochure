@@ -3,5 +3,6 @@
 export(brochure)
 export(brochureApp)
 export(page)
+export(redirect)
 importFrom(shiny,shinyApp)
 importFrom(shiny,tagList)
