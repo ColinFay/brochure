@@ -45,6 +45,14 @@ redirect <- function(
   to,
   code = 301
 ){
+  attempt::stop_if(
+    code,
+    ~ !.x %in% c(301:308, 310),
+    sprintf(
+      "Redirect code should be one of %s.",
+      paste(c(301:308, 310), collapse = " ")
+    )
+  )
   res <- list(
     from = from,
     to = to,
