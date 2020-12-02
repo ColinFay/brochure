@@ -57,7 +57,7 @@ server <- function(
 brochureApp(ui, server)
 ```
 
-Redirection can be used to redirect from one endpoint to the other:
+Redirections can be used to redirect from one endpoint to the other:
 
 ``` r
 ui <- function(request){
@@ -68,18 +68,8 @@ ui <- function(request){
         h1("This is my first page")
       )
     ),
-    page(
-      href = "/page2",
-      ui =  tagList(
-        h1("This is my second page")
-      )
-    ),
     redirect(
-      from = "/page3",
-      to =  "/page2"
-    ),
-    redirect(
-      from = "/page4",
+      from = "/nothere",
       to =  "/"
     )
   )
