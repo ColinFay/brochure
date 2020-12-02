@@ -1,61 +1,6 @@
 ...multipage <- new.env()
 ...multipage_opts <- new.env()
 
-#' Create a brochureApp
-#'
-#' This function  is to be used in place of
-#' `shinyApp()`.
-#'
-#' @inheritParams shiny::shinyApp
-#' @param content_404 The content to dislay when a 404 is sent
-#' @importFrom shiny shinyApp
-#'
-#' @return A shiny.appobj
-#' @export
-brochureApp <- function(
-  ui,
-  server,
-  onStart = NULL,
-  options = list(),
-  enableBookmarking = NULL,
-  content_404 = "Not found"
-){
-  # We add this enabled, just to be sure
-  # `brochure_enable` is called inside a
-  # `brochureApp`
-  ...multipage_opts$enabled <- TRUE
-  # Force UI if it hasn't been evaluated yet
-  # So that we are sure `...multipage` are
-  # enable
-  if (is.function(ui)) ui()
-  res <- shinyApp(
-    ui = ui,
-    server = server,
-    onStart = onStart,
-    options = options,
-    uiPattern = ".*",
-    enableBookmarking = enableBookmarking
-  )
-  old_httpHandler <- res$httpHandler
-  res$httpHandler <- function(req){
-    #browser()
-    # Returning a 404 if the page doesn't exist
-    if (!req$PATH_INFO %in% names(...multipage)){
-      httpResponse <- getFromNamespace("httpResponse", "shiny")
-      return(httpResponse(
-        status = 404,
-        content = as.character(content_404)
-      ))
-    }
-    # Setting the path info for reuse in brochure()
-    ...multipage_opts$path <- req$PATH_INFO
-    # Note to self:
-    # req$HTTP_COOKIE
-    old_httpHandler(req)
-  }
-  res
-}
-
 #' A Brochure Page
 #'
 #' @param href The endpoint to serve the UI on
@@ -88,6 +33,27 @@ page <- function(
   res
 }
 
+#' Redirection
+#'
+#' @param from redirect from
+#' @param to redirect to
+#'
+#' @return A redirection
+#' @export
+redirect <- function(
+  from,
+  to,
+  code = 301
+){
+  res <- list(
+    from = from,
+    to = to,
+    code = code
+  )
+  class(res) <- c("redirect", class(res))
+  res
+}
+
 #' Create the UI for a Brochure
 #'
 #' @param ... a list of `Page()`
@@ -107,7 +73,6 @@ brochure <- function(
   wrapped = shiny::fluidPage
 ){
   content <- list(...)
-
   # Separate the extra content from the pages
   # This allows to add extra deps
   are_pages <- vapply(content, function(x) {
@@ -116,10 +81,34 @@ brochure <- function(
 
   pages <- content[
     are_pages
-  ]
+    ]
 
   extra <- content[
     !are_pages
+    ]
+
+  # Extract and store the redirects
+  are_redirect <- vapply(extra, function(x) {
+    inherits(x, "redirect")
+  }, logical(1))
+
+  redirect <- extra[
+    are_redirect
+    ]
+  ...multipage_opts$redirect <- do.call(
+    rbind,
+    lapply(redirect, function(x){
+      data.frame(
+        from = x$from,
+        to = x$to,
+        code = x$code
+      )
+    })
+  )
+
+  # We don't need the redirect in extra
+  extra <- extra[
+    !are_redirect
   ]
 
   # Force a `/` page
@@ -129,7 +118,6 @@ brochure <- function(
     }, FUN.VALUE = character(1)
   )
 
-  # Check that we have a home at /
   if (
     ! "/" %in% all_href
   ){
@@ -164,59 +152,9 @@ brochure <- function(
         extra,
         pages[[
           which(id)
-        ]]$ui
+          ]]$ui
       )
     )
   }
 
 }
-
-#' #' Enable Multipage via Brochure
-#' #'
-#' #' @param basepath The base path of your app. This pattern will be removed from the
-#' #' url, so that it matches the href of your `page()`. For example, it you have
-#' #' an app at `http://connect.thinkr.fr/brochure/`, and your page is names `page1`,
-#' #' use `basepath = "brochure"`
-#' #'
-#' #' @return Used for sided effect
-#' #'
-#' #' @importFrom shiny getDefaultReactiveDomain renderUI tagList h1
-#' #' @export
-#' brochure_enable <- function(
-#'   basepath = ""
-#' ){
-#'
-#'   # Stop if we're not in a brochureApp
-#'   if (
-#'     is.null(...multipage_opts$enabled) ||
-#'     !...multipage_opts$enabled
-#'   ){
-#'     stop("Brochure not enabled. \nHave you used `brochureApp()` to run your app?")
-#'   }
-#'
-#'   output <- get("output", envir = parent.frame())
-#'
-#'   observe({
-#'     session <- getDefaultReactiveDomain()
-#'     url_hash <- session$clientData$url_pathname
-#'     # If ever the hash is empty, turn it to /
-#'     # I'm not sure it's necessary anymore, TODO: check
-#'     if (url_hash == ""){
-#'       url_hash <- "/"
-#'     }
-#'     # Removing the basepath
-#'     url_hash <- gsub(basepath, "", url_hash)
-#'     # Make sure you don't have multiple //
-#'     url_hash <- gsub("/{2,}", "/", url_hash)
-#'
-#'     # Look for the page and render it
-#'     output$multipageui <- ...multipage[[
-#'       url_hash
-#'     ]]$renderFunc(
-#'       ...multipage[[
-#'         url_hash
-#'       ]]$ui
-#'     )
-#'
-#'   })
-#' }
