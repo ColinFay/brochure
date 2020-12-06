@@ -2,6 +2,7 @@
 
 export(brochure)
 export(brochureApp)
+export(onPage)
 export(page)
 export(redirect)
 importFrom(shiny,shinyApp)

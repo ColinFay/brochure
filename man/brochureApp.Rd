@@ -36,7 +36,7 @@ about the ideal height/width for the app.}
 
 \item{enableBookmarking}{Can be one of \code{"url"}, \code{"server"}, or
 \code{"disable"}. The default value, \code{NULL}, will respect the setting from
-any previous calls to  \code{\link[=enableBookmarking]{enableBookmarking()}}. See \code{\link[=enableBookmarking]{enableBookmarking()}}
+any previous calls to  \code{\link[shiny:enableBookmarking]{enableBookmarking()}}. See \code{\link[shiny:enableBookmarking]{enableBookmarking()}}
 for more information on bookmarking your app.}
 
 \item{content_404}{The content to dislay when a 404 is sent}
