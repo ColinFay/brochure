@@ -61,6 +61,10 @@ server <- function(
   session
 ){
   
+  onPage(page = "page2", {
+    print("hey")
+  })
+  
 }
 
 brochureApp(ui, server)
@@ -89,7 +93,56 @@ server <- function(
   output, 
   session
 ){
+
+}
+
+brochureApp(ui, server)
+```
+
+All app, by default set a session cookie in the browser that can be caught in the server. To remove this cookie, you need to redirect to a `logout` page:
+
+```{r eval = FALSE}
+library(shiny)
+ui <- function(request){
+  brochure(
+    page(
+      href = "/",
+      ui = tagList(
+        h1("This is my first page"), 
+        tags$a(href = "/page2", "page2"), 
+        tags$a(href = "/logout", "log out"), 
+        verbatimTextOutput("cookie")
+      )
+    ),
+    page(
+      href = "/page2",
+      ui = tagList(
+        h1("This is my second page"), 
+        tags$a(href = "/", "home"), 
+        tags$a(href = "/logout", "log out"), 
+        verbatimTextOutput("cookie2")
+      )
+    ),
+    logout(
+      href = "/logout",
+      redirect_to = "/"
+    )
+  )
+}
+
+server <- function(
+  input, 
+  output, 
+  session
+){
   
+  output$cookie <- renderPrint({
+    get_brochure_cookie()
+  })
+  output$cookie2 <- renderPrint({
+    get_brochure_cookie()
+  })
+
 }
 
 brochureApp(ui, server)
