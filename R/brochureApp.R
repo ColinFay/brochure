@@ -51,10 +51,8 @@ brochureApp <- function(
         status = 302,
         headers = list(
           Location = paste0(
-            req$rook.url_scheme,
-            "://",
-            req$HTTP_HOST,
-            gsub("(/.*)/$", "\\1", req$PATH_INFO)
+            "http://connect.thinkr.fr/tdshiny/",
+            gsub(".*/([0-9]*)/", "\\1", req$PATH_INFO)
           )
         )
       ))
