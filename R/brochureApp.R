@@ -47,12 +47,18 @@ brochureApp <- function(
     # Redirect to url with backslash.
     # I should probably find a better way to so that
     if (grepl("/.+/$", req$PATH_INFO)){
-      #shiny::updateQueryString(queryString = req$PATH_INFO)
+
+      to <- paste0("/", ...multipage_opts$basepath,gsub("(.+)/", "\\1", req$PATH_INFO))
+
       return(httpResponse(
-        status = 200,
-        content = paste0(...multipage_opts$basepath, "/",gsub("(.+)/", "\\1", req$PATH_INFO))
+        status = 301,
+        headers = list(
+          Location = gsub("//", "/", to)
+        )
       ))
+
     }
+
     # Handle redirect
     if (req$PATH_INFO %in% ...multipage_opts$redirect$from){
       dest <- ...multipage_opts$redirect[
