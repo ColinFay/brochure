@@ -102,6 +102,7 @@ brochure <- function(
   basepath = "",
   wrapped = shiny::fluidPage
 ){
+  ...multipage_opts$basepath  <- ""
   content <- list(...)
   # Separate the extra content from the pages
   # This allows to add extra deps
