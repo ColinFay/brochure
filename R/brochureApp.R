@@ -5,6 +5,8 @@
 #'
 #' @inheritParams shiny::shinyApp
 #' @param content_404 The content to dislay when a 404 is sent
+#' @param with_cookie Should the app set session cookies?
+#' @param cookie_storage A function returning a list to manage cookies
 #' @importFrom shiny shinyApp
 #'
 #' @return A shiny.appobj
@@ -41,7 +43,7 @@ brochureApp <- function(
   old_httpHandler <- res$httpHandler
   res$httpHandler <- function(req){
 
-    httpResponse <- getFromNamespace("httpResponse", "shiny")
+    httpResponse <- utils::getFromNamespace("httpResponse", "shiny")
     # Redirect to url with backslash.
     # I should probably find a better way to so that
     if (grepl("/.+/$", req$PATH_INFO)){

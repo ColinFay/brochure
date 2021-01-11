@@ -12,6 +12,7 @@
 #' @importFrom shiny tagList
 #'
 #' @examples
+#' library(shiny)
 #' page(
 #'  href = "/page2",
 #'  ui =  tagList(
@@ -37,6 +38,7 @@ page <- function(
 #'
 #' @param from redirect from
 #' @param to redirect to
+#' @param code redirectin http code (one of `c(301:308, 310)`)
 #'
 #' @return A redirection
 #' @export
@@ -67,6 +69,7 @@ redirect <- function(
 #'
 #' This is usually considered as a "log out" mechanism
 #'
+#' @param href The endpoint of the logout page
 #' @param redirect_to The page to redirect to after cookie removal
 #'
 #' @return Redirection
@@ -91,7 +94,7 @@ logout <- function(
 #' an app at `http://connect.thinkr.fr/brochure/`, and your page is names `page1`,
 #' use `basepath = "brochure"`
 #'
-#' @return
+#' @return An HTML UI
 #' @export
 #' @importFrom shiny tagList
 brochure <- function(
