@@ -51,7 +51,7 @@ brochureApp <- function(
         status = 302,
         headers = list(
           Location = paste0(
-            "http://connect.thinkr.fr/tdshiny/",
+            "https://connect.thinkr.fr/tdshiny/",
             gsub(".*/([0-9]*)/", "\\1", req$PATH_INFO)
           )
         )
