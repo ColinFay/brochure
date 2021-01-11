@@ -48,14 +48,12 @@ brochureApp <- function(
     # I should probably find a better way to so that
     if (grepl("/.+/$", req$PATH_INFO)){
       #browser()
-      for (i in names(req)){
-        message(paste("-", i, "---"))
-        print(req[[i]])
-      }
+      message("Redirect")
+      message(req$PATH_INFO)
       return(httpResponse(
         status = 302,
         headers = list(
-          Location = paste0(req$HTTP_HOST, gsub("(/.*)/$", "\\1", req$PATH_INFO))
+          Location = gsub("(/.*)/$", "\\1", req$PATH_INFO)
         )
       ))
     }
