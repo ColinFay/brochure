@@ -49,22 +49,13 @@ brochureApp <- function(
     httpResponse <- utils::getFromNamespace("httpResponse", "shiny")
     # Manage url with backslash.
     # I should probably find a better way to do that
-    if (!is.null(manage_backslash)){
-      return(
-        manage_backslash(req)
-      )
-    }
+
     if (grepl("/.+/$", req$PATH_INFO)){
-      browser()
-      to <- paste0("/", ...multipage_opts$basepath, gsub("(.+)/", "\\1", req$PATH_INFO))
-
-      return(httpResponse(
-        status = 301,
-        headers = list(
-          Location = gsub("//", "/", to)
+      if (!is.null(manage_backslash)){
+        return(
+          manage_backslash(req)
         )
-      ))
-
+      }
     }
 
     # Handle redirect
