@@ -10,7 +10,9 @@ brochureApp(
   onStart = NULL,
   options = list(),
   enableBookmarking = NULL,
-  content_404 = "Not found"
+  content_404 = "Not found",
+  with_cookie = TRUE,
+  cookie_storage = local_cookie
 )
 }
 \arguments{
