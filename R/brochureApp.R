@@ -46,16 +46,18 @@ brochureApp <- function(
     httpResponse <- utils::getFromNamespace("httpResponse", "shiny")
     # Redirect to url with backslash.
     # I should probably find a better way to so that
-    shiny::updateQueryString(queryString = req$PATH_INFO)
-    # if (grepl("/.+/$", req$PATH_INFO)){
-    #   shiny::updateQueryString(queryString = req$PATH_INFO)
-    #   # return(httpResponse(
-    #   #   status = 302,
-    #   #   headers = list(
-    #   #     Location = gsub("(.+)/", "\\1", )
-    #   #   )
-    #   # ))
-    # }
+
+    if (grepl("/.+/$", req$PATH_INFO)){
+      #shiny::updateQueryString(queryString = req$PATH_INFO)
+      return(httpResponse(
+        status = 200,
+        headers = list(
+          content = as.character(
+            req$PATH_INFO
+          )
+        )
+      ))
+    }
     # Handle redirect
     if (req$PATH_INFO %in% ...multipage_opts$redirect$from){
       dest <- ...multipage_opts$redirect[
