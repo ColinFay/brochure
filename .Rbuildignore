@@ -1,5 +1,4 @@
 ^brochure\.Rproj$
 ^\.Rproj\.user$
 ^README\.Rmd$
-app.R
-
+^inst/brochureexamples$
