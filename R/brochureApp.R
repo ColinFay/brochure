@@ -47,10 +47,15 @@ brochureApp <- function(
     # Redirect to url with backslash.
     # I should probably find a better way to so that
     if (grepl("/.+/$", req$PATH_INFO)){
+      #browser()
+      for (i in names(req)){
+        message(paste("-", i, "---"))
+        print(req[[i]])
+      }
       return(httpResponse(
         status = 302,
         headers = list(
-          Location = gsub("(/.*)/$", "\\1", req$PATH_INFO)
+          Location = paste0(req$HTTP_HOST, gsub("(/.*)/$", "\\1", req$PATH_INFO))
         )
       ))
     }
