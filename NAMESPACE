@@ -2,6 +2,8 @@
 
 export(brochure)
 export(brochureApp)
+export(get_brochure_cookie)
+export(logout)
 export(onPage)
 export(page)
 export(redirect)
