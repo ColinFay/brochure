@@ -4,13 +4,15 @@
 #'
 #' @return A string with the cookie, or NA if there is no cookie.
 #' @export
-get_brochure_cookie <- function(session = shiny::getDefaultReactiveDomain()){
-
+get_brochure_cookie <- function(
+  session = shiny::getDefaultReactiveDomain()
+  ){
   parse_cookie(session$request$HTTP_COOKIE)["brochure_session"]
 
 }
 
 parse_cookie <- function(txt){
+  if (is.null(txt)) return("")
   couples <- strsplit(txt, ";")[[1]]
   res <- lapply(
     couples,
