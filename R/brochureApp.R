@@ -44,16 +44,16 @@ brochureApp <- function(
   res$httpHandler <- function(req){
 
     httpResponse <- utils::getFromNamespace("httpResponse", "shiny")
-    # Redirect to url with backslash.
-    # I should probably find a better way to so that
-    if (grepl("/.+/$", req$PATH_INFO)){
-      return(httpResponse(
-        status = 302,
-        headers = list(
-          Location = gsub("(/.*)/$", "\\1", req$PATH_INFO)
-        )
-      ))
-    }
+    # # Redirect to url with backslash.
+    # # I should probably find a better way to so that
+    # if (grepl("/.+/$", req$PATH_INFO)){
+    #   return(httpResponse(
+    #     status = 302,
+    #     headers = list(
+    #       Location = gsub("(/.*)/$", "\\1", req$PATH_INFO)
+    #     )
+    #   ))
+    # }
     # Handle redirect
     if (req$PATH_INFO %in% ...multipage_opts$redirect$from){
       dest <- ...multipage_opts$redirect[
