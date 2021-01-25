@@ -42,11 +42,20 @@ brochureApp <- function(
   )
   old_httpHandler <- res$httpHandler
   res$httpHandler <- function(req){
+    # If there are any middleware, run them
+    if (length(
+      ...multipage_opts$middleware
+    )){
+      for (i in ...multipage_opts$middleware){
+        req  <- i(req)
+      }
+    }
 
     httpResponse <- utils::getFromNamespace("httpResponse", "shiny")
     # # Redirect to url with backslash.
     # # I should probably find a better way to so that
     # if (grepl("/.+/$", req$PATH_INFO)){
+    #   print('redirect')
     #   return(httpResponse(
     #     status = 302,
     #     headers = list(
@@ -54,6 +63,7 @@ brochureApp <- function(
     #     )
     #   ))
     # }
+    #browser()
     # Handle redirect
     if (req$PATH_INFO %in% ...multipage_opts$redirect$from){
       dest <- ...multipage_opts$redirect[
@@ -102,9 +112,12 @@ brochureApp <- function(
     # req$HTTP_COOKIE
     # session$request$HTTP_COOKIE
     inter <- old_httpHandler(req)
+
     if (with_cookie){
       # browser()
-      current_cookie <- parse_cookie(req$HTTP_COOKIE)["brochure_session"]
+      current_cookie <- parse_cookie(
+        req$HTTP_COOKIE
+      )["brochure_session"]
       if (
         is.na(current_cookie) |
         ! cookie_storage()$is_valid(

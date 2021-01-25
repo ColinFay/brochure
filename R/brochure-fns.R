@@ -93,6 +93,9 @@ logout <- function(
 #' url, so that it matches the href of your `page()`. For example, it you have
 #' an app at `http://connect.thinkr.fr/brochure/`, and your page is names `page1`,
 #' use `basepath = "brochure"`
+#' @param middleware a list of functions that can manipulate the `req` object.
+#' These functions should take `req` as a parameters, and return the `req` object
+#' (potentially modified).
 #'
 #' @return An HTML UI
 #' @export
@@ -100,10 +103,14 @@ logout <- function(
 brochure <- function(
   ...,
   basepath = "",
+  middleware = list(),
   wrapped = shiny::fluidPage
 ){
+  # Put the basepath and the middlewares
   ...multipage_opts$basepath  <- basepath
+  ...multipage_opts$middleware  <- middleware
   content <- list(...)
+
   # Separate the extra content from the pages
   # This allows to add extra deps
   are_pages <- vapply(content, function(x) {
