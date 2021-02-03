@@ -212,6 +212,9 @@ brochure <- function(
 
     wrapped(
       tagList(
+        htmltools::includeScript(
+          system.file("redirect.js", package = "brochure")
+        ),
         extra,
         pages[[
           which(id)
