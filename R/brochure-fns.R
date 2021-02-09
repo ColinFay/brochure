@@ -1,10 +1,17 @@
+# Storing the content of the multipage
 ...multipage <- new.env()
+# Env to store the options
 ...multipage_opts <- new.env()
 
 #' A Brochure Page
 #'
 #' @param href The endpoint to serve the UI on
 #' @param ui Content served at `/href`
+#' @param middleware a list of functions that can manipulate the `req` object.
+#' These functions should take `req` as a parameters, and return the `req` object
+#' (potentially modified), or an object of class httpResponse. If any of the
+#' middleware return an httpResponse, this response will be sent to the browser
+#' immeditately, stopping any other code.
 #'
 #' @return A list
 #' @export
@@ -23,15 +30,19 @@
 #'
 page <- function(
   href,
-  ui
+  ui,
+  middleware = list(),
+  finalizer = list()
 ){
   # Page are href + ui
   res <- list(
     href = href,
     ui = tagList(ui)
   )
-  class(res) <- c("brochure_page", class(res))
-  res
+  # Adding the page level middlewares
+  add_middleware_page(href, middleware)
+  add_finalizer_page(href, finalizer)
+  with_class(res, "brochure_page")
 }
 
 #' Redirection
@@ -47,21 +58,16 @@ redirect <- function(
   to,
   code = 301
 ){
-  attempt::stop_if(
-    code,
-    ~ !.x %in% c(301:308, 310),
-    sprintf(
-      "Redirect code should be one of %s.",
-      paste(c(301:308, 310), collapse = " ")
-    )
-  )
+  # We need the redirect to be a specific HTTP code
+  check_redirect_code(code)
+
   res <- list(
     from = from,
     to = to,
     code = code
   )
-  class(res) <- c("redirect", class(res))
-  res
+
+  with_class(res, "redirect")
 }
 
 
@@ -95,7 +101,9 @@ logout <- function(
 #' use `basepath = "brochure"`
 #' @param middleware a list of functions that can manipulate the `req` object.
 #' These functions should take `req` as a parameters, and return the `req` object
-#' (potentially modified).
+#' (potentially modified), or an object of class httpResponse. If any of the
+#' middleware return an httpResponse, this response will be sent to the browser
+#' immeditately, stopping any other code.
 #'
 #' @return An HTML UI
 #' @export
@@ -104,75 +112,48 @@ brochure <- function(
   ...,
   basepath = "",
   middleware = list(),
+  finalizer = list(),
   wrapped = shiny::fluidPage
 ){
   # Put the basepath and the middlewares
   ...multipage_opts$basepath  <- basepath
   ...multipage_opts$middleware  <- middleware
+  ...multipage_opts$finalizer  <- finalizer
+
+  #browser()
+
+  # Extracting the dots
   content <- list(...)
 
   # Separate the extra content from the pages
   # This allows to add extra deps
-  are_pages <- vapply(content, function(x) {
-    inherits(x, "brochure_page")
-  }, logical(1))
+  are_pages <- extract(content, "brochure_page")
 
-  pages <- content[
-    are_pages
-    ]
+  # Which one are page
+  pages <- content[ are_pages ]
 
-  extra <- content[
-    !are_pages
-    ]
+  extra <- content[ !are_pages ]
 
   # Extract and store the redirects
-  are_redirect <- vapply(extra, function(x) {
-    inherits(x, "redirect")
-  }, logical(1))
+  are_redirect <- extract(extra, "redirect")
 
-  redirect <- extra[
-    are_redirect
-    ]
-
-  ...multipage_opts$redirect <- do.call(
-    rbind,
-    lapply(redirect, function(x){
-      data.frame(
-        from = x$from,
-        to = x$to,
-        code = x$code
-      )
-    })
+  # We'll add a dataframe of redirection
+  ...multipage_opts$redirect <- build_redirect(
+    extra[ are_redirect ]
   )
 
   # We don't need the redirect in extra
-  extra <- extra[
-    !are_redirect
-  ]
+  extra <- extra[ !are_redirect ]
 
   # Extract and store the logout
-  are_logout <- vapply(extra, function(x) {
-    inherits(x, "logout")
-  }, logical(1))
+  are_logout <- extract(extra, "logout")
 
-  logout <- extra[
-    are_logout
-  ]
-
-  ...multipage_opts$logout <- do.call(
-    rbind,
-    lapply(logout, function(x){
-      data.frame(
-        from = x$from,
-        to = x$to
-      )
-    })
+  ...multipage_opts$logout <- build_logout(
+    extra[ are_logout ]
   )
 
   # We don't need the logout in extra
-  extra <- extra[
-    !are_logout
-  ]
+  extra <- extra[ !are_logout ]
 
   # Force a `/` page
   all_href <- vapply(
@@ -181,9 +162,7 @@ brochure <- function(
     }, FUN.VALUE = character(1)
   )
 
-  if (
-    ! "/" %in% all_href
-  ){
+  if ( ! "/" %in% all_href ){
     stop("You must specify a root page (one with `href = '/')`.")
   }
 

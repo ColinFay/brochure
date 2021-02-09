@@ -52,10 +52,6 @@ server <- function(
   session
 ){
   
-  onPage(page = "page2", {
-    print("hey")
-  })
-  
 }
 
 brochureApp(ui, server)
@@ -84,7 +80,7 @@ server <- function(
   output, 
   session
 ){
-
+  
 }
 
 brochureApp(ui, server)
@@ -135,7 +131,7 @@ server <- function(
   output$cookie2 <- renderPrint({
     get_brochure_cookie()
   })
-
+  
 }
 
 brochureApp(ui, server)
@@ -220,6 +216,148 @@ server <- function(
     plot(airquality)
   })
   
+}
+
+brochureApp(ui, server)
+```
+
+## Middlewares & finalizers
+
+You can add middlewares and finalizers at the app & at each page level.
+A (middleware/finalizer is a function that takes one argument, `req`
+(middleware) or `req` and `http_response` (finalizer), and return `req`
+(middleware) & `http_response` (finalizer), potentially modified. Each
+page & the app have a `middleware` parameter, that can take a list of
+these functions.
+
+They can be used to register log, or to modify the `req` object, or any
+kind of things you can think of. They are run when R is building the
+HTTP response to send to the browser (i.e, no server code has been run
+yet).
+
+Note that if any of these middleware returns an `httpResponse` object,
+it will be returned to the browser immediately, without any further
+computation.
+
+Finalizers, on the other hands, are runs on the final `httpResponse`
+object return by R. In other words: - R receives a `GET` request from
+the browser, with a `req` object. - The middlewares are run using this
+req - R createsan `httpResponse` based on the `brochure` definition -
+The finalizers are run on this `httpResponse` (first app level, then
+page level) - The `httpResponse` is returned to the browser
+
+### Middleware demo
+
+``` r
+library(brochure)
+library(shiny)
+
+ui <- function(request){
+  brochure(
+    middleware = list(
+      function(req){
+        print("ALL PAGE")
+        req
+      }
+    ),
+    page(
+      href = "/",
+      ui = tagList(
+        h1("This is my first page")
+      ), 
+      middleware = list(
+        function(req){
+          print("HOME")
+          req
+        }
+      )
+    ),
+    page(
+      href = "/page2",
+      ui =  tagList(
+        h1("This is my second page")
+      )
+    )
+  )
+}
+
+server <- function(
+  input, 
+  output, 
+  session
+){
+  
+}
+
+brochureApp(ui, server)
+```
+
+### Finalizer demo
+
+Finalizers can be interesting to set cookies
+
+``` r
+library(brochure)
+library(shiny)
+
+ui <- function(request){
+  brochure(
+    finalizer = list(
+      function(http_resp, req){
+        qs <- shiny::parseQueryString(req$QUERY_STRING)
+        if (
+          length(qs) == 0
+        ){
+          http_resp$headers$`Set-Cookie` <- "plop=12; HttpOnly; Expires=Wed, 21 Oct 2050 07:28:00 GMT;Path=/"
+        } else if ("logout" %in% names(qs)){
+          http_resp$headers$`Set-Cookie` <- "plop=12; HttpOnly; Expires=Wed, 21 Oct 1950 07:28:00 GMT;Path=/"
+        }
+        http_resp
+      }
+    ),
+    page(
+      href = "/",
+      ui = tagList(
+        h1("This is my first page"), 
+        tags$p("Try reloading this page with ?logout in the url to remove the Cookie"), 
+        verbatimTextOutput("cookie1")
+      )
+    ),
+    page(
+      href = "/page2",
+      ui =  tagList(
+        h1("This is my second page"),
+        verbatimTextOutput("cookie2")
+      )
+    ), 
+    page(
+      href = "/logout",
+      ui = tagList(
+        "Bye"
+      ), 
+      finalizer = list( 
+        function(http_resp, req){
+          http_resp$headers$`Set-Cookie` <- "plop=12; HttpOnly; Expires=Wed, 21 Oct 1950 07:28:00 GMT;Path=/"
+          http_resp
+        }
+      )
+    )
+  )
+}
+
+server <- function(
+  input, 
+  output, 
+  session
+){
+  
+  output$cookie1 <- renderPrint({
+    session$request$HTTP_COOKIE
+  })
+  
+  output$cookie2 <- renderPrint({
+    session$request$HTTP_COOKIE
+  })
 }
 
 brochureApp(ui, server)

@@ -1,6 +1,6 @@
-remotes::install_github("colinfay/brochure")
+#remotes::install_github("colinfay/brochure")
 # Launch the shinyApp
-#pkgload::load_all()
+pkgload::load_all()
 library(brochure)
 library(glouton)
 library(shiny)
@@ -22,6 +22,7 @@ nav_links <- tags$ul(
 
 ui <- function(request){
   brochure(
+    middleware = list(function(req){print(req)}),
     basepath = "brochure",
     # We add an extra dep to the brochure page, here {glouton}
     use_glouton(),
@@ -37,6 +38,10 @@ ui <- function(request){
       )
     ),
     page(
+      middleware = list(function(req){
+        print("coucou")
+        req
+      }),
       href = "/page2",
       ui =  tagList(
         h1("This is my second page"),
@@ -57,6 +62,10 @@ ui <- function(request){
           tags$li("There")
         )
       )
+    ),
+    redirect(
+      "/blabla",
+      "/page2"
     )
   )
 }
