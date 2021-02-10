@@ -10,9 +10,7 @@ brochureApp(
   onStart = NULL,
   options = list(),
   enableBookmarking = NULL,
-  content_404 = "Not found",
-  with_cookie = TRUE,
-  cookie_storage = local_cookie
+  content_404 = "Not found"
 )
 }
 \arguments{
@@ -42,10 +40,6 @@ any previous calls to  \code{\link[shiny:enableBookmarking]{enableBookmarking()}
 for more information on bookmarking your app.}
 
 \item{content_404}{The content to dislay when a 404 is sent}
-
-\item{with_cookie}{Should the app set session cookies?}
-
-\item{cookie_storage}{A function returning a list to manage cookies}
 }
 \value{
 A shiny.appobj

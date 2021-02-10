@@ -95,57 +95,8 @@ server <- function(
 brochureApp(ui, server)
 ```
 
-All app, by default set a session cookie in the browser that can be caught in the server. To remove this cookie, you need to redirect to a `logout` page:
 
-```{r eval = FALSE}
-library(shiny)
-ui <- function(request){
-  brochure(
-    page(
-      href = "/",
-      ui = tagList(
-        h1("This is my first page"), 
-        tags$a(href = "/page2", "page2"), 
-        tags$a(href = "/logout", "log out"), 
-        verbatimTextOutput("cookie")
-      )
-    ),
-    page(
-      href = "/page2",
-      ui = tagList(
-        h1("This is my second page"), 
-        tags$a(href = "/", "home"), 
-        tags$a(href = "/logout", "log out"), 
-        verbatimTextOutput("cookie2")
-      )
-    ),
-    logout(
-      href = "/logout",
-      redirect_to = "/"
-    )
-  )
-}
-
-server <- function(
-  input, 
-  output, 
-  session
-){
-  
-  output$cookie <- renderPrint({
-    get_brochure_cookie()
-  })
-  output$cookie2 <- renderPrint({
-    get_brochure_cookie()
-  })
-  
-}
-
-brochureApp(ui, server)
-```
-
-
-And a more elaborate one: 
+A more elaborate example: 
 
 ```{r example, eval = FALSE}
 library(brochure)
@@ -231,16 +182,12 @@ brochureApp(ui, server)
 
 ## req_handlers & res_handlers
 
-You can add req_handlers and res_handlers at the app & at page level. 
-A req_handlers/res_handlers is a function that takes one or two argument(s), `req`  for req_handlers or `req` and `res` for res_handlers, and return `req` (req_handlers) & `res` (res_handlers), potentially modified. 
-Each page & the app have a `req_handlers` and `res_handlers` parameters, that can take a list of functions.
+Each page, and the app, have a `req_handlers` and `res_handlers` parameters, that can take a list of functions.
+A req_handlers/res_handlers is a function that takes one or two argument(s), `req`  for req_handlers and `req` & `res` for res_handlers.
+req_handlers return `req` & res_handlers return `res`, potentially modified. 
 
 They can be used to register log, or to modify the objects, or any kind of things you can think of. 
-They are run when R is building the HTTP response to send to the browser (i.e, no server code has been run yet).
-
-Note that if any req_handlers returns an `httpResponse` object, it will be returned to the browser immediately, without any further computation, and are not passed to the `res_handlers`.
-
-In other words: 
+They are run when R is building the HTTP response to send to the browser (i.e, no server code has been run yet), following this process:
 
 1. R receives a `GET` request from the browser, creating a `req` object. 
 1. The `req_handlers` are run using this `req` 
@@ -248,7 +195,10 @@ In other words:
 1. The res_handlers are run on this `httpResponse` (first app level res_handlers, then page level res_handlers)
 1. The `httpResponse` is returned to the browser
 
-### req_handlers demo
+Note that if any req_handlers returns an `httpResponse` object, it will be returned to the browser immediately, without any further computation, and are not passed to the `res_handlers`.
+
+
+### Logging with `req_handlers()`
 
 ```{r eval = FALSE} 
 library(brochure)
@@ -258,7 +208,9 @@ ui <- function(request){
   brochure(
     req_handlers = list(
       function(req){
-        print("ALL PAGE")
+        cli::cat_rule(
+          sprintf("%s - %s", Sys.time(), req$PATH_INFO)
+        )
         req
       }
     ),
@@ -294,9 +246,16 @@ server <- function(
 brochureApp(ui, server)
 ```
 
-### res_handlers demo
+### Handling cookies using `res_handlers`
 
-res_handlers can be interesting to set cookies
+`res_handlers` can be used to set cookies, by adding a `Set-Cookie` header.
+
+Note that you can parse the cookie using `parse_cookie_string`.
+
+```{r eval = FALSE}
+parse_cookie_string( session$request$HTTP_COOKIE )
+```
+
 
 ```{r eval = FALSE} 
 library(brochure)
@@ -306,10 +265,10 @@ ui <- function(request){
   brochure(
     res_handlers = list(
       function(res, req){
+        # If the query string is ?logout, we remove the cookie
         qs <- shiny::parseQueryString(req$QUERY_STRING)
-        if (
-          length(qs) == 0
-        ){
+        
+        if ( length(qs) == 0 ){
           res$headers$`Set-Cookie` <- "plop=12; HttpOnly; Expires=Wed, 21 Oct 2050 07:28:00 GMT;Path=/"
         } else if ("logout" %in% names(qs)){
           res$headers$`Set-Cookie` <- "plop=12; HttpOnly; Expires=Wed, 21 Oct 1950 07:28:00 GMT;Path=/"
@@ -354,11 +313,15 @@ server <- function(
 ){
   
   output$cookie1 <- renderPrint({
-    session$request$HTTP_COOKIE
+    parse_cookie_string(
+      session$request$HTTP_COOKIE
+    )
   })
   
   output$cookie2 <- renderPrint({
-    session$request$HTTP_COOKIE
+     parse_cookie_string(
+      session$request$HTTP_COOKIE
+    )
   })
 }
 

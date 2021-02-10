@@ -2,9 +2,8 @@
 
 export(brochure)
 export(brochureApp)
-export(get_brochure_cookie)
-export(logout)
 export(page)
+export(parse_cookie_string)
 export(redirect)
 export(server_redirect)
 importFrom(shiny,shinyApp)
