@@ -52,10 +52,6 @@ server <- function(
   session
 ){
   
-  onPage(page = "page2", {
-    print("hey")
-  })
-  
 }
 
 brochureApp(ui, server)
@@ -84,7 +80,7 @@ server <- function(
   output, 
   session
 ){
-
+  
 }
 
 brochureApp(ui, server)
@@ -135,7 +131,7 @@ server <- function(
   output$cookie2 <- renderPrint({
     get_brochure_cookie()
   })
-
+  
 }
 
 brochureApp(ui, server)
@@ -220,6 +216,151 @@ server <- function(
     plot(airquality)
   })
   
+}
+
+brochureApp(ui, server)
+```
+
+## req\_handlers & res\_handlers
+
+You can add req\_handlers and res\_handlers at the app & at page level.
+A req\_handlers/res\_handlers is a function that takes one or two
+argument(s), `req` for req\_handlers or `req` and `res` for
+res\_handlers, and return `req` (req\_handlers) & `res` (res\_handlers),
+potentially modified. Each page & the app have a `req_handlers` and
+`res_handlers` parameters, that can take a list of functions.
+
+They can be used to register log, or to modify the objects, or any kind
+of things you can think of. They are run when R is building the HTTP
+response to send to the browser (i.e, no server code has been run yet).
+
+Note that if any req\_handlers returns an `httpResponse` object, it will
+be returned to the browser immediately, without any further computation,
+and are not passed to the `res_handlers`.
+
+In other words:
+
+1.  R receives a `GET` request from the browser, creating a `req`
+    object.
+2.  The `req_handlers` are run using this `req`
+3.  R creates an `httpResponse`, using this `req` and how you defined
+    the UI
+4.  The res\_handlers are run on this `httpResponse` (first app level
+    res\_handlers, then page level res\_handlers)
+5.  The `httpResponse` is returned to the browser
+
+### req\_handlers demo
+
+``` r
+library(brochure)
+library(shiny)
+
+ui <- function(request){
+  brochure(
+    req_handlers = list(
+      function(req){
+        print("ALL PAGE")
+        req
+      }
+    ),
+    page(
+      href = "/",
+      ui = tagList(
+        h1("This is my first page")
+      ), 
+      req_handlers = list(
+        function(req){
+          print("HOME")
+          req
+        }
+      )
+    ),
+    page(
+      href = "/page2",
+      ui =  tagList(
+        h1("This is my second page")
+      )
+    )
+  )
+}
+
+server <- function(
+  input, 
+  output, 
+  session
+){
+  
+}
+
+brochureApp(ui, server)
+```
+
+### res\_handlers demo
+
+res\_handlers can be interesting to set cookies
+
+``` r
+library(brochure)
+library(shiny)
+
+ui <- function(request){
+  brochure(
+    res_handlers = list(
+      function(res, req){
+        qs <- shiny::parseQueryString(req$QUERY_STRING)
+        if (
+          length(qs) == 0
+        ){
+          res$headers$`Set-Cookie` <- "plop=12; HttpOnly; Expires=Wed, 21 Oct 2050 07:28:00 GMT;Path=/"
+        } else if ("logout" %in% names(qs)){
+          res$headers$`Set-Cookie` <- "plop=12; HttpOnly; Expires=Wed, 21 Oct 1950 07:28:00 GMT;Path=/"
+        }
+        res
+      }
+    ),
+    page(
+      href = "/",
+      ui = tagList(
+        h1("This is my first page"), 
+        tags$p("Try reloading this page with ?logout in the url to remove the Cookie"), 
+        verbatimTextOutput("cookie1")
+      )
+    ),
+    page(
+      href = "/page2",
+      ui =  tagList(
+        h1("This is my second page"),
+        verbatimTextOutput("cookie2")
+      )
+    ), 
+    page(
+      href = "/logout",
+      ui = tagList(
+        "Bye"
+      ), 
+      res_handlers = list( 
+        function(res, req){
+          res$headers$`Set-Cookie` <- "plop=12; HttpOnly; Expires=Wed, 21 Oct 1950 07:28:00 GMT;Path=/"
+          res
+        }
+      )
+    )
+  )
+}
+
+server <- function(
+  input, 
+  output, 
+  session
+){
+  
+  output$cookie1 <- renderPrint({
+    session$request$HTTP_COOKIE
+  })
+  
+  output$cookie2 <- renderPrint({
+    session$request$HTTP_COOKIE
+  })
 }
 
 brochureApp(ui, server)

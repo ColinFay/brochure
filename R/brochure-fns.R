@@ -1,88 +1,7 @@
+# Storing the content of the multipage
 ...multipage <- new.env()
+# Env to store the options
 ...multipage_opts <- new.env()
-
-#' A Brochure Page
-#'
-#' @param href The endpoint to serve the UI on
-#' @param ui Content served at `/href`
-#'
-#' @return A list
-#' @export
-#'
-#' @importFrom shiny tagList
-#'
-#' @examples
-#' library(shiny)
-#' page(
-#'  href = "/page2",
-#'  ui =  tagList(
-#'    h1("This is my second page"),
-#'    plotOutput("plotb")
-#'  )
-#' )
-#'
-page <- function(
-  href,
-  ui
-){
-  # Page are href + ui
-  res <- list(
-    href = href,
-    ui = tagList(ui)
-  )
-  class(res) <- c("brochure_page", class(res))
-  res
-}
-
-#' Redirection
-#'
-#' @param from redirect from
-#' @param to redirect to
-#' @param code redirectin http code (one of `c(301:308, 310)`)
-#'
-#' @return A redirection
-#' @export
-redirect <- function(
-  from,
-  to,
-  code = 301
-){
-  attempt::stop_if(
-    code,
-    ~ !.x %in% c(301:308, 310),
-    sprintf(
-      "Redirect code should be one of %s.",
-      paste(c(301:308, 310), collapse = " ")
-    )
-  )
-  res <- list(
-    from = from,
-    to = to,
-    code = code
-  )
-  class(res) <- c("redirect", class(res))
-  res
-}
-
-
-#' Remove Current Brochure Cookie
-#'
-#' This is usually considered as a "log out" mechanism
-#'
-#' @param href The endpoint of the logout page
-#' @param redirect_to The page to redirect to after cookie removal
-#'
-#' @return Redirection
-#' @export
-#'
-logout <- function(
-  href,
-  redirect_to
-){
-  res <- list(from = href, to = redirect_to)
-  class(res) <- c("logout", class(res))
-  res
-}
 
 #' Create the UI for a Brochure
 #'
@@ -93,9 +12,14 @@ logout <- function(
 #' url, so that it matches the href of your `page()`. For example, it you have
 #' an app at `http://connect.thinkr.fr/brochure/`, and your page is names `page1`,
 #' use `basepath = "brochure"`
-#' @param middleware a list of functions that can manipulate the `req` object.
+#' @param req_handlers a list of functions that can manipulate the `req` object.
 #' These functions should take `req` as a parameters, and return the `req` object
-#' (potentially modified).
+#' (potentially modified), or an object of class httpResponse. If any of the
+#' req_handlers return an httpResponse, this response will be sent to the browser
+#' immeditately, stopping any other code.
+#' @param res_handlers A list of functions that can manipulate the httpResponse
+#' object before it is send to the browser. Each function must take a `res` and
+#' `req` parameter.
 #'
 #' @return An HTML UI
 #' @export
@@ -103,76 +27,49 @@ logout <- function(
 brochure <- function(
   ...,
   basepath = "",
-  middleware = list(),
+  req_handlers = list(),
+  res_handlers = list(),
   wrapped = shiny::fluidPage
 ){
-  # Put the basepath and the middlewares
+  # Put the basepath and the req_handlerss
   ...multipage_opts$basepath  <- basepath
-  ...multipage_opts$middleware  <- middleware
+  ...multipage_opts$req_handlers  <- req_handlers
+  ...multipage_opts$res_handlers  <- res_handlers
+
+  #browser()
+
+  # Extracting the dots
   content <- list(...)
 
   # Separate the extra content from the pages
   # This allows to add extra deps
-  are_pages <- vapply(content, function(x) {
-    inherits(x, "brochure_page")
-  }, logical(1))
+  are_pages <- extract(content, "brochure_page")
 
-  pages <- content[
-    are_pages
-    ]
+  # Which one are page
+  pages <- content[ are_pages ]
 
-  extra <- content[
-    !are_pages
-    ]
+  extra <- content[ !are_pages ]
 
   # Extract and store the redirects
-  are_redirect <- vapply(extra, function(x) {
-    inherits(x, "redirect")
-  }, logical(1))
+  are_redirect <- extract(extra, "redirect")
 
-  redirect <- extra[
-    are_redirect
-    ]
-
-  ...multipage_opts$redirect <- do.call(
-    rbind,
-    lapply(redirect, function(x){
-      data.frame(
-        from = x$from,
-        to = x$to,
-        code = x$code
-      )
-    })
+  # We'll add a dataframe of redirection
+  ...multipage_opts$redirect <- build_redirect(
+    extra[ are_redirect ]
   )
 
   # We don't need the redirect in extra
-  extra <- extra[
-    !are_redirect
-  ]
+  extra <- extra[ !are_redirect ]
 
   # Extract and store the logout
-  are_logout <- vapply(extra, function(x) {
-    inherits(x, "logout")
-  }, logical(1))
+  are_logout <- extract(extra, "logout")
 
-  logout <- extra[
-    are_logout
-  ]
-
-  ...multipage_opts$logout <- do.call(
-    rbind,
-    lapply(logout, function(x){
-      data.frame(
-        from = x$from,
-        to = x$to
-      )
-    })
+  ...multipage_opts$logout <- build_logout(
+    extra[ are_logout ]
   )
 
   # We don't need the logout in extra
-  extra <- extra[
-    !are_logout
-  ]
+  extra <- extra[ !are_logout ]
 
   # Force a `/` page
   all_href <- vapply(
@@ -181,9 +78,7 @@ brochure <- function(
     }, FUN.VALUE = character(1)
   )
 
-  if (
-    ! "/" %in% all_href
-  ){
+  if ( ! "/" %in% all_href ){
     stop("You must specify a root page (one with `href = '/')`.")
   }
 
@@ -212,7 +107,7 @@ brochure <- function(
 
     wrapped(
       tagList(
-        htmltools::includeScript(
+        shiny::includeScript(
           system.file("redirect.js", package = "brochure")
         ),
         extra,
@@ -223,4 +118,87 @@ brochure <- function(
     )
   }
 
+}
+
+#' A Brochure Page
+#'
+#' @param href The endpoint to serve the UI on
+#' @param ui Content served at `/href`
+#' @inheritParams brochure
+#'
+#' @return A list
+#' @export
+#'
+#' @importFrom shiny tagList
+#'
+#' @examples
+#' library(shiny)
+#' page(
+#'  href = "/page2",
+#'  ui =  tagList(
+#'    h1("This is my second page"),
+#'    plotOutput("plotb")
+#'  )
+#' )
+#'
+page <- function(
+  href,
+  ui,
+  req_handlers = list(),
+  res_handlers = list()
+){
+  # Page are href + ui
+  res <- list(
+    href = href,
+    ui = tagList(ui)
+  )
+  # Adding the page level req_handlerss
+  add_req_handlers_page(href, req_handlers)
+  add_res_handlers_page(href, res_handlers)
+  with_class(res, "brochure_page")
+}
+
+#' Redirection
+#'
+#' @param from redirect from
+#' @param to redirect to
+#' @param code redirectin http code (one of `c(301:308, 310)`)
+#'
+#' @return A redirection
+#' @export
+redirect <- function(
+  from,
+  to,
+  code = 301
+){
+  # We need the redirect to be a specific HTTP code
+  check_redirect_code(code)
+
+  res <- list(
+    from = from,
+    to = to,
+    code = code
+  )
+
+  with_class(res, "redirect")
+}
+
+
+#' Remove Current Brochure Cookie
+#'
+#' This is usually considered as a "log out" mechanism
+#'
+#' @param href The endpoint of the logout page
+#' @param redirect_to The page to redirect to after cookie removal
+#'
+#' @return Redirection
+#' @export
+#'
+logout <- function(
+  href,
+  redirect_to
+){
+  res <- list(from = href, to = redirect_to)
+  class(res) <- c("logout", class(res))
+  res
 }

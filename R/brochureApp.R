@@ -37,44 +37,34 @@ brochureApp <- function(
     server = server,
     onStart = onStart,
     options = options,
-    uiPattern = ".*",
+    uiPattern = ".*", # This is where the magic happens
     enableBookmarking = enableBookmarking
   )
+
+  # We're keeping the old `httpHandler`
   old_httpHandler <- res$httpHandler
+
   res$httpHandler <- function(req){
-    # If there are any middleware, run them
-    if (length(
-      ...multipage_opts$middleware
-    )){
-      for (i in ...multipage_opts$middleware){
+
+    # Handling the app level req_handlers
+    app_req_handlers <- get_req_handlers_app()
+
+    if (length( app_req_handlers )){
+      for (i in app_req_handlers ){
         req  <- i(req)
+        # If any req_handlers return an 'httpResponse', return it directly without doing
+        # anything else
+        if ( "httpResponse" %in% class(req) ){
+          return(req)
+        }
       }
     }
 
-    httpResponse <- utils::getFromNamespace("httpResponse", "shiny")
-    # # Redirect to url with backslash.
-    # # I should probably find a better way to so that
-    # if (grepl("/.+/$", req$PATH_INFO)){
-    #   print('redirect')
-    #   return(httpResponse(
-    #     status = 302,
-    #     headers = list(
-    #       Location = gsub("(/.*)/$", "\\1", req$PATH_INFO)
-    #     )
-    #   ))
-    # }
-    #browser()
     # Handle redirect
     if (req$PATH_INFO %in% ...multipage_opts$redirect$from){
-      dest <- ...multipage_opts$redirect[
-        ...multipage_opts$redirect$from == req$PATH_INFO,
-      ]
-      return(httpResponse(
-        status = dest$code,
-        headers = list(
-          Location = dest$to
-        )
-      ))
+      return(
+        make_redirect(req$PATH_INFO)
+      )
     }
 
     # Handle logout form,
@@ -97,21 +87,46 @@ brochureApp <- function(
       ))
     }
 
-
     # Returning a 404 if the page doesn't exist
     if (!req$PATH_INFO %in% names(...multipage)){
-      return(httpResponse(
-        status = 404,
-        content = as.character(content_404)
-      ))
+      return( make_404(content_404))
     }
+
     # Setting the path info for reuse in brochure()
     ...multipage_opts$path <- req$PATH_INFO
 
-    # Note to self:
-    # req$HTTP_COOKIE
-    # session$request$HTTP_COOKIE
-    inter <- old_httpHandler(req)
+    # Handling the page level req_handlers
+    page_req_handlerss <- get_req_handlers_page(
+      gsub(".+/$", "", req$PATH_INFO)
+    )
+
+    if ( length( page_req_handlerss ) ){
+      for (i in page_req_handlerss){
+        req <- i(req)
+        if ( "httpResponse" %in% class(req) ){
+          return(req)
+        }
+      }
+    }
+
+    res <- old_httpHandler(req)
+
+    # Res handling
+    app_res_handlers <- get_res_handlers_app()
+
+    if (length(app_res_handlers)){
+      for (i in app_res_handlers){
+        res <- i(res, req)
+      }
+    }
+
+    page_res_handlers <- get_res_handlers_page(req$PATH_INFO)
+
+    if (length(page_res_handlers)){
+      for (i in page_res_handlers){
+        res <- i(res, req)
+      }
+    }
 
     if (with_cookie){
       # browser()
@@ -124,7 +139,7 @@ brochureApp <- function(
           current_cookie
         )
       ){
-        inter$headers <- list(
+        res$headers <- list(
           "Set-Cookie" = sprintf(
             "brochure_session=%s; HttpOnly; Expires=Wed, 21 Oct 2050 07:28:00 GMT;Path=/",
             cookie_storage()$add_cookie()
@@ -133,7 +148,7 @@ brochureApp <- function(
       }
     }
 
-    inter
+    res
   }
   res
 }
