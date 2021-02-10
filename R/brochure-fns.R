@@ -61,16 +61,6 @@ brochure <- function(
   # We don't need the redirect in extra
   extra <- extra[ !are_redirect ]
 
-  # Extract and store the logout
-  are_logout <- extract(extra, "logout")
-
-  ...multipage_opts$logout <- build_logout(
-    extra[ are_logout ]
-  )
-
-  # We don't need the logout in extra
-  extra <- extra[ !are_logout ]
-
   # Force a `/` page
   all_href <- vapply(
     pages, function(x){
@@ -181,24 +171,4 @@ redirect <- function(
   )
 
   with_class(res, "redirect")
-}
-
-
-#' Remove Current Brochure Cookie
-#'
-#' This is usually considered as a "log out" mechanism
-#'
-#' @param href The endpoint of the logout page
-#' @param redirect_to The page to redirect to after cookie removal
-#'
-#' @return Redirection
-#' @export
-#'
-logout <- function(
-  href,
-  redirect_to
-){
-  res <- list(from = href, to = redirect_to)
-  class(res) <- c("logout", class(res))
-  res
 }

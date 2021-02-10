@@ -32,15 +32,3 @@ build_redirect <- function(redirect){
     })
   )
 }
-
-build_logout <- function(logout){
-  do.call(
-    rbind,
-    lapply(logout, function(x){
-      data.frame(
-        from = x$from,
-        to = x$to
-      )
-    })
-  )
-}
