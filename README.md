@@ -221,32 +221,35 @@ server <- function(
 brochureApp(ui, server)
 ```
 
-## Middlewares & finalizers
+## req\_handlers & res\_handlers
 
-You can add middlewares and finalizers at the app & at each page level.
-A (middleware/finalizer is a function that takes one argument, `req`
-(middleware) or `req` and `http_response` (finalizer), and return `req`
-(middleware) & `http_response` (finalizer), potentially modified. Each
-page & the app have a `middleware` parameter, that can take a list of
-these functions.
+You can add req\_handlers and res\_handlers at the app & at page level.
+A req\_handlers/res\_handlers is a function that takes one or two
+argument(s), `req` for req\_handlers or `req` and `res` for
+res\_handlers, and return `req` (req\_handlers) & `res` (res\_handlers),
+potentially modified. Each page & the app have a `req_handlers` and
+`res_handlers` parameters, that can take a list of functions.
 
-They can be used to register log, or to modify the `req` object, or any
-kind of things you can think of. They are run when R is building the
-HTTP response to send to the browser (i.e, no server code has been run
-yet).
+They can be used to register log, or to modify the objects, or any kind
+of things you can think of. They are run when R is building the HTTP
+response to send to the browser (i.e, no server code has been run yet).
 
-Note that if any of these middleware returns an `httpResponse` object,
-it will be returned to the browser immediately, without any further
-computation.
+Note that if any req\_handlers returns an `httpResponse` object, it will
+be returned to the browser immediately, without any further computation,
+and are not passed to the `res_handlers`.
 
-Finalizers, on the other hands, are runs on the final `httpResponse`
-object return by R. In other words: - R receives a `GET` request from
-the browser, with a `req` object. - The middlewares are run using this
-req - R createsan `httpResponse` based on the `brochure` definition -
-The finalizers are run on this `httpResponse` (first app level, then
-page level) - The `httpResponse` is returned to the browser
+In other words:
 
-### Middleware demo
+1.  R receives a `GET` request from the browser, creating a `req`
+    object.
+2.  The `req_handlers` are run using this `req`
+3.  R creates an `httpResponse`, using this `req` and how you defined
+    the UI
+4.  The res\_handlers are run on this `httpResponse` (first app level
+    res\_handlers, then page level res\_handlers)
+5.  The `httpResponse` is returned to the browser
+
+### req\_handlers demo
 
 ``` r
 library(brochure)
@@ -254,7 +257,7 @@ library(shiny)
 
 ui <- function(request){
   brochure(
-    middleware = list(
+    req_handlers = list(
       function(req){
         print("ALL PAGE")
         req
@@ -265,7 +268,7 @@ ui <- function(request){
       ui = tagList(
         h1("This is my first page")
       ), 
-      middleware = list(
+      req_handlers = list(
         function(req){
           print("HOME")
           req
@@ -292,9 +295,9 @@ server <- function(
 brochureApp(ui, server)
 ```
 
-### Finalizer demo
+### res\_handlers demo
 
-Finalizers can be interesting to set cookies
+res\_handlers can be interesting to set cookies
 
 ``` r
 library(brochure)
@@ -302,17 +305,17 @@ library(shiny)
 
 ui <- function(request){
   brochure(
-    finalizer = list(
-      function(http_resp, req){
+    res_handlers = list(
+      function(res, req){
         qs <- shiny::parseQueryString(req$QUERY_STRING)
         if (
           length(qs) == 0
         ){
-          http_resp$headers$`Set-Cookie` <- "plop=12; HttpOnly; Expires=Wed, 21 Oct 2050 07:28:00 GMT;Path=/"
+          res$headers$`Set-Cookie` <- "plop=12; HttpOnly; Expires=Wed, 21 Oct 2050 07:28:00 GMT;Path=/"
         } else if ("logout" %in% names(qs)){
-          http_resp$headers$`Set-Cookie` <- "plop=12; HttpOnly; Expires=Wed, 21 Oct 1950 07:28:00 GMT;Path=/"
+          res$headers$`Set-Cookie` <- "plop=12; HttpOnly; Expires=Wed, 21 Oct 1950 07:28:00 GMT;Path=/"
         }
-        http_resp
+        res
       }
     ),
     page(
@@ -335,10 +338,10 @@ ui <- function(request){
       ui = tagList(
         "Bye"
       ), 
-      finalizer = list( 
-        function(http_resp, req){
-          http_resp$headers$`Set-Cookie` <- "plop=12; HttpOnly; Expires=Wed, 21 Oct 1950 07:28:00 GMT;Path=/"
-          http_resp
+      res_handlers = list( 
+        function(res, req){
+          res$headers$`Set-Cookie` <- "plop=12; HttpOnly; Expires=Wed, 21 Oct 1950 07:28:00 GMT;Path=/"
+          res
         }
       )
     )

@@ -4,12 +4,22 @@
 \alias{page}
 \title{A Brochure Page}
 \usage{
-page(href, ui)
+page(href, ui, req_handlers = list(), res_handlers = list())
 }
 \arguments{
 \item{href}{The endpoint to serve the UI on}
 
 \item{ui}{Content served at \verb{/href}}
+
+\item{req_handlers}{a list of functions that can manipulate the \code{req} object.
+These functions should take \code{req} as a parameters, and return the \code{req} object
+(potentially modified), or an object of class httpResponse. If any of the
+req_handlers return an httpResponse, this response will be sent to the browser
+immeditately, stopping any other code.}
+
+\item{res_handlers}{A list of functions that can manipulate the httpResponse
+object before it is send to the browser. Each function must take a \code{res} and
+\code{req} parameter.}
 }
 \value{
 A list

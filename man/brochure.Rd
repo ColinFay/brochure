@@ -4,7 +4,13 @@
 \alias{brochure}
 \title{Create the UI for a Brochure}
 \usage{
-brochure(..., basepath = "", middleware = list(), wrapped = shiny::fluidPage)
+brochure(
+  ...,
+  basepath = "",
+  req_handlers = list(),
+  res_handlers = list(),
+  wrapped = shiny::fluidPage
+)
 }
 \arguments{
 \item{...}{a list of \code{Page()}}
@@ -14,9 +20,15 @@ url, so that it matches the href of your \code{page()}. For example, it you have
 an app at \verb{http://connect.thinkr.fr/brochure/}, and your page is names \code{page1},
 use \code{basepath = "brochure"}}
 
-\item{middleware}{a list of functions that can manipulate the \code{req} object.
+\item{req_handlers}{a list of functions that can manipulate the \code{req} object.
 These functions should take \code{req} as a parameters, and return the \code{req} object
-(potentially modified).}
+(potentially modified), or an object of class httpResponse. If any of the
+req_handlers return an httpResponse, this response will be sent to the browser
+immeditately, stopping any other code.}
+
+\item{res_handlers}{A list of functions that can manipulate the httpResponse
+object before it is send to the browser. Each function must take a \code{res} and
+\code{req} parameter.}
 
 \item{wrapped}{A UI function wrapping the Brochure UI.
 Default is \code{shiny::fluidPage}.}
