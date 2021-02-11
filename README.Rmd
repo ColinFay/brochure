@@ -24,7 +24,7 @@ The goal of `{brochure}` is to provide a mechanism for creating natively multi-p
 
 __Disclaimer__: the way you will build app with `{brochure}` is different from the way you usually build `{shiny}` apps, as we no longer operate under the single page app paradigm. 
 Please read the "Design Pattern" of this README for more info.
- 
+
 ## Installation
 
 You can install the released version of `{brochure}` with:
@@ -200,6 +200,9 @@ They are run when R is building the HTTP response to send to the browser (i.e, n
 
 Note that if any req_handlers returns an `httpResponse` object, it will be returned to the browser immediately, without any further computation, and are not passed to the `res_handlers`.
 
+You can use formulas inside your handlers. `.x` and `..1` will be `req`  for req_handlers, `.x` and `..1` will be `res` & `.y` and `..2` will be `req` for res_handlers. 
+
+Design pattern side-note: you'd probably want to define the handlers outside of the app, for better code organization (as with `log_where` below). 
 
 ### Logging with `req_handlers()`
 
@@ -207,15 +210,17 @@ Note that if any req_handlers returns an `httpResponse` object, it will be retur
 library(brochure)
 library(shiny)
 
+log_where <- function(req){
+  cli::cat_rule(
+    sprintf("%s - %s", Sys.time(), req$PATH_INFO)
+  )
+  req
+}
+
 ui <- function(request){
   brochure(
     req_handlers = list(
-      function(req){
-        cli::cat_rule(
-          sprintf("%s - %s", Sys.time(), req$PATH_INFO)
-        )
-        req
-      }
+      log_where
     ),
     page(
       href = "/",
@@ -225,7 +230,7 @@ ui <- function(request){
       req_handlers = list(
         function(req){
           print("HOME")
-          req
+          return(req)
         }
       )
     ),
@@ -233,6 +238,13 @@ ui <- function(request){
       href = "/page2",
       ui =  tagList(
         h1("This is my second page")
+      ), 
+      req_handlers = list(
+        # with a formula
+        ~ { 
+          print("PAGE2")
+          return(.x) 
+        }
       )
     )
   )
@@ -272,6 +284,14 @@ ui <- function(request){
         h1("This is my first page"), 
         h2("It will contain cookie depending on the last page you've visited (/login or /logout)"),
         verbatimTextOutput("cookie1")
+      ),  
+      res_handlers = list(
+        # with a formula
+        ~ { 
+          # Printing the status code of the answer
+          print(.x$status)
+          return(.x) 
+        }
       )
     ),
     page(
