@@ -13,6 +13,11 @@ The goal of `{brochure}` is to provide a mechanism for creating natively
 multi-page `{shiny}` applications, *i.e* that can serve content on
 multiple endpoints.
 
+**Disclaimer**: the way you will build app with `{brochure}` is
+different from the way you usually build `{shiny}` apps, as we no longer
+operate under the single page app paradigm. Please read the “Design
+Pattern” of this README for more info.
+
 ## Installation
 
 You can install the released version of `{brochure}` with:
@@ -329,13 +334,15 @@ brochureApp(ui, server)
 ## Design pattern
 
 Note that every time you open a new page, a **new shiny session is
-launched**.
+launched**. This is different from what you usually do when you are
+building a `{shiny}` app, that works as a single page application, which
+is no longer the case in `{brochure}`.
 
 What that means is that there is no data persistence in R when
 navigating from one page to the other. That might seem like a downside,
 but I believe that it will actually be for the best: it will make
 developers think more carefully about the data flow of their
-application;
+application.
 
 That being said, how do keep track of a user though pages, so that if
 they do something in a page, it’s reflected on another?
