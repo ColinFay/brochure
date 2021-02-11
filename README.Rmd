@@ -267,11 +267,10 @@ ui <- function(request){
       function(res, req){
         # If the query string is ?logout, we remove the cookie
         qs <- shiny::parseQueryString(req$QUERY_STRING)
-        
         if ( length(qs) == 0 ){
-          res$headers$`Set-Cookie` <- "plop=12; HttpOnly; Expires=Wed, 21 Oct 2050 07:28:00 GMT;Path=/"
+          res$headers$`Set-Cookie` <- "plop=12; HttpOnly;"
         } else if ("logout" %in% names(qs)){
-          res$headers$`Set-Cookie` <- "plop=12; HttpOnly; Expires=Wed, 21 Oct 1950 07:28:00 GMT;Path=/"
+          res$headers$`Set-Cookie` <- "plop=12; Expires=Wed, 21 Oct 1950 07:28:00 GMT"
         }
         res
       }
@@ -298,7 +297,7 @@ ui <- function(request){
       ), 
       res_handlers = list( 
         function(res, req){
-          res$headers$`Set-Cookie` <- "plop=12; HttpOnly; Expires=Wed, 21 Oct 1950 07:28:00 GMT;Path=/"
+          res$headers$`Set-Cookie` <- "plop=12; Expires=Wed, 21 Oct 1950 07:28:00 GMT"
           res
         }
       )
