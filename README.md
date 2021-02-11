@@ -202,21 +202,31 @@ Note that if any req\_handlers returns an `httpResponse` object, it will
 be returned to the browser immediately, without any further computation,
 and are not passed to the `res_handlers`.
 
+You can use formulas inside your handlers. `.x` and `..1` will be `req`
+for req\_handlers, `.x` and `..1` will be `res` & `.y` and `..2` will be
+`req` for res\_handlers.
+
+Design pattern side-note: you’d probably want to define the handlers
+outside of the app, for better code organization (as with `log_where`
+below).
+
 ### Logging with `req_handlers()`
 
 ``` r
 library(brochure)
 library(shiny)
 
+log_where <- function(req){
+  cli::cat_rule(
+    sprintf("%s - %s", Sys.time(), req$PATH_INFO)
+  )
+  req
+}
+
 ui <- function(request){
   brochure(
     req_handlers = list(
-      function(req){
-        cli::cat_rule(
-          sprintf("%s - %s", Sys.time(), req$PATH_INFO)
-        )
-        req
-      }
+      log_where
     ),
     page(
       href = "/",
@@ -226,7 +236,7 @@ ui <- function(request){
       req_handlers = list(
         function(req){
           print("HOME")
-          req
+          return(req)
         }
       )
     ),
@@ -234,6 +244,13 @@ ui <- function(request){
       href = "/page2",
       ui =  tagList(
         h1("This is my second page")
+      ), 
+      req_handlers = list(
+        # with a formula
+        ~ { 
+          print("PAGE2")
+          return(.x) 
+        }
       )
     )
   )
@@ -273,6 +290,14 @@ ui <- function(request){
         h1("This is my first page"), 
         h2("It will contain cookie depending on the last page you've visited (/login or /logout)"),
         verbatimTextOutput("cookie1")
+      ),  
+      res_handlers = list(
+        # with a formula
+        ~ { 
+          # Printing the status code of the answer
+          print(.x$status)
+          return(.x) 
+        }
       )
     ),
     page(
