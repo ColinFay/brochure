@@ -1,0 +1,26 @@
+test_that("rm_backslash works", {
+  expect_equal(
+    rm_backslash("/xxx/"),
+    "xxx"
+  )
+  expect_equal(
+    rm_backslash("/xxx"),
+    "xxx"
+  )
+  expect_equal(
+    rm_backslash("xxx"),
+    "xxx"
+  )
+  expect_equal(
+    rm_backslash("xxx/"),
+    "xxx"
+  )
+  expect_equal(
+    rm_backslash("/x/xx/"),
+    "x/xx"
+  )
+  expect_equal(
+    rm_backslash("/x/x/x/"),
+    "x/x/x"
+  )
+})

@@ -54,6 +54,10 @@ brochureApp <- function(
       }
     }
 
+
+    req$PATH_INFO <- rm_backslash(req$PATH_INFO)
+    #browser()
+
     # Handle redirect
     if (req$PATH_INFO %in% ...multipage_opts$redirect$from){
       return(
@@ -70,12 +74,12 @@ brochureApp <- function(
     ...multipage_opts$path <- req$PATH_INFO
 
     # Handling the page level req_handlers
-    page_req_handlerss <- get_req_handlers_page(
+    page_req_handlers <- get_req_handlers_page(
       gsub(".+/$", "", req$PATH_INFO)
     )
 
-    if ( length( page_req_handlerss ) ){
-      for (i in page_req_handlerss){
+    if ( length( page_req_handlers ) ){
+      for (i in page_req_handlers){
         req <- i(req)
         if ( "httpResponse" %in% class(req) ){
           return(req)
