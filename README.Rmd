@@ -263,41 +263,36 @@ library(shiny)
 
 ui <- function(request){
   brochure(
-    res_handlers = list(
-      function(res, req){
-        # If the query string is ?logout, we remove the cookie
-        qs <- shiny::parseQueryString(req$QUERY_STRING)
-        if ( length(qs) == 0 ){
-          res$headers$`Set-Cookie` <- "plop=12; HttpOnly;"
-        } else if ("logout" %in% names(qs)){
-          res$headers$`Set-Cookie` <- "plop=12; Expires=Wed, 21 Oct 1950 07:28:00 GMT"
-        }
-        res
-      }
-    ),
     page(
       href = "/",
       ui = tagList(
         h1("This is my first page"), 
-        tags$p("Try reloading this page with ?logout in the url to remove the Cookie"), 
+        h2("It will contain cookie depending on the last page you've visited (/login or /logout)"),
         verbatimTextOutput("cookie1")
       )
     ),
     page(
-      href = "/page2",
+      href = "/login",
       ui =  tagList(
         h1("This is my second page"),
         verbatimTextOutput("cookie2")
+      ), 
+      res_handlers = list(
+        function(res, req){
+          res$headers$`Set-Cookie` <- "logged=12; HttpOnly;"
+          res
+        }
       )
     ), 
     page(
       href = "/logout",
       ui = tagList(
-        "Bye"
+        h1("Bye"),
+        verbatimTextOutput("cookie3")
       ), 
       res_handlers = list( 
         function(res, req){
-          res$headers$`Set-Cookie` <- "plop=12; Expires=Wed, 21 Oct 1950 07:28:00 GMT"
+          res$headers$`Set-Cookie` <- "logged=12; Expires=Wed, 21 Oct 1950 07:28:00 GMT"
           res
         }
       )
@@ -318,7 +313,12 @@ server <- function(
   })
   
   output$cookie2 <- renderPrint({
-     parse_cookie_string(
+    parse_cookie_string(
+      session$request$HTTP_COOKIE
+    )
+  })
+  output$cookie3 <- renderPrint({
+    parse_cookie_string(
       session$request$HTTP_COOKIE
     )
   })
