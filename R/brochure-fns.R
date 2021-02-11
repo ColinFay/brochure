@@ -137,6 +137,7 @@ page <- function(
   req_handlers = list(),
   res_handlers = list()
 ){
+  href <- rm_backslash(href)
   # Page are href + ui
   res <- list(
     href = href,
@@ -161,6 +162,7 @@ redirect <- function(
   to,
   code = 301
 ){
+
   # We need the redirect to be a specific HTTP code
   check_redirect_code(code)
 

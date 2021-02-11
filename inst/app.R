@@ -22,7 +22,7 @@ nav_links <- tags$ul(
 
 ui <- function(request){
   brochure(
-    middleware = list(function(req){print(req)}),
+    req_handlers = list(function(req){print(req)}),
     basepath = "brochure",
     # We add an extra dep to the brochure page, here {glouton}
     use_glouton(),
@@ -38,7 +38,7 @@ ui <- function(request){
       )
     ),
     page(
-      middleware = list(function(req){
+      req_handlers = list(function(req){
         print("coucou")
         req
       }),
