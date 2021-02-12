@@ -210,7 +210,12 @@ Design pattern side-note: you’d probably want to define the handlers
 outside of the app, for better code organization (as with `log_where`
 below).
 
-### Logging with `req_handlers()`
+### Logging with `req_handlers()`, and building a healthceck point
+
+In this app, we’ll log every page and the time it is called.
+
+We’ll also build an `healthcheck` endpoint that simply returns a 200
+`httpResponse`..
 
 ``` r
 library(brochure)
@@ -251,6 +256,17 @@ ui <- function(request){
           print("PAGE2")
           return(.x) 
         }
+      )
+    ),
+    page(
+      href = "/healthcheck",
+      ui =  tagList(), 
+      req_handlers = list(
+        # If you have shiny < 1.6.0, you'll need to 
+        # do shiny:::httpResponse (triple `:`) 
+        # as it is not exported until 1.6.0.
+        # Otherwise, see ?shiny::httpResponse
+        ~ shiny::httpResponse( 200, content = "OK")
       )
     )
   )
