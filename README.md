@@ -210,7 +210,7 @@ Design pattern side-note: you’d probably want to define the handlers
 outside of the app, for better code organization (as with `log_where`
 below).
 
-### Logging with `req_handlers()`, and building a healthceck point
+### Logging with `req_handlers()`, and building a healthcheck point
 
 In this app, we’ll log every page and the time it is called.
 
