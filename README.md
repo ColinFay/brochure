@@ -582,3 +582,15 @@ run_app <- function(
   )
 }
 ```
+
+## Previous work
+
+Other packages that implements features that are closed to what
+`{brochure}` does:
+
+  - [`{shiny.router}`](https://appsilon.com/shiny-router-020/)
+
+  - [`{blaze}`](https://github.com/nteetor/blaze)
+
+As far as I can tell, these packages doesn’t serve the same goal as what
+`{brochure}` does, as they both still serve Single Page Applications.
