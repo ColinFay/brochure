@@ -4,12 +4,26 @@
 \alias{page}
 \title{A Brochure Page}
 \usage{
-page(href, ui, req_handlers = list(), res_handlers = list())
+page(
+  href,
+  ui = tagList(),
+  server = function(input, output, session) { },
+  req_handlers = list(),
+  res_handlers = list()
+)
 }
 \arguments{
 \item{href}{The endpoint to serve the UI on}
 
-\item{ui}{Content served at \verb{/href}}
+\item{ui}{The UI definition of the app (for example, a call to
+\code{fluidPage()} with nested controls).
+
+If bookmarking is enabled (see \code{enableBookmarking}), this must be
+a single argument function that returns the UI definition.}
+
+\item{server}{A function with three parameters: \code{input}, \code{output}, and
+\code{session}. The function is called once for each session ensuring that each
+app is independent.}
 
 \item{req_handlers}{a list of functions that can manipulate the \code{req} object.
 These functions should take \code{req} as a parameters, and return the \code{req} object

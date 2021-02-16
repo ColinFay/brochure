@@ -3,8 +3,6 @@
 # Env to store the options
 ...multipage_opts <- new.env()
 
-#' Create the UI for a Brochure
-#'
 #' @param ... a list of `Page()`
 #' @param wrapped A UI function wrapping the Brochure UI.
 #' Default is `shiny::fluidPage`.
@@ -22,7 +20,7 @@
 #' `req` parameter.
 #'
 #' @return An HTML UI
-#' @export
+#' @noRd
 #' @importFrom shiny tagList
 brochure <- function(
   ...,
@@ -59,7 +57,9 @@ brochure <- function(
   )
 
   # We don't need the redirect in extra
-  extra <- extra[ !are_redirect ]
+  #extra <- extra[ !are_redirect ]
+  ...multipage_opts$extra <- extra[ !are_redirect ]
+  ...multipage_opts$wrapped <- wrapped
 
   # Force a `/` page
   all_href <- vapply(
@@ -75,46 +75,37 @@ brochure <- function(
   # Saving all the UIs
   x <- lapply(
     pages,
-    function(x){
+    function(x, extra = extra){
       ...multipage[[x$href]]$ui <- x$ui
+      ...multipage[[x$href]]$server <- x$server
     }
   )
 
-  if (is.null(...multipage_opts$path)) {
-    # Ignore the first time brochure() is called
-    return()
-  } else {
-    # Removing the basepath
-    url_hash <- gsub(basepath, "", ...multipage_opts$path)
-    # Make sure you don't have multiple //
-    url_hash <- gsub("/{2,}", "/", url_hash)
-
-    id <- vapply(
-      pages,
-      function(x) x$href == url_hash,
-      FUN.VALUE = logical(1)
-    )
-
-    wrapped(
-      tagList(
-        shiny::includeScript(
-          system.file("redirect.js", package = "brochure")
-        ),
-        extra,
-        pages[[
-          which(id)
-          ]]$ui
-      )
-    )
-  }
+  # if (is.null(...multipage_opts$path)) {
+  #   # Ignore the first time brochure() is called
+  #   return()
+  # } else {
+  #   # Removing the basepath
+  #   url_hash <- gsub(basepath, "", ...multipage_opts$path)
+  #   # Make sure you don't have multiple //
+  #   url_hash <- gsub("/{2,}", "/", url_hash)
+  #
+  #   id <- vapply(
+  #     pages,
+  #     function(x) x$href == url_hash,
+  #     FUN.VALUE = logical(1)
+  #   )
+  #
+  #
+  # }
 
 }
 
 #' A Brochure Page
 #'
 #' @param href The endpoint to serve the UI on
-#' @param ui Content served at `/href`
-#' @inheritParams brochure
+#' @inheritParams brochureApp
+#' @inheritParams shiny::shinyApp
 #'
 #' @return A list
 #' @export
@@ -133,7 +124,8 @@ brochure <- function(
 #'
 page <- function(
   href,
-  ui,
+  ui = tagList(),
+  server = function(input, output, session){},
   req_handlers = list(),
   res_handlers = list()
 ){
@@ -141,7 +133,8 @@ page <- function(
   # Page are href + ui
   res <- list(
     href = href,
-    ui = tagList(ui)
+    ui = ui,
+    server = server
   )
   # Adding the page level req_handlerss
   add_req_handlers_page(href, req_handlers)

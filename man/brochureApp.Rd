@@ -5,24 +5,19 @@
 \title{Create a brochureApp}
 \usage{
 brochureApp(
-  ui,
-  server,
+  ...,
   onStart = NULL,
   options = list(),
   enableBookmarking = NULL,
-  content_404 = "Not found"
+  content_404 = "Not found",
+  basepath = "",
+  req_handlers = list(),
+  res_handlers = list(),
+  wrapped = shiny::fluidPage
 )
 }
 \arguments{
-\item{ui}{The UI definition of the app (for example, a call to
-\code{fluidPage()} with nested controls).
-
-If bookmarking is enabled (see \code{enableBookmarking}), this must be
-a single argument function that returns the UI definition.}
-
-\item{server}{A function with three parameters: \code{input}, \code{output}, and
-\code{session}. The function is called once for each session ensuring that each
-app is independent.}
+\item{...}{a list of \code{Page()}}
 
 \item{onStart}{A function that will be called before the app is actually run.
 This is only needed for \code{shinyAppObj}, since in the \code{shinyAppDir}
@@ -40,6 +35,24 @@ any previous calls to  \code{\link[shiny:enableBookmarking]{enableBookmarking()}
 for more information on bookmarking your app.}
 
 \item{content_404}{The content to dislay when a 404 is sent}
+
+\item{basepath}{The base path of your app. This pattern will be removed from the
+url, so that it matches the href of your \code{page()}. For example, it you have
+an app at \verb{http://connect.thinkr.fr/brochure/}, and your page is names \code{page1},
+use \code{basepath = "brochure"}}
+
+\item{req_handlers}{a list of functions that can manipulate the \code{req} object.
+These functions should take \code{req} as a parameters, and return the \code{req} object
+(potentially modified), or an object of class httpResponse. If any of the
+req_handlers return an httpResponse, this response will be sent to the browser
+immeditately, stopping any other code.}
+
+\item{res_handlers}{A list of functions that can manipulate the httpResponse
+object before it is send to the browser. Each function must take a \code{res} and
+\code{req} parameter.}
+
+\item{wrapped}{A UI function wrapping the Brochure UI.
+Default is \code{shiny::fluidPage}.}
 }
 \value{
 A shiny.appobj
