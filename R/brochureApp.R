@@ -4,19 +4,47 @@
 #' `shinyApp()`.
 #'
 #' @inheritParams shiny::shinyApp
+#' @param ... a list of `Page()`
+#' @param wrapped A UI function wrapping the Brochure UI.
+#' Default is `shiny::fluidPage`.
+#' @param basepath The base path of your app. This pattern will be removed from the
+#' url, so that it matches the href of your `page()`. For example, it you have
+#' an app at `http://connect.thinkr.fr/brochure/`, and your page is names `page1`,
+#' use `basepath = "brochure"`
+#' @param req_handlers a list of functions that can manipulate the `req` object.
+#' These functions should take `req` as a parameters, and return the `req` object
+#' (potentially modified), or an object of class httpResponse. If any of the
+#' req_handlers return an httpResponse, this response will be sent to the browser
+#' immeditately, stopping any other code.
+#' @param res_handlers A list of functions that can manipulate the httpResponse
+#' object before it is send to the browser. Each function must take a `res` and
+#' `req` parameter.
 #' @param content_404 The content to dislay when a 404 is sent
 #' @importFrom shiny shinyApp
 #'
 #' @return A shiny.appobj
 #' @export
 brochureApp <- function(
-  ui,
-  server,
+  ...,
   onStart = NULL,
   options = list(),
   enableBookmarking = NULL,
-  content_404 = "Not found"
+  content_404 = "Not found",
+  basepath = "",
+  req_handlers = list(),
+  res_handlers = list(),
+  wrapped = shiny::fluidPage
 ){
+
+  # Saving the brochure
+  brochure(
+    ...,
+    basepath = "",
+    req_handlers = req_handlers,
+    res_handlers = res_handlers,
+    wrapped = wrapped
+  )
+
   # We add this enabled, just to be sure
   # `brochure_enable` is called inside a
   # `brochureApp`
@@ -25,10 +53,44 @@ brochureApp <- function(
   # Force UI if it hasn't been evaluated yet
   # So that we are sure `...multipage`  and `...multipage_opts`
   # enable
-  if (is.function(ui)) ui()
+  #if (is.function(ui)) ui()
   res <- shinyApp(
-    ui = ui,
-    server = server,
+    ui = function(request){
+
+      ui <- ...multipage[[
+        rm_backslash(request$PATH_INFO)
+      ]]$ui
+
+      if (is.function(ui)) {
+        ui <- ui(request)
+      }
+
+      ...multipage_opts$wrapped(
+        tagList(
+          shiny::includeScript(
+            system.file(
+              "redirect.js",
+              package = "brochure"
+            )
+          ),
+          ...multipage_opts$extra,
+          ui
+        )
+      )
+
+    },
+    server = function(input, output, session){
+      path <- rm_backslash(
+        gsub(
+          "websocket/",
+          "",
+          session$request$PATH_INFO
+        )
+      )
+      ...multipage[[
+        path
+      ]]$server(input, output, session)
+    },
     onStart = onStart,
     options = options,
     uiPattern = ".*", # This is where the magic happens
@@ -39,7 +101,7 @@ brochureApp <- function(
   old_httpHandler <- res$httpHandler
 
   res$httpHandler <- function(req){
-
+    #browser()
     # Handling the app level req_handlers
     app_req_handlers <- get_req_handlers_app()
 

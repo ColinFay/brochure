@@ -1,6 +1,6 @@
 Package: brochure
 Title: Multipage 'Shiny' Apps
-Version: 0.0.0.9005
+Version: 0.0.0.9010
 Authors@R: 
     person(given = "Colin",
            family = "Fay",

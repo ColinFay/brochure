@@ -22,7 +22,12 @@ nav_links <- tags$ul(
 
 ui <- function(request){
   brochure(
-    req_handlers = list(function(req){print(req)}),
+    req_handlers = list(function(req){
+      cli::cat_rule(Sys.time())
+      print(req$HEADERS[["host"]])
+      print(req$PATH_INFO)
+      req
+    }),
     basepath = "brochure",
     # We add an extra dep to the brochure page, here {glouton}
     use_glouton(),
@@ -42,7 +47,7 @@ ui <- function(request){
         print("coucou")
         req
       }),
-      href = "/page2",
+      href = "/page2/:id:",
       ui =  tagList(
         h1("This is my second page"),
         nav_links,
