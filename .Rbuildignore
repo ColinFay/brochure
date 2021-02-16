@@ -3,3 +3,4 @@
 ^README\.Rmd$
 ^inst/brochureexamples$
 ^LICENSE\.md$
+^\.github$

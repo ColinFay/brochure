@@ -5,6 +5,8 @@
 
 <!-- badges: start -->
 
+[![R build
+status](https://github.com/ColinFay/brochure/workflows/R-CMD-check/badge.svg)](https://github.com/ColinFay/brochure/actions)
 <!-- badges: end -->
 
 **THIS IS A WORK IN PROGRESS, DO NOT USE**
