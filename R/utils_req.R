@@ -18,3 +18,24 @@ make_404 <- function(content_404){
     content = as.character(content_404)
   )
 }
+
+handle_res_with_handlers <- function(res, req){
+
+  app_res_handlers <- get_res_handlers_app()
+
+  if (length(app_res_handlers)){
+    for (i in app_res_handlers){
+      res <- i(res, req)
+    }
+  }
+
+  page_res_handlers <- get_res_handlers_page(req$PATH_INFO)
+
+  if (length(page_res_handlers)){
+    for (i in page_res_handlers){
+      res <- i(res, req)
+    }
+  }
+
+  res
+}

@@ -101,7 +101,7 @@ brochureApp <- function(
   old_httpHandler <- res$httpHandler
 
   res$httpHandler <- function(req){
-    #browser()
+
     # Handling the app level req_handlers
     app_req_handlers <- get_req_handlers_app()
 
@@ -111,7 +111,8 @@ brochureApp <- function(
         # If any req_handlers return an 'httpResponse', return it directly without doing
         # anything else
         if ( "httpResponse" %in% class(req) ){
-          return(req)
+          #res <- handle_res_with_handlers(res, original_req)
+          return(res)
         }
       }
     }
@@ -152,24 +153,9 @@ brochureApp <- function(
     res <- old_httpHandler(req)
 
     # Res handling
-    app_res_handlers <- get_res_handlers_app()
-
-    if (length(app_res_handlers)){
-      for (i in app_res_handlers){
-        res <- i(res, req)
-      }
-    }
-
-    page_res_handlers <- get_res_handlers_page(req$PATH_INFO)
-
-    if (length(page_res_handlers)){
-      for (i in page_res_handlers){
-        res <- i(res, req)
-      }
-    }
-
-    res
+    res <- handle_res_with_handlers(res, req)
+    return(res)
   }
-  res
+  return(res)
 }
 

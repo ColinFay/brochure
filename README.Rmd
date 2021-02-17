@@ -18,6 +18,7 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 [![R build status](https://github.com/ColinFay/brochure/workflows/R-CMD-check/badge.svg)](https://github.com/ColinFay/brochure/actions)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 <!-- badges: end -->
 
 __THIS IS A WORK IN PROGRESS, DO NOT USE__
@@ -29,7 +30,7 @@ Please read the "Design Pattern" of this README for more info.
 
 ## Installation
 
-You can install the released version of `{brochure}` with:
+You can install the dev version of `{brochure}` with:
 
 ``` r
 remotes::install_github("ColinFay/brochure")
@@ -188,12 +189,18 @@ brochureApp(
 
 ### Sorry what?
 
-Each page, and the app, have a `req_handlers` and `res_handlers` parameters, that can take a list of functions.
-An `_handler` is a function that takes as argument(s):
-- `req`, the request object,  for `req_handlers` 
-- `res`, the response object, & `req` for `res_handlers`
+Each page, and the global app, have a `req_handlers` and `res_handlers` parameters, that can take a __list of functions__.
 
-`req_handlers` __must__ return `req` & `res_handlers` __must__ return `res`, potentially modified. 
+An `*_handler` is a function that takes as parameter(s):
+
+- For `req_handlers`, `req`, which is the request object (see below for when these objects are created). 
+For example `function(req){ print(req$PATH_INFO); return(req)}`.
+
+- For `res_handlers`, `res`, the response object, & `req`.
+For example `function(res, req){ print(res$content); return(res)}`.
+
+`req_handlers` __must__ return `req` & `res_handlers` __must__ return `res`. 
+Both can be potentially modified. 
 
 They can be used to register log, or to modify the objects, or any kind of things you can think of.
 If you are familiar with `express.js`, you can think of `req_handlers` as what express calls "middleware". 
@@ -206,7 +213,8 @@ These functions are run when R is building the HTTP response to send to the brow
 1. The `httpResponse` is sent back to the browser
 
 Note that if any `req_handlers` returns an `httpResponse` object, it will be returned to the browser immediately, without any further computation. 
-This early `httpResponse` will not be passed to the `res_handlers`.
+This early `httpResponse` will not be passed to the `res_handlers` of the app or the page.
+This process can for example be used to send custom `httpResponse`, as shown below with the `healthcheck` endpoint.
 
 You can use formulas inside your handlers. `.x` and `..1` will be `req`  for req_handlers, `.x` and `..1` will be `res` & `.y` and `..2` will be `req` for res_handlers. 
 
@@ -229,7 +237,7 @@ log_where <- function(req){
 }
 ```
 
-We'll also build an `healthcheck` endpoint that simply returns a 200 `httpResponse`.
+We'll also build an `healthcheck` endpoint that simply returns a `httpResponse`  with the 200 HTTP code.
 
 ```{r}
 # Reusing the pages from before
@@ -260,12 +268,22 @@ brochureApp(
 )
 ```
 
+If you navigate to each page, you'll see this in the console:
+
+```
+Listening on http://127.0.0.1:4879
+── 2021-02-17 21:52:16 - / ──────────────────────────────
+── 2021-02-17 21:52:17 - /page2 ─────────────────────────
+── 2021-02-17 21:52:19 - /contact ───────────────────────
+
+```
+
 If you go to another R session, you can check that you've got a 200 on `healthcheck`
 
 ``` r
 > httr::GET("http://127.0.0.1:4879/healthcheck")
 Response [http://127.0.0.1:4879/healthcheck]
-  Date: 2021-02-16 19:47
+  Date: 2021-02-17 21:55
   Status: 200
   Content-Type: text/html; charset=UTF-8
   Size: 2 B
@@ -380,7 +398,6 @@ brochureApp(
   logout()
 )
 ```
-
 
 ## Design pattern
 
