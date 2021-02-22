@@ -42,11 +42,11 @@ get_cookies <- function(
 #' Description of parameters is taken from this page.
 #'
 #' @param res An httpResponse object
-#' @param name A <cookie-name> can be any US-ASCII characters,
+#' @param name A cookie-name can be any US-ASCII characters,
 #' except control characters, spaces, or tabs. It also must
 #' not contain a separator character like the following:
-#'  ( ) < > @ , ; : \ " / [ ] ? = { }.
-#' @param value A <cookie-value> can optionally be wrapped in
+#'  `( ) < > @ , ; : \ " / [ ] ? = { }`.
+#' @param value A cookie-value can optionally be wrapped in
 #' double quotes and include any US-ASCII characters excluding
 #' control characters, Whitespace, double quotes, comma,
 #' semicolon, and backslash.

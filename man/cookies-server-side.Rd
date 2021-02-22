@@ -2,9 +2,12 @@
 % Please edit documentation in R/cookie.R
 \name{parse_cookie_string}
 \alias{parse_cookie_string}
+\alias{get_cookies}
 \title{Parse the cookie string}
 \usage{
 parse_cookie_string(cookie_string)
+
+get_cookies(session = shiny::getDefaultReactiveDomain())
 }
 \arguments{
 \item{cookie_string}{The cookie string to parse}
