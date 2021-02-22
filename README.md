@@ -304,9 +304,10 @@ Response [http://127.0.0.1:4879/healthcheck]
 ### Handling cookies using `res_handlers`
 
 `res_handlers` can be used to set cookies, by adding a `Set-Cookie`
-header.
+header, using both the `set_cookie()` and `remove_cookie()` functions.
 
-Note that you can parse the cookie using `parse_cookie_string`.
+Note that you can get them from the server with `get_cookies()`, and
+parse the cookie string using `parse_cookie_string`.
 
 ``` r
 parse_cookie_string( "a=12;session=blabla" )
@@ -343,7 +344,7 @@ home <- function(){
     server = function(input, output, session){
       output$cookie <- renderPrint({
         parse_cookie_string(
-          session$request$HTTP_COOKIE
+          get_cookies()
         )
       })
     }
@@ -362,7 +363,7 @@ login <- function(){
     server = function(input, output, session){
       output$cookie <- renderPrint({
         parse_cookie_string(
-          session$request$HTTP_COOKIE
+          get_cookies()
         )
       })
       observeEvent( input$redirect , {
@@ -373,10 +374,12 @@ login <- function(){
     },
     res_handlers = list(
       # We'll add a cookie here
-      function(res, req){
-        res$headers$`Set-Cookie` <- "BROCHURECOOKIE=12; HttpOnly;"
-        res
-      }
+      ~ set_cookie(.x, "BROCHURECOOKIE", 12)
+      # If you had to do it yourself
+      # function(res, req){
+      #   res$headers$`Set-Cookie` <- "BROCHURECOOKIE=12; HttpOnly;"
+      #   res
+      # }
     )
   )
 }
@@ -392,16 +395,18 @@ logout <- function(){
     server = function(input, output, session){
       output$cookie <- renderPrint({
         parse_cookie_string(
-          session$request$HTTP_COOKIE
+          get_cookies()
         )
       })
     },
     res_handlers = list(
-      # We'll add a cookie here
-      function(res, req){
-        res$headers$`Set-Cookie` <- "BROCHURECOOKIE=12; Expires=Wed, 21 Oct 1950 07:28:00 GMT"
-        res
-      }
+      # We'll remove the cookie here
+      ~ remove_cookie(.x, "BROCHURECOOKIE")
+      # If you had to do it yourself
+      # function(res, req){
+      #   res$headers$`Set-Cookie` <- "BROCHURECOOKIE=''; Max-Age = 0;"
+      #   res
+      # }
     )
   )
 }
