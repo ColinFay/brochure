@@ -11,6 +11,8 @@ get_cookies(session = shiny::getDefaultReactiveDomain())
 }
 \arguments{
 \item{cookie_string}{The cookie string to parse}
+
+\item{session}{The \code{{shiny}} \code{session} object.}
 }
 \value{
 a list of cookies and values
