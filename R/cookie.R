@@ -1,6 +1,7 @@
 #' Parse the cookie string
 #'
 #' @param cookie_string The cookie string to parse
+#' @inheritParams shiny::shinyApp
 #'
 #' @return a list of cookies and values
 #' @rdname cookies-server-side

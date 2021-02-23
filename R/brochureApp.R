@@ -50,13 +50,12 @@ brochureApp <- function(
   # `brochureApp`
   ...multipage_opts$enabled <- TRUE
 
-  # Force UI if it hasn't been evaluated yet
-  # So that we are sure `...multipage`  and `...multipage_opts`
-  # enable
-  #if (is.function(ui)) ui()
+  # We build the shinyApp object here
   res <- shinyApp(
     ui = function(request){
 
+      # Extract the correct UI, wrap it
+      # and add the redirect from brochure
       ui <- ...multipage[[
         rm_backslash(request$PATH_INFO)
       ]]$ui
@@ -80,6 +79,8 @@ brochureApp <- function(
 
     },
     server = function(input, output, session){
+      # Same logic as the UI, we look for the correct
+      # server function
       path <- rm_backslash(
         gsub(
           "websocket/",
@@ -109,9 +110,8 @@ brochureApp <- function(
       for (i in app_req_handlers ){
         req  <- i(req)
         # If any req_handlers return an 'httpResponse', return it directly without doing
-        # anything else
+        # anything else.
         if ( "httpResponse" %in% class(req) ){
-          #res <- handle_res_with_handlers(res, original_req)
           return(res)
         }
       }
@@ -119,7 +119,6 @@ brochureApp <- function(
 
 
     req$PATH_INFO <- rm_backslash(req$PATH_INFO)
-    #browser()
 
     # Handle redirect
     if (req$PATH_INFO %in% ...multipage_opts$redirect$from){

@@ -1,3 +1,5 @@
+# Just to be sure we've got the object, as it is only exported
+# since 1.6
 httpResponse <- utils::getFromNamespace("httpResponse", "shiny")
 
 make_redirect <- function(PATH_INFO){

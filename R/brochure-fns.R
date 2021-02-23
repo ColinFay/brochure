@@ -81,24 +81,6 @@ brochure <- function(
     }
   )
 
-  # if (is.null(...multipage_opts$path)) {
-  #   # Ignore the first time brochure() is called
-  #   return()
-  # } else {
-  #   # Removing the basepath
-  #   url_hash <- gsub(basepath, "", ...multipage_opts$path)
-  #   # Make sure you don't have multiple //
-  #   url_hash <- gsub("/{2,}", "/", url_hash)
-  #
-  #   id <- vapply(
-  #     pages,
-  #     function(x) x$href == url_hash,
-  #     FUN.VALUE = logical(1)
-  #   )
-  #
-  #
-  # }
-
 }
 
 #' A Brochure Page
