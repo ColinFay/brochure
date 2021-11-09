@@ -4,3 +4,4 @@
 ^inst/brochureexamples$
 ^LICENSE\.md$
 ^\.github$
+^dev$
