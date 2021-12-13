@@ -3,6 +3,7 @@
 export(brochureApp)
 export(get_cookies)
 export(golem_hook)
+export(new_page)
 export(page)
 export(parse_cookie_string)
 export(redirect)

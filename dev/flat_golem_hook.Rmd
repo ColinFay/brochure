@@ -35,11 +35,26 @@ golem_hook <- function(path, package_name, ...) {
   )
   file.copy(
     system.file(
-      "golem/page_home.R",
+      "golem/mod_home.R",
       package = "brochure"
     ),
-    "R/page_home.R"
+    "R/mod_home.R"
   )
+
+  dev_R <- readLines(
+    "dev/02_dev.R"
+  )
+  dev_R <- gsub(
+    'golem::add_module(name = "name_of_module1", with_test = TRUE) # Name of the module',
+    'golem::add_module(name = "name_of_module1", with_test = TRUE, module_template = brochure::new_page) # Name of the module',
+    dev_R
+  )
+  dev_R <- gsub(
+    'golem::add_module(name = "name_of_module2", with_test = TRUE) # Name of the module',
+    'golem::add_module(name = "name_of_module2", with_test = TRUE, module_template = brochure::new_page) # Name of the module',
+    dev_R
+  )
+  write(dev_R, "dev/02_dev.R")
 }
 ```
 
@@ -58,7 +73,7 @@ test_that("golem_hook works", {
   golem::create_golem("testgolembrochure", project_hook = brochure::golem_hook)
   setwd("testgolembrochure")
   expect_true(
-    file.exists("R/page_home.R")
+    file.exists("R/mod_home.R")
   )
   expect_true(
     file.exists("R/run_app.R")
@@ -66,12 +81,12 @@ test_that("golem_hook works", {
   expect_equal(
     readLines(
       system.file(
-        "golem/page_home.R",
+        "golem/mod_home.R",
         package = "brochure"
       )
     ),
     readLines(
-      "R/page_home.R"
+      "R/mod_home.R"
     )
   )
   expect_equal(
@@ -83,6 +98,13 @@ test_that("golem_hook works", {
     ),
     readLines(
       "R/run_app.R"
+    )
+  )
+
+  expect_true(
+    grepl(
+      "brochure",
+      paste(readLines("dev/02_dev.R"), collapse = " ")
     )
   )
 })

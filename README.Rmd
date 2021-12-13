@@ -529,6 +529,12 @@ You can set up a `{brochure}` based app with `{golem}` using the `brochure::gole
 golem::create_golem("my_app", project_hook = brochure::golem_hook)
 ```
 
+You can also use the module_template function to create a `{brochure}` module :
+
+```r
+golem::add_module(name = "pouet", module_template = brochure::new_page)
+```
+
 ### Adapt old app
 
 To adapt your `{golem}` based application to `{brochure}`, here are the two steps to follow: 

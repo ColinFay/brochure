@@ -21,9 +21,24 @@ golem_hook <- function(path, package_name, ...) {
   )
   file.copy(
     system.file(
-      "golem/page_home.R",
+      "golem/mod_home.R",
       package = "brochure"
     ),
-    "R/page_home.R"
+    "R/mod_home.R"
   )
+
+  dev_R <- readLines(
+    "dev/02_dev.R"
+  )
+  dev_R <- gsub(
+    'golem::add_module(name = "name_of_module1", with_test = TRUE) # Name of the module',
+    'golem::add_module(name = "name_of_module1", with_test = TRUE, module_template = brochure::new_page) # Name of the module',
+    dev_R
+  )
+  dev_R <- gsub(
+    'golem::add_module(name = "name_of_module2", with_test = TRUE) # Name of the module',
+    'golem::add_module(name = "name_of_module2", with_test = TRUE, module_template = brochure::new_page) # Name of the module',
+    dev_R
+  )
+  write(dev_R, "dev/02_dev.R")
 }
