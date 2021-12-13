@@ -33,8 +33,8 @@ remotes::install_github("ColinFay/brochure")
 ``` r
 library(brochure)
 #> 
-#> Attaching package: 'brochure'
-#> The following object is masked from 'package:utils':
+#> Attachement du package : 'brochure'
+#> L'objet suivant est masqu'e depuis 'package:utils':
 #> 
 #>     page
 library(shiny)
@@ -57,20 +57,20 @@ brochureApp(
   page(
     href = "/",
     ui = fluidPage(
-      h1("This is my first page"), 
+      h1("This is my first page"),
       plotOutput("plot")
     ),
-    server = function(input, output, session){
+    server = function(input, output, session) {
       output$plot <- renderPlot({
         plot(iris)
       })
     }
-  ), 
+  ),
   # Second page, without any server-side function
   page(
-    href = "/page2", 
-    ui =  fluidPage(
-      h1("This is my second page"), 
+    href = "/page2",
+    ui = fluidPage(
+      h1("This is my second page"),
       tags$p("There is no server function in this one")
     )
   )
@@ -93,7 +93,7 @@ brochureApp(
   ),
   redirect(
     from = "/nothere",
-    to =  "/"
+    to = "/"
   )
 )
 ```
@@ -106,27 +106,27 @@ A more elaborate example:
 # Creating a navlink
 nav_links <- tags$ul(
   tags$li(
-    tags$a(href = "/", "home"), 
+    tags$a(href = "/", "home"),
   ),
   tags$li(
-    tags$a(href = "/page2", "page2"), 
+    tags$a(href = "/page2", "page2"),
   ),
   tags$li(
-    tags$a(href = "/contact", "contact"), 
+    tags$a(href = "/contact", "contact"),
   )
 )
 
-page_1 <- function(){
+page_1 <- function() {
   page(
     href = "/",
-    ui = function(request){
+    ui = function(request) {
       tagList(
         h1("This is my first page"),
         nav_links,
         plotOutput("plot")
       )
     },
-    server = function(input, output, session){
+    server = function(input, output, session) {
       output$plot <- renderPlot({
         plot(mtcars)
       })
@@ -134,17 +134,17 @@ page_1 <- function(){
   )
 }
 
-page_2 <- function(){
+page_2 <- function() {
   page(
     href = "/page2",
-    ui =  function(request){
+    ui = function(request) {
       tagList(
         h1("This is my second page"),
         nav_links,
         plotOutput("plot")
       )
-    }, 
-    server = function(input, output, session){
+    },
+    server = function(input, output, session) {
       output$plot <- renderPlot({
         plot(mtcars)
       })
@@ -152,10 +152,10 @@ page_2 <- function(){
   )
 }
 
-page_contact <- function(){
+page_contact <- function() {
   page(
     href = "/contact",
-    ui =  tagList(
+    ui = tagList(
       h1("Contact us"),
       nav_links,
       tags$ul(
@@ -174,11 +174,11 @@ brochureApp(
   # Redirections
   redirect(
     from = "/page3",
-    to =  "/page2"
+    to = "/page2"
   ),
   redirect(
     from = "/page4",
-    to =  "/"
+    to = "/"
   )
 )
 ```
@@ -238,11 +238,11 @@ In this app, we’ll log to the console every page and the time it is
 called, using the `log_where()` function.
 
 ``` r
-log_where <- function(req){
+log_where <- function(req) {
   cli::cat_rule(
     sprintf(
-      "%s - %s", 
-      Sys.time(), 
+      "%s - %s",
+      Sys.time(),
       req$PATH_INFO
     )
   )
@@ -265,18 +265,18 @@ brochureApp(
   page_contact(),
   page(
     href = "/healthcheck",
-    # As this is a pure backend exchange, 
+    # As this is a pure backend exchange,
     # We don't need a UI
-    ui =  tagList(), 
+    ui = tagList(),
     # As this req_handler returns an httpResponse,
-    # This response will be returned directly to the browser, 
+    # This response will be returned directly to the browser,
     # without passing through the usual shiny http dance
     req_handlers = list(
-      # If you have shiny < 1.6.0, you'll need to 
-      # do shiny:::httpResponse (triple `:`) 
+      # If you have shiny < 1.6.0, you'll need to
+      # do shiny:::httpResponse (triple `:`)
       # as it is not exported until 1.6.0.
       # Otherwise, see ?shiny::httpResponse
-      ~ shiny::httpResponse( 200, content = "OK")
+      ~ shiny::httpResponse(200, content = "OK")
     )
   )
 )
@@ -310,7 +310,7 @@ Note that you can get them from the server with `get_cookies()`, and
 parse the cookie string using `parse_cookie_string`.
 
 ``` r
-parse_cookie_string( "a=12;session=blabla" )
+parse_cookie_string("a=12;session=blabla")
 #>        a  session 
 #>     "12" "blabla"
 ```
@@ -322,26 +322,26 @@ redirect the user after login.
 # Creating a navlink
 nav_links <- tags$ul(
   tags$li(
-    tags$a(href = "/", "home"), 
+    tags$a(href = "/", "home"),
   ),
   tags$li(
-    tags$a(href = "/login", "login"), 
+    tags$a(href = "/login", "login"),
   ),
   tags$li(
-    tags$a(href = "/logout", "logout"), 
+    tags$a(href = "/logout", "logout"),
   )
 )
 
-home <- function(){
+home <- function() {
   page(
     href = "/",
     ui = tagList(
-      h1("This is my first page"), 
+      h1("This is my first page"),
       tags$p("It will contain BROCHURECOOKIE depending on the last page you've visited (/login or /logout)"),
       verbatimTextOutput("cookie"),
       nav_links
     ),
-    server = function(input, output, session){
+    server = function(input, output, session) {
       output$cookie <- renderPrint({
         parse_cookie_string(
           get_cookies()
@@ -351,26 +351,25 @@ home <- function(){
   )
 }
 
-login <- function(){
+login <- function() {
   page(
     href = "/login",
-    ui =  tagList(
+    ui = tagList(
       h1("You've just logged!"),
       verbatimTextOutput("cookie"),
       actionButton("redirect", "Redirect to the home page"),
       nav_links
-    ), 
-    server = function(input, output, session){
+    ),
+    server = function(input, output, session) {
       output$cookie <- renderPrint({
         parse_cookie_string(
           get_cookies()
         )
       })
-      observeEvent( input$redirect , {
+      observeEvent(input$redirect, {
         # Using brochure to redirect to another page
         server_redirect("/")
       })
-      
     },
     res_handlers = list(
       # We'll add a cookie here
@@ -384,15 +383,15 @@ login <- function(){
   )
 }
 
-logout <- function(){
+logout <- function() {
   page(
     href = "/logout",
-    ui =  tagList(
+    ui = tagList(
       h1("You've logged out"),
       nav_links,
       verbatimTextOutput("cookie")
-    ), 
-    server = function(input, output, session){
+    ),
+    server = function(input, output, session) {
       output$cookie <- renderPrint({
         parse_cookie_string(
           get_cookies()
@@ -451,36 +450,39 @@ cache_system <- cachem::cache_disk(tempdir())
 
 nav_links <- tags$ul(
   tags$li(
-    tags$a(href = "/", "home"), 
+    tags$a(href = "/", "home"),
   ),
   tags$li(
-    tags$a(href = "/page2", "page2"), 
+    tags$a(href = "/page2", "page2"),
   )
 )
 
-cookie_set <- function(){
+cookie_set <- function() {
   r <- reactiveValues()
-  
-  observeEvent(TRUE, {
-    # Fetch the cookies using {glouton}
-    r$cook <- fetch_cookies()
-    
-    # If there is no stored cookie for {brochure}, we generate it
-    if (is.null(r$cook$brochure_cookie)){
-      # Generate a random id
-      session_id <- digest::sha1(paste(Sys.time(), sample(letters, 16)))
-      # Add this id as a cookie
-      add_cookie("brochure_cookie", session_id)
-      # Store in in the reactiveValues list
-      r$cook$brochure_cookie <- session_id
-    }
-    # For debugging purpose
-    print(r$cook$brochure_cookie )
-  }, once = TRUE)
+
+  observeEvent(TRUE,
+    {
+      # Fetch the cookies using {glouton}
+      r$cook <- fetch_cookies()
+
+      # If there is no stored cookie for {brochure}, we generate it
+      if (is.null(r$cook$brochure_cookie)) {
+        # Generate a random id
+        session_id <- digest::sha1(paste(Sys.time(), sample(letters, 16)))
+        # Add this id as a cookie
+        add_cookie("brochure_cookie", session_id)
+        # Store in in the reactiveValues list
+        r$cook$brochure_cookie <- session_id
+      }
+      # For debugging purpose
+      print(r$cook$brochure_cookie)
+    },
+    once = TRUE
+  )
   return(r)
 }
 
-page_1 <- function(){
+page_1 <- function() {
   page(
     href = "/",
     ui = tagList(
@@ -488,12 +490,12 @@ page_1 <- function(){
       nav_links,
       # The text enter on page 1 will be available on page 2, using
       # a session cookie and a storage system
-      textInput("textenter", "Enter a text"), 
+      textInput("textenter", "Enter a text"),
       actionButton("save", "Save my text and go to page2")
     ),
-    server = function(input, output, session){
+    server = function(input, output, session) {
       r <- cookie_set()
-      observeEvent( input$save , {
+      observeEvent(input$save, {
         # Use the session id to save on the cache system
         cache_system$set(
           paste0(
@@ -508,17 +510,17 @@ page_1 <- function(){
   )
 }
 
-page_2 <- function(){
+page_2 <- function() {
   page(
     href = "/page2",
-    ui =  tagList(
+    ui = tagList(
       h1("This is my second page"),
       nav_links,
       # The text enter on page 1 will be available here, reading
       # the storage system
       verbatimTextOutput("textdisplay")
-    ), 
-    server = function(input, output, session){
+    ),
+    server = function(input, output, session) {
       r <- cookie_set()
       output$textdisplay <- renderPrint({
         # Getting the content value based on the session cookie
@@ -543,7 +545,18 @@ brochureApp(
 )
 ```
 
-## With golem
+## With `{golem}`
+
+### Fresh `{golem}` App
+
+You can set up a `{brochure}` based app with `{golem}` using the
+`brochure::golem_hook()` function.
+
+``` r
+golem::create_golem("my_app", project_hook = brochure::golem_hook)
+```
+
+### Adapt old app
 
 To adapt your `{golem}` based application to `{brochure}`, here are the
 two steps to follow:
@@ -584,12 +597,10 @@ two steps to follow:
 <!-- end list -->
 
 ``` r
-run_app <- function(
-  onStart = NULL,
-  options = list(), 
-  enableBookmarking = NULL,
-  ...
-) {
+run_app <- function(onStart = NULL,
+                    options = list(),
+                    enableBookmarking = NULL,
+                    ...) {
   with_golem_options(
     app = brochureApp(
       # Putting the resources here
@@ -598,9 +609,9 @@ run_app <- function(
       login(),
       logout(),
       onStart = onStart,
-      options = options, 
+      options = options,
       enableBookmarking = enableBookmarking
-    ), 
+    ),
     golem_opts = list(...)
   )
 }
