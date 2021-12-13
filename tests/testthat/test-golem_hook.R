@@ -8,7 +8,7 @@ test_that("golem_hook works", {
   golem::create_golem("testgolembrochure", project_hook = brochure::golem_hook)
   setwd("testgolembrochure")
   expect_true(
-    file.exists("R/page_home.R")
+    file.exists("R/mod_home.R")
   )
   expect_true(
     file.exists("R/run_app.R")
@@ -16,12 +16,12 @@ test_that("golem_hook works", {
   expect_equal(
     readLines(
       system.file(
-        "golem/page_home.R",
+        "golem/mod_home.R",
         package = "brochure"
       )
     ),
     readLines(
-      "R/page_home.R"
+      "R/mod_home.R"
     )
   )
   expect_equal(
@@ -33,6 +33,13 @@ test_that("golem_hook works", {
     ),
     readLines(
       "R/run_app.R"
+    )
+  )
+
+  expect_true(
+    grepl(
+      "brochure",
+      paste(readLines("dev/02_dev.R"), collapse = " ")
     )
   )
 })
