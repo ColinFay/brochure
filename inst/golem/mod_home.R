@@ -26,10 +26,16 @@ mod_home_server <- function(id) {
 #' Page Functions
 #'
 #' @noRd
-home <- function() {
+#' @importFrom brochure page
+home <- function(id = "home", href = "/") {
     page(
-        href = "/",
-        ui = mod_home_ui,
-        server = mod_home_server
+        href = href,
+        ui = mod_home_ui(id = id),
+        server = function(input, output, session) {
+            mod_home_server(id = id)
+        }
     )
 }
+
+# Add this to the brochureApp call in R/run_app.R
+# home()

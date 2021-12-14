@@ -12,6 +12,8 @@
 #' }
 golem_hook <- function(path, package_name, ...) {
   unlink("R/run_app.R", TRUE, TRUE)
+  unlink("R/app_ui.R", TRUE, TRUE)
+  unlink("R/app_server.R", TRUE, TRUE)
   file.copy(
     system.file(
       "golem/run_app.R",
@@ -30,15 +32,23 @@ golem_hook <- function(path, package_name, ...) {
   dev_R <- readLines(
     "dev/02_dev.R"
   )
-  dev_R <- gsub(
-    'golem::add_module(name = "name_of_module1", with_test = TRUE) # Name of the module',
-    'golem::add_module(name = "name_of_module1", with_test = TRUE, module_template = brochure::new_page) # Name of the module',
-    dev_R
-  )
-  dev_R <- gsub(
-    'golem::add_module(name = "name_of_module2", with_test = TRUE) # Name of the module',
-    'golem::add_module(name = "name_of_module2", with_test = TRUE, module_template = brochure::new_page) # Name of the module',
-    dev_R
-  )
+  dev_R[
+    which(
+      grepl(
+        "name_of_module1",
+        dev_R
+      )
+    )
+  ] <- 'golem::add_module(name = "name_of_module1", with_test = TRUE, module_template = brochure::new_page) # Name of the module'
+
+  dev_R[
+    which(
+      grepl(
+        "name_of_module2",
+        dev_R
+      )
+    )
+  ] <- 'golem::add_module(name = "name_of_module2", with_test = TRUE, module_template = brochure::new_page) # Name of the module'
+  unlink("dev/02_dev.R")
   write(dev_R, "dev/02_dev.R")
 }

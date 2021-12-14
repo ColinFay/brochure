@@ -24,5 +24,10 @@ new_page <- function(name, path, export, ...) {
     name,
     tmplt
   )
+  tmplt <- gsub(
+    "/",
+    sprintf("/%s", name),
+    tmplt
+  )
   write(tmplt, path)
 }
