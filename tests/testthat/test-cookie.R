@@ -1,5 +1,5 @@
 test_that("set_cookie works", {
-  res <- shiny:::httpResponse()
+  res <- shiny::httpResponse()
   expect_error(
     set_cookie(
       res
@@ -42,7 +42,11 @@ test_that("set_cookie works", {
   )
   expect_equal(
     cook["Expires"],
+<<<<<<< HEAD
     c(Expires = "Mon, 28 Nov 2021 09:00:00 GMT")
+=======
+    c(Expires = http_date(as.POSIXlt("2021-11-28 09:00:00", tz = "GMT")))
+>>>>>>> small test update to passe CI
   )
 
   output <- set_cookie(
