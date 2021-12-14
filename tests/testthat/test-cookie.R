@@ -1,5 +1,5 @@
 test_that("set_cookie works", {
-  res <- shiny:::httpResponse()
+  res <- shiny::httpResponse()
   expect_error(
     set_cookie(
       res
@@ -42,7 +42,7 @@ test_that("set_cookie works", {
   )
   expect_equal(
     cook["Expires"],
-    c(Expires = "Mon, 28 Nov 2021 09:00:00 GMT" )
+    c(Expires = http_date(as.POSIXlt("2021-11-28 09:00:00", tz = "GMT")))
   )
 
   output <- set_cookie(
@@ -58,7 +58,7 @@ test_that("set_cookie works", {
 
   expect_equal(
     cook["Max-Age"],
-    c(`Max-Age` = "0" )
+    c(`Max-Age` = "0")
   )
 
   output <- set_cookie(
@@ -74,7 +74,7 @@ test_that("set_cookie works", {
 
   expect_equal(
     cook["Domain"],
-    c(`Domain` = "Colinfay" )
+    c(`Domain` = "Colinfay")
   )
 
   output <- set_cookie(
@@ -90,7 +90,7 @@ test_that("set_cookie works", {
 
   expect_equal(
     cook["Path"],
-    c(`Path` = "/this" )
+    c(`Path` = "/this")
   )
 
   output <- set_cookie(
@@ -106,7 +106,7 @@ test_that("set_cookie works", {
 
   expect_equal(
     cook["Secure"],
-    c(`Secure` = NA_character_ )
+    c(`Secure` = NA_character_)
   )
 
   output <- set_cookie(
@@ -137,7 +137,7 @@ test_that("set_cookie works", {
 
   expect_equal(
     cook["HttpOnly"],
-    c(`HttpOnly` = NA_character_ )
+    c(`HttpOnly` = NA_character_)
   )
 
   output <- set_cookie(
@@ -168,7 +168,7 @@ test_that("set_cookie works", {
 
   expect_equal(
     cook["SameSite"],
-    c(`SameSite` = "Lax" )
+    c(`SameSite` = "Lax")
   )
 
   expect_error(
@@ -179,5 +179,4 @@ test_that("set_cookie works", {
       same_site = "gouigoui"
     )
   )
-
 })
