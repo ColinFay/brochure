@@ -9,14 +9,17 @@
 #'
 #' @examples
 #' parse_cookie_string("brochure_session=63422; brochure_cookie=3958")
-parse_cookie_string <- function(cookie_string){
-  if (is.null(cookie_string)) return("")
+parse_cookie_string <- function(cookie_string) {
+  if (is.null(cookie_string)) {
+    return("")
+  }
   couples <- strsplit(cookie_string, ";")[[1]]
   res <- lapply(
     couples,
     function(x) {
-      #browser()
-      nms <- strsplit(x, "=")[[1]]
+      # Small hack to prevent splitting on the trailing =
+      nms <- sub("=", "\\\\SPLITHERE\\\\", x)
+      nms <- strsplit(nms, "\\\\SPLITHERE\\\\")[[1]]
       res <- gsub("^ +", "", nms[2])
       res <- gsub("[ ^]* +$", "", res)
       names(res) <- gsub("^ +", "", nms[1])
@@ -29,9 +32,7 @@ parse_cookie_string <- function(cookie_string){
 
 #' @rdname cookies-server-side
 #' @export
-get_cookies <- function(
-  session = shiny::getDefaultReactiveDomain()
-){
+get_cookies <- function(session = shiny::getDefaultReactiveDomain()) {
   session$request$HTTP_COOKIE
 }
 
@@ -75,22 +76,20 @@ get_cookies <- function(
 #'
 #' @examples
 #' set_cookie(
-#'    shiny:::httpResponse(),
-#'    "this",
-#'    12
+#'   shiny:::httpResponse(),
+#'   "this",
+#'   12
 #' )
-set_cookie <- function(
-  res,
-  name,
-  value,
-  expires = NULL,
-  max_age = NULL,
-  domain = NULL,
-  path = NULL,
-  secure = NULL,
-  http_only = NULL,
-  same_site = NULL
-){
+set_cookie <- function(res,
+                       name,
+                       value,
+                       expires = NULL,
+                       max_age = NULL,
+                       domain = NULL,
+                       path = NULL,
+                       secure = NULL,
+                       http_only = NULL,
+                       same_site = NULL) {
   attempt::stop_if(
     name,
     missing,
@@ -104,31 +103,31 @@ set_cookie <- function(
 
   cook <- sprintf("%s=%s;", name, value)
 
-  if (!is.null(expires)){
+  if (!is.null(expires)) {
     cook <- sprintf("%s Expires = %s;", cook, http_date(as.POSIXlt(expires, tz = "GMT")))
   }
 
-  if (!is.null(max_age)){
+  if (!is.null(max_age)) {
     cook <- sprintf("%s Max-Age = %s;", cook, max_age)
   }
 
-  if (!is.null(domain)){
+  if (!is.null(domain)) {
     cook <- sprintf("%s Domain = %s;", cook, domain)
   }
 
-  if (!is.null(path)){
+  if (!is.null(path)) {
     cook <- sprintf("%s Path = %s;", cook, path)
   }
 
-  if (!is.null(secure) && secure){
+  if (!is.null(secure) && secure) {
     cook <- sprintf("%s Secure;", cook)
   }
 
-  if (!is.null(http_only) && http_only){
+  if (!is.null(http_only) && http_only) {
     cook <- sprintf("%s HttpOnly;", cook)
   }
 
-  if (!is.null(same_site)){
+  if (!is.null(same_site)) {
     attempt::stop_if_not(
       same_site,
       ~ .x %in% c("Strict", "Lax", "None"),
@@ -143,11 +142,8 @@ set_cookie <- function(
 
 #' @export
 #' @rdname cookie-middleware
-remove_cookie <- function(
-  res,
-  name
-){
-
+remove_cookie <- function(res,
+                          name) {
   res$headers$`Set-Cookie` <- sprintf(
     "%s=''; Max-Age=0",
     name
@@ -157,9 +153,7 @@ remove_cookie <- function(
 
 # HTTP Date is stupid
 # https://developer.mozilla.org/fr/docs/Web/HTTP/Headers/Date
-http_date <- function(
-  date
-){
+http_date <- function(date) {
   # Borrowed from https://github.com/r-lib/gargle/blob/132d549871ab5d80ae20d21c5b465fdd80ca0f6c/R/shiny.R#L250
   sprintf(
     "%s, %02s %s %04s %02s:%02s:%02s GMT",

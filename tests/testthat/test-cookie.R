@@ -42,7 +42,7 @@ test_that("set_cookie works", {
   )
   expect_equal(
     cook["Expires"],
-    c(Expires = "Mon, 28 Nov 2021 09:00:00 GMT" )
+    c(Expires = "Mon, 28 Nov 2021 09:00:00 GMT")
   )
 
   output <- set_cookie(
@@ -58,7 +58,7 @@ test_that("set_cookie works", {
 
   expect_equal(
     cook["Max-Age"],
-    c(`Max-Age` = "0" )
+    c(`Max-Age` = "0")
   )
 
   output <- set_cookie(
@@ -74,7 +74,7 @@ test_that("set_cookie works", {
 
   expect_equal(
     cook["Domain"],
-    c(`Domain` = "Colinfay" )
+    c(`Domain` = "Colinfay")
   )
 
   output <- set_cookie(
@@ -90,7 +90,7 @@ test_that("set_cookie works", {
 
   expect_equal(
     cook["Path"],
-    c(`Path` = "/this" )
+    c(`Path` = "/this")
   )
 
   output <- set_cookie(
@@ -106,7 +106,7 @@ test_that("set_cookie works", {
 
   expect_equal(
     cook["Secure"],
-    c(`Secure` = NA_character_ )
+    c(`Secure` = NA_character_)
   )
 
   output <- set_cookie(
@@ -137,7 +137,7 @@ test_that("set_cookie works", {
 
   expect_equal(
     cook["HttpOnly"],
-    c(`HttpOnly` = NA_character_ )
+    c(`HttpOnly` = NA_character_)
   )
 
   output <- set_cookie(
@@ -168,7 +168,7 @@ test_that("set_cookie works", {
 
   expect_equal(
     cook["SameSite"],
-    c(`SameSite` = "Lax" )
+    c(`SameSite` = "Lax")
   )
 
   expect_error(
@@ -179,5 +179,23 @@ test_that("set_cookie works", {
       same_site = "gouigoui"
     )
   )
+})
 
+
+test_that("parse_cookie_string works", {
+  res <- parse_cookie_string(
+    "_ga=AA; _ga_Z0FXMLE2RM=BB; br-acc=xyz="
+  )
+  expect_equal(
+    res["_ga"],
+    c("_ga" = "AA")
+  )
+  expect_equal(
+    res["_ga_Z0FXMLE2RM"],
+    c("_ga_Z0FXMLE2RM" = "BB")
+  )
+  expect_equal(
+    res["br-acc"],
+    c("br-acc" = "xyz=")
+  )
 })
