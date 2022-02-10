@@ -33,8 +33,8 @@ remotes::install_github("ColinFay/brochure")
 ``` r
 library(brochure)
 #> 
-#> Attachement du package : 'brochure'
-#> L'objet suivant est masqu'e depuis 'package:utils':
+#> Attaching package: 'brochure'
+#> The following object is masked from 'package:utils':
 #> 
 #>     page
 library(shiny)
@@ -553,7 +553,7 @@ You can set up a `{brochure}` based app with `{golem}` using the
 `brochure::golem_hook()` function.
 
 ``` r
-golem::create_golem("my_app", project_hook = brochure::golem_hook)
+golem::create_golem("myapp", project_hook = brochure::golem_hook)
 ```
 
 You can also use the module\_template function to create a `{brochure}`
