@@ -10,7 +10,11 @@
 #' if (requireNamespace("golem") & interactive()) {
 #'   golem::create_golem("myapp", project_hook = golem_hook)
 #' }
-golem_hook <- function(path, package_name, ...) {
+golem_hook <- function(
+  path,
+  package_name,
+  ...
+) {
   unlink("R/run_app.R", TRUE, TRUE)
   unlink("R/app_ui.R", TRUE, TRUE)
   unlink("R/app_server.R", TRUE, TRUE)
@@ -21,6 +25,17 @@ golem_hook <- function(path, package_name, ...) {
     ),
     "R/run_app.R"
   )
+
+  run_app <- readLines(
+    "R/run_app.R"
+  )
+  run_app <- gsub(
+    "REPLACEME",
+    package_name,
+    run_app
+  )
+  write(run_app, "R/run_app.R")
+
   file.copy(
     system.file(
       "golem/mod_home.R",

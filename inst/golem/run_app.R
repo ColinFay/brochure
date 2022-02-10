@@ -8,10 +8,12 @@
 #' @importFrom shiny shinyApp
 #' @importFrom brochure brochureApp
 #' @importFrom golem with_golem_options
-run_app <- function(onStart = NULL,
-                    options = list(),
-                    enableBookmarking = NULL,
-                    ...) {
+run_app <- function(
+  onStart = NULL,
+  options = list(),
+  enableBookmarking = NULL,
+  ...
+) {
   with_golem_options(
     app = brochureApp(
       # Putting the resources here
@@ -40,14 +42,15 @@ run_app <- function(onStart = NULL,
 #' @noRd
 golem_add_external_resources <- function() {
   add_resource_path(
-    "www", app_sys("app/www")
+    "www",
+    app_sys("app/www")
   )
 
   tags$head(
     favicon(),
     bundle_resources(
       path = app_sys("app/www"),
-      app_title = "shop"
+      app_title = "REPLACEME"
     )
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()

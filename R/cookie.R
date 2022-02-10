@@ -80,16 +80,18 @@ get_cookies <- function(session = shiny::getDefaultReactiveDomain()) {
 #'   "this",
 #'   12
 #' )
-set_cookie <- function(res,
-                       name,
-                       value,
-                       expires = NULL,
-                       max_age = NULL,
-                       domain = NULL,
-                       path = NULL,
-                       secure = NULL,
-                       http_only = NULL,
-                       same_site = NULL) {
+set_cookie <- function(
+  res,
+  name,
+  value,
+  expires = NULL,
+  max_age = NULL,
+  domain = NULL,
+  path = NULL,
+  secure = NULL,
+  http_only = NULL,
+  same_site = NULL
+) {
   attempt::stop_if(
     name,
     missing,
@@ -142,8 +144,10 @@ set_cookie <- function(res,
 
 #' @export
 #' @rdname cookie-middleware
-remove_cookie <- function(res,
-                          name) {
+remove_cookie <- function(
+  res,
+  name
+) {
   res$headers$`Set-Cookie` <- sprintf(
     "%s=''; Max-Age=0",
     name
