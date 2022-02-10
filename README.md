@@ -13,6 +13,13 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 
 **THIS IS A WORK IN PROGRESS, DO NOT USE**
 
+You’re reading the documentation for version:
+
+``` r
+desc::desc_get_version()
+#> [1] '0.0.0.9022'
+```
+
 The goal of `{brochure}` is to provide a mechanism for creating natively
 multi-page `{shiny}` applications, *i.e* that can serve content on
 multiple endpoints.
@@ -460,7 +467,8 @@ nav_links <- tags$ul(
 cookie_set <- function() {
   r <- reactiveValues()
 
-  observeEvent(TRUE,
+  observeEvent(
+    TRUE,
     {
       # Fetch the cookies using {glouton}
       r$cook <- fetch_cookies()
@@ -604,10 +612,12 @@ two steps to follow:
 <!-- end list -->
 
 ``` r
-run_app <- function(onStart = NULL,
-                    options = list(),
-                    enableBookmarking = NULL,
-                    ...) {
+run_app <- function(
+  onStart = NULL,
+  options = list(),
+  enableBookmarking = NULL,
+  ...
+) {
   with_golem_options(
     app = brochureApp(
       # Putting the resources here
