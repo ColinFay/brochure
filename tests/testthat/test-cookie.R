@@ -42,11 +42,7 @@ test_that("set_cookie works", {
   )
   expect_equal(
     cook["Expires"],
-<<<<<<< HEAD
-    c(Expires = "Mon, 28 Nov 2021 09:00:00 GMT")
-=======
     c(Expires = http_date(as.POSIXlt("2021-11-28 09:00:00", tz = "GMT")))
->>>>>>> small test update to passe CI
   )
 
   output <- set_cookie(
@@ -182,24 +178,5 @@ test_that("set_cookie works", {
       12,
       same_site = "gouigoui"
     )
-  )
-})
-
-
-test_that("parse_cookie_string works", {
-  res <- parse_cookie_string(
-    "_ga=AA; _ga_Z0FXMLE2RM=BB; br-acc=xyz="
-  )
-  expect_equal(
-    res["_ga"],
-    c("_ga" = "AA")
-  )
-  expect_equal(
-    res["_ga_Z0FXMLE2RM"],
-    c("_ga_Z0FXMLE2RM" = "BB")
-  )
-  expect_equal(
-    res["br-acc"],
-    c("br-acc" = "xyz=")
   )
 })
