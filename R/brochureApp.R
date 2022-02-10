@@ -34,7 +34,7 @@ brochureApp <- function(
   req_handlers = list(),
   res_handlers = list(),
   wrapped = shiny::fluidPage
-){
+) {
 
   # Saving the brochure
   brochure(
@@ -52,12 +52,12 @@ brochureApp <- function(
 
   # We build the shinyApp object here
   res <- shinyApp(
-    ui = function(request){
+    ui = function(request) {
 
       # Extract the correct UI, wrap it
       # and add the redirect from brochure
       ui <- ...multipage[[
-        rm_backslash(request$PATH_INFO)
+      rm_backslash(request$PATH_INFO)
       ]]$ui
 
       if (is.function(ui)) {
@@ -76,9 +76,8 @@ brochureApp <- function(
           ui
         )
       )
-
     },
-    server = function(input, output, session){
+    server = function(input, output, session) {
       # Same logic as the UI, we look for the correct
       # server function
       path <- rm_backslash(
@@ -89,7 +88,7 @@ brochureApp <- function(
         )
       )
       ...multipage[[
-        path
+      path
       ]]$server(input, output, session)
     },
     onStart = onStart,
@@ -101,17 +100,17 @@ brochureApp <- function(
   # We're keeping the old `httpHandler`
   old_httpHandler <- res$httpHandler
 
-  res$httpHandler <- function(req){
+  res$httpHandler <- function(req) {
 
     # Handling the app level req_handlers
     app_req_handlers <- get_req_handlers_app()
 
-    if (length( app_req_handlers )){
-      for (i in app_req_handlers ){
-        req  <- i(req)
+    if (length(app_req_handlers)) {
+      for (i in app_req_handlers) {
+        req <- i(req)
         # If any req_handlers return an 'httpResponse', return it directly without doing
         # anything else.
-        if ( "httpResponse" %in% class(req) ){
+        if ("httpResponse" %in% class(req)) {
           return(res)
         }
       }
@@ -121,15 +120,15 @@ brochureApp <- function(
     req$PATH_INFO <- rm_backslash(req$PATH_INFO)
 
     # Handle redirect
-    if (req$PATH_INFO %in% ...multipage_opts$redirect$from){
+    if (req$PATH_INFO %in% ...multipage_opts$redirect$from) {
       return(
         make_redirect(req$PATH_INFO)
       )
     }
 
     # Returning a 404 if the page doesn't exist
-    if (!req$PATH_INFO %in% names(...multipage)){
-      return( make_404(content_404))
+    if (!req$PATH_INFO %in% names(...multipage)) {
+      return(make_404(content_404))
     }
 
     # Setting the path info for reuse in brochure()
@@ -140,10 +139,10 @@ brochureApp <- function(
       gsub(".+/$", "", req$PATH_INFO)
     )
 
-    if ( length( page_req_handlers ) ){
-      for (i in page_req_handlers){
+    if (length(page_req_handlers)) {
+      for (i in page_req_handlers) {
         req <- i(req)
-        if ( "httpResponse" %in% class(req) ){
+        if ("httpResponse" %in% class(req)) {
           return(req)
         }
       }
@@ -157,4 +156,3 @@ brochureApp <- function(
   }
   return(res)
 }
-

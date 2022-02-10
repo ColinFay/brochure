@@ -1,0 +1,129 @@
+---
+title: "golem hook"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r development, include=FALSE}
+library(testthat)
+```
+
+```{r development-1}
+# Load already included functions
+pkgload::load_all(export_all = FALSE)
+```
+
+# My function
+
+```{r function-my_fun}
+#' Golem Hook function
+#'
+#' @return Used for side effect
+#' @inheritParams golem::project_hook
+#' @export
+#'
+#' @examples
+golem_hook <- function(path, package_name, ...) {
+  unlink("R/run_app.R", TRUE, TRUE)
+  unlink("R/app_ui.R", TRUE, TRUE)
+  unlink("R/app_server.R", TRUE, TRUE)
+  file.copy(
+    system.file(
+      "golem/run_app.R",
+      package = "brochure"
+    ),
+    "R/run_app.R"
+  )
+  file.copy(
+    system.file(
+      "golem/mod_home.R",
+      package = "brochure"
+    ),
+    "R/mod_home.R"
+  )
+
+  dev_R <- readLines(
+    "dev/02_dev.R"
+  )
+  dev_R[
+    which(
+      grepl(
+        "name_of_module1",
+        dev_R
+      )
+    )
+  ] <- 'golem::add_module(name = "name_of_module1", with_test = TRUE, module_template = brochure::new_page) # Name of the module'
+
+  dev_R[
+    which(
+      grepl(
+        "name_of_module2",
+        dev_R
+      )
+    )
+  ] <- 'golem::add_module(name = "name_of_module2", with_test = TRUE, module_template = brochure::new_page) # Name of the module'
+  unlink("dev/02_dev.R")
+  write(dev_R, "dev/02_dev.R")
+}
+```
+
+```{r examples-my_fun}
+if (requireNamespace("golem") & interactive()) {
+  golem::create_golem("myapp", project_hook = golem_hook)
+}
+```
+
+```{r tests-my_fun}
+test_that("golem_hook works", {
+  skip_if_not_installed("golem")
+  old <- setwd(tempdir())
+  on.exit(setwd(old))
+  unlink("testgolembrochure", TRUE, TRUE)
+  golem::create_golem("testgolembrochure", project_hook = brochure::golem_hook)
+  setwd("testgolembrochure")
+  expect_true(
+    file.exists("R/mod_home.R")
+  )
+  expect_true(
+    file.exists("R/run_app.R")
+  )
+  expect_equal(
+    readLines(
+      system.file(
+        "golem/mod_home.R",
+        package = "brochure"
+      )
+    ),
+    readLines(
+      "R/mod_home.R"
+    )
+  )
+  expect_equal(
+    readLines(
+      system.file(
+        "golem/run_app.R",
+        package = "brochure"
+      )
+    ),
+    readLines(
+      "R/run_app.R"
+    )
+  )
+
+  expect_true(
+    grepl(
+      "brochure",
+      paste(readLines("dev/02_dev.R"), collapse = " ")
+    )
+  )
+})
+```
+
+
+```{r development-inflate, eval=FALSE}
+# Run but keep eval=FALSE to avoid infinite loop
+# Execute in the console directly
+fusen::inflate(flat_file = "dev/flat_golem_hook.Rmd", vignette_name = NA, document = FALSE)
+```
+

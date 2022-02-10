@@ -28,13 +28,13 @@ brochure <- function(
   req_handlers = list(),
   res_handlers = list(),
   wrapped = shiny::fluidPage
-){
+) {
   # Put the basepath and the req_handlerss
-  ...multipage_opts$basepath  <- basepath
-  ...multipage_opts$req_handlers  <- req_handlers
-  ...multipage_opts$res_handlers  <- res_handlers
+  ...multipage_opts$basepath <- basepath
+  ...multipage_opts$req_handlers <- req_handlers
+  ...multipage_opts$res_handlers <- res_handlers
 
-  #browser()
+  # browser()
 
   # Extracting the dots
   content <- list(...)
@@ -44,43 +44,44 @@ brochure <- function(
   are_pages <- extract(content, "brochure_page")
 
   # Which one are page
-  pages <- content[ are_pages ]
+  pages <- content[are_pages]
 
-  extra <- content[ !are_pages ]
+  extra <- content[!are_pages]
 
   # Extract and store the redirects
   are_redirect <- extract(extra, "redirect")
 
   # We'll add a dataframe of redirection
   ...multipage_opts$redirect <- build_redirect(
-    extra[ are_redirect ]
+    extra[are_redirect]
   )
 
   # We don't need the redirect in extra
-  #extra <- extra[ !are_redirect ]
-  ...multipage_opts$extra <- extra[ !are_redirect ]
+  # extra <- extra[ !are_redirect ]
+  ...multipage_opts$extra <- extra[!are_redirect]
   ...multipage_opts$wrapped <- wrapped
 
   # Force a `/` page
   all_href <- vapply(
-    pages, function(x){
+    pages,
+    function(x) {
       x$href
-    }, FUN.VALUE = character(1)
+    },
+    FUN.VALUE = character(1)
   )
 
-  if ( ! "/" %in% all_href ){
+  if (!"/" %in% all_href) {
     stop("You must specify a root page (one with `href = '/')`.")
   }
 
   # Saving all the UIs
   x <- lapply(
     pages,
-    function(x, extra = extra){
+    function(x, extra = extra) {
       ...multipage[[x$href]]$ui <- x$ui
       ...multipage[[x$href]]$server <- x$server
     }
   )
-
 }
 
 #' A Brochure Page
@@ -97,20 +98,19 @@ brochure <- function(
 #' @examples
 #' library(shiny)
 #' page(
-#'  href = "/page2",
-#'  ui =  tagList(
-#'    h1("This is my second page"),
-#'    plotOutput("plotb")
-#'  )
+#'   href = "/page2",
+#'   ui = tagList(
+#'     h1("This is my second page"),
+#'     plotOutput("plotb")
+#'   )
 #' )
-#'
 page <- function(
   href,
   ui = tagList(),
-  server = function(input, output, session){},
+  server = function(input, output, session) {},
   req_handlers = list(),
   res_handlers = list()
-){
+) {
   href <- rm_backslash(href)
   # Page are href + ui
   res <- list(
@@ -136,7 +136,7 @@ redirect <- function(
   from,
   to,
   code = 301
-){
+) {
 
   # We need the redirect to be a specific HTTP code
   check_redirect_code(code)

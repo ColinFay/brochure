@@ -27,7 +27,7 @@ app_ui <- function(request) {
       ),
       page(
         href = "/page2",
-        ui =  tagList(
+        ui = tagList(
           h1("This is my second page"),
           nav_links,
           # The text enter on page 1 will be available here, reading
@@ -39,7 +39,7 @@ app_ui <- function(request) {
       ),
       page(
         href = "/contact",
-        ui =  tagList(
+        ui = tagList(
           h1("Contact us"),
           nav_links,
           tags$ul(
@@ -60,20 +60,19 @@ app_ui <- function(request) {
 #' @import shiny
 #' @importFrom golem add_resource_path activate_js favicon bundle_resources
 #' @noRd
-golem_add_external_resources <- function(){
-
+golem_add_external_resources <- function() {
   add_resource_path(
-    'www', app_sys('app/www')
+    "www",
+    app_sys("app/www")
   )
 
   tags$head(
     favicon(),
     bundle_resources(
-      path = app_sys('app/www'),
-      app_title = 'brochure'
+      path = app_sys("app/www"),
+      app_title = "brochure"
     )
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()
   )
 }
-

@@ -1,0 +1,94 @@
+---
+title: "brochure_page"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r development, include=FALSE}
+library(testthat)
+```
+
+```{r development-1}
+# Load already included functions
+pkgload::load_all(export_all = FALSE)
+```
+
+# My function
+
+```{r function-my_fun}
+#' Add page
+#'
+#' Module template for golem
+#'
+#' @return Used for side effect
+#' @inheritParams golem::module_template
+#' @export
+#'
+#' @examples
+new_page <- function(name, path, export, ...) {
+  tmplt <- readLines(
+    system.file(
+      "golem/mod_home.R",
+      package = "brochure"
+    )
+  )
+  tmplt <- gsub(
+    "home",
+    name,
+    tmplt
+  )
+  tmplt <- gsub(
+    "/",
+    sprintf("/%s", name),
+    tmplt
+  )
+  write(tmplt, path)
+}
+```
+
+```{r examples-my_fun}
+if (requireNamespace("golem") & interactive()) {
+  golem::add_module(name = "home", module_template = brochure::new_page)
+}
+```
+
+```{r tests-my_fun}
+test_that("golem_hook works", {
+  x <- tempfile(fileext = ".R")
+  new_page("pouet", x)
+
+  tmplt <- readLines(
+    x
+  )
+  expect_true(
+    tmplt[1] == "#' pouet UI Function"
+  )
+  tmplt <- paste(tmplt, collapse = " ")
+  expect_true(
+    grepl("pouet", tmplt)
+  )
+  expect_true(
+    grepl("page", tmplt)
+  )
+
+  skip_if_not_installed("golem")
+  old <- setwd(tempdir())
+  on.exit(setwd(old))
+  unlink("testgolembrochure", TRUE, TRUE)
+  golem::create_golem("testgolembrochure", project_hook = brochure::golem_hook)
+  setwd("testgolembrochure")
+  golem::add_module(name = "pouet", module_template = brochure::new_page)
+  expect_true(
+    file.exists("R/mod_pouet.R")
+  )
+})
+```
+
+
+```{r development-inflate, eval=FALSE}
+# Run but keep eval=FALSE to avoid infinite loop
+# Execute in the console directly
+fusen::inflate(flat_file = "dev/flat_add_page.Rmd", vignette_name = NA, document = FALSE)
+```
+

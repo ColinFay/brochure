@@ -15,34 +15,34 @@
 
 ## Dependencies ----
 ## Add one line by package you want to add as dependency
-usethis::use_package( "thinkr" )
+usethis::use_package("thinkr")
 
 usethis::use_dev_package("brochure")
 usethis::use_dev_package("glouton")
 usethis::use_dev_package("cachem")
 ## Add modules ----
 ## Create a module infrastructure in R/
-golem::add_module( name = "name_of_module1" ) # Name of the module
-golem::add_module( name = "name_of_module2" ) # Name of the module
+golem::add_module(name = "name_of_module1") # Name of the module
+golem::add_module(name = "name_of_module2") # Name of the module
 
 ## Add helper functions ----
 ## Creates ftc_* and utils_*
-golem::add_fct( "helpers" )
-golem::add_utils( "helpers" )
+golem::add_fct("helpers")
+golem::add_utils("helpers")
 
 ## External resources
 ## Creates .js and .css files at inst/app/www
-golem::add_js_file( "script" )
-golem::add_js_handler( "handlers" )
-golem::add_css_file( "custom" )
+golem::add_js_file("script")
+golem::add_js_handler("handlers")
+golem::add_css_file("custom")
 
 ## Add internal datasets ----
 ## If you have data in your package
-usethis::use_data_raw( name = "my_dataset", open = FALSE )
+usethis::use_data_raw(name = "my_dataset", open = FALSE)
 
 ## Tests ----
 ## Add one line by test you want to create
-usethis::use_test( "app" )
+usethis::use_test("app")
 
 # Documentation
 
@@ -95,4 +95,3 @@ usethis::use_gitlab_ci()
 # You're now set! ----
 # go to dev/03_deploy.R
 rstudioapi::navigateToFile("dev/03_deploy.R")
-
