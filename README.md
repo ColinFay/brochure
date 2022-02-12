@@ -11,7 +11,7 @@ status](https://github.com/ColinFay/brochure/workflows/R-CMD-check/badge.svg)](h
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 <!-- badges: end -->
 
-**THIS IS A WORK IN PROGRESS, DO NOT USE**
+
 
 You’re reading the documentation for version:
 
