@@ -119,9 +119,18 @@ page <- function(
     server = server
   )
   # Adding the page level req_handlerss
-  add_req_handlers_page(href, req_handlers)
-  add_res_handlers_page(href, res_handlers)
-  with_class(res, "brochure_page")
+  add_req_handlers_page(
+    href,
+    req_handlers
+  )
+  add_res_handlers_page(
+    href,
+    res_handlers
+  )
+  with_class(
+    res,
+    "brochure_page"
+  )
 }
 
 #' Redirection
@@ -147,5 +156,8 @@ redirect <- function(
     code = code
   )
 
-  with_class(res, "redirect")
+  with_class(
+    res,
+    "redirect"
+  )
 }

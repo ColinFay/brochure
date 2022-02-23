@@ -24,7 +24,10 @@ add_res_handlers_page <- function(
   href,
   res_handlers
 ) {
-  res_handlers <- lapply(res_handlers, as_function)
+  res_handlers <- lapply(
+    res_handlers,
+    as_function
+  )
   ...multipage_opts$res_handlers_page[[href]] <- res_handlers
 }
 

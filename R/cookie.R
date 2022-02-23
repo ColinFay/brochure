@@ -106,27 +106,49 @@ set_cookie <- function(
   cook <- sprintf("%s=%s;", name, value)
 
   if (!is.null(expires)) {
-    cook <- sprintf("%s Expires = %s;", cook, http_date(as.POSIXlt(expires, tz = "GMT")))
+    cook <- sprintf(
+      "%s Expires = %s;",
+      cook,
+      http_date(as.POSIXlt(expires, tz = "GMT"))
+    )
   }
 
   if (!is.null(max_age)) {
-    cook <- sprintf("%s Max-Age = %s;", cook, max_age)
+    cook <- sprintf(
+      "%s Max-Age = %s;",
+      cook,
+      max_age
+    )
   }
 
   if (!is.null(domain)) {
-    cook <- sprintf("%s Domain = %s;", cook, domain)
+    cook <- sprintf(
+      "%s Domain = %s;",
+      cook,
+      domain
+    )
   }
 
   if (!is.null(path)) {
-    cook <- sprintf("%s Path = %s;", cook, path)
+    cook <- sprintf(
+      "%s Path = %s;",
+      cook,
+      path
+    )
   }
 
   if (!is.null(secure) && secure) {
-    cook <- sprintf("%s Secure;", cook)
+    cook <- sprintf(
+      "%s Secure;",
+      cook
+    )
   }
 
   if (!is.null(http_only) && http_only) {
-    cook <- sprintf("%s HttpOnly;", cook)
+    cook <- sprintf(
+      "%s HttpOnly;",
+      cook
+    )
   }
 
   if (!is.null(same_site)) {
@@ -135,7 +157,11 @@ set_cookie <- function(
       ~ .x %in% c("Strict", "Lax", "None"),
       'same_site should be one of "Strict", "Lax", "None"'
     )
-    cook <- sprintf("%s SameSite = %s;", cook, same_site)
+    cook <- sprintf(
+      "%s SameSite = %s;",
+      cook,
+      same_site
+    )
   }
 
   res$headers$`Set-Cookie` <- cook
@@ -161,9 +187,34 @@ http_date <- function(date) {
   # Borrowed from https://github.com/r-lib/gargle/blob/132d549871ab5d80ae20d21c5b465fdd80ca0f6c/R/shiny.R#L250
   sprintf(
     "%s, %02s %s %04s %02s:%02s:%02s GMT",
-    c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")[date$wday + 1],
+    c(
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat",
+      "Sun"
+    )[
+      date$wday + 1
+    ],
     date$mday,
-    c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")[date$mon + 1],
+    c(
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec"
+    )[
+      date$mon + 1
+    ],
     date$year + 1900,
     date$hour,
     date$min,

@@ -8,5 +8,8 @@ server_redirect <- function(
   to,
   session = shiny::getDefaultReactiveDomain()
 ) {
-  session$sendCustomMessage("redirect", to)
+  session$sendCustomMessage(
+    "redirect",
+    to
+  )
 }
