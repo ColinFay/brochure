@@ -1,6 +1,6 @@
 Package: brochure
 Title: Multipage 'Shiny' Apps
-Version: 0.0.0.9022
+Version: 0.0.0.9023
 Authors@R: 
     person("Colin", "Fay", , "contact@colinfay.me", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7343-1846"))

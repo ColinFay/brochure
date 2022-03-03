@@ -17,7 +17,7 @@ You’re reading the documentation for version:
 
 ``` r
 desc::desc_get_version()
-#> [1] '0.0.0.9022'
+#> [1] '0.0.0.9023'
 ```
 
 The goal of `{brochure}` is to provide a mechanism for creating natively
