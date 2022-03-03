@@ -11,7 +11,7 @@ status](https://github.com/ColinFay/brochure/workflows/R-CMD-check/badge.svg)](h
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 <!-- badges: end -->
 
-
+**THIS IS A WORK IN PROGRESS, DO NOT USE**
 
 You’re reading the documentation for version:
 
@@ -186,6 +186,22 @@ brochureApp(
   redirect(
     from = "/page4",
     to = "/"
+  )
+)
+```
+
+**IMPORTANT NOTE** all elements which are not of class `"brochure_*"`
+(`brochure_page` and `brochure_redirect`) will be injected **as is** in
+the page. In other word, if you use a function that return a string, the
+string will be added as is to the pages. For example, this will inject a
+`"x"` on each page. This is probably **NOT** what you want to do, but
+can be the source of some bugs you’ll have with your app.
+
+``` r
+brochureApp(
+  "x",
+  page(
+    href = "/"
   )
 )
 ```
@@ -561,7 +577,7 @@ You can set up a `{brochure}` based app with `{golem}` using the
 `brochure::golem_hook()` function.
 
 ``` r
-golem::create_golem("myapp", project_hook = brochure::golem_hook)
+golem::create_golem("mapmyrace", project_hook = brochure::golem_hook)
 ```
 
 You can also use the module\_template function to create a `{brochure}`

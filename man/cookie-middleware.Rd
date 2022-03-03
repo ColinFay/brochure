@@ -69,8 +69,8 @@ Description of parameters is taken from this page.
 }
 \examples{
 set_cookie(
-   shiny:::httpResponse(),
-   "this",
-   12
+  shiny:::httpResponse(),
+  "this",
+  12
 )
 }

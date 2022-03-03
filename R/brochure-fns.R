@@ -34,14 +34,15 @@ brochure <- function(
   ...multipage_opts$req_handlers <- req_handlers
   ...multipage_opts$res_handlers <- res_handlers
 
-  # browser()
-
   # Extracting the dots
   content <- list(...)
 
   # Separate the extra content from the pages
   # This allows to add extra deps
-  are_pages <- extract(content, "brochure_page")
+  are_pages <- extract(
+    content,
+    "brochure_page"
+  )
 
   # Which one are page
   pages <- content[are_pages]
@@ -49,7 +50,10 @@ brochure <- function(
   extra <- content[!are_pages]
 
   # Extract and store the redirects
-  are_redirect <- extract(extra, "redirect")
+  are_redirect <- extract(
+    extra,
+    "redirect"
+  )
 
   # We'll add a dataframe of redirection
   ...multipage_opts$redirect <- build_redirect(

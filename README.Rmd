@@ -189,6 +189,19 @@ brochureApp(
 )
 ```
 
+__IMPORTANT NOTE__ all elements which are not of class `"brochure_*"` (`brochure_page` and `brochure_redirect`) will be injected __as is__ in the page. 
+In other word, if you use a function that return a string, the string will be added as is to the pages.
+For example, this will inject a `"x"` on each page. 
+This is probably __NOT__ what you want to do, but can be the source of some bugs you'll have with your app.
+
+```{r}
+brochureApp(
+  "x",
+  page(
+    href = "/"
+  )
+)
+```
 
 ## `req_handlers` & `res_handlers`
 
@@ -533,7 +546,7 @@ brochureApp(
 You can set up a `{brochure}` based app with `{golem}` using the `brochure::golem_hook()` function. 
 
 ```r
-golem::create_golem("myapp", project_hook = brochure::golem_hook)
+golem::create_golem("mapmyrace", project_hook = brochure::golem_hook)
 ```
 
 You can also use the module_template function to create a `{brochure}` module :
