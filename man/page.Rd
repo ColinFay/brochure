@@ -44,11 +44,10 @@ A Brochure Page
 \examples{
 library(shiny)
 page(
- href = "/page2",
- ui =  tagList(
-   h1("This is my second page"),
-   plotOutput("plotb")
- )
+  href = "/page2",
+  ui = tagList(
+    h1("This is my second page"),
+    plotOutput("plotb")
+  )
 )
-
 }

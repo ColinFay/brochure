@@ -4,7 +4,12 @@
 #' `shinyApp()`.
 #'
 #' @inheritParams shiny::shinyApp
-#' @param ... a list of `Page()`
+#' @param ... a list of elements to inject in the brochureApp.
+#' __IMPORTANT NOTE__ all elements which are not of class `"brochure_*"`
+#' will be injected __as is__ in the page. In other word, if you use a function
+#' that return a string, the string will be added as is to the pages.
+#' The only elements that should be injected on top of `page()`s are HTML elements
+#' and/or `tagList/tags` that are invisible on screen (for example a `<script></script>`).
 #' @param wrapped A UI function wrapping the Brochure UI.
 #' Default is `shiny::fluidPage`.
 #' @param basepath The base path of your app. This pattern will be removed from the
@@ -56,6 +61,8 @@ brochureApp <- function(
 
       # Extract the correct UI, wrap it
       # and add the redirect from brochure
+      # REGEX for path should be handled here
+
       ui <- ...multipage[[
       rm_backslash(request$PATH_INFO)
       ]]$ui
@@ -80,6 +87,8 @@ brochureApp <- function(
     server = function(input, output, session) {
       # Same logic as the UI, we look for the correct
       # server function
+      # REGEX for path should be handled here
+
       path <- rm_backslash(
         gsub(
           "websocket/",
@@ -115,7 +124,7 @@ brochureApp <- function(
         }
       }
     }
-
+    # REGEX for path should be handled here
 
     req$PATH_INFO <- rm_backslash(req$PATH_INFO)
 
@@ -132,6 +141,7 @@ brochureApp <- function(
     }
 
     # Setting the path info for reuse in brochure()
+    # Id from path should be added here as an opt
     ...multipage_opts$path <- req$PATH_INFO
 
     # Handling the page level req_handlers
