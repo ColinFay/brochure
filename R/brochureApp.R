@@ -120,7 +120,7 @@ brochureApp <- function(
         # If any req_handlers return an 'httpResponse', return it directly without doing
         # anything else.
         if ("httpResponse" %in% class(req)) {
-          return(res)
+          return(req)
         }
       }
     }
