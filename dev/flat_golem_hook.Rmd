@@ -28,6 +28,7 @@ golem_hook <- function(path, package_name, ...) {
   unlink("R/run_app.R", TRUE, TRUE)
   unlink("R/app_ui.R", TRUE, TRUE)
   unlink("R/app_server.R", TRUE, TRUE)
+  
   file.copy(
     system.file(
       "golem/run_app.R",
@@ -35,6 +36,17 @@ golem_hook <- function(path, package_name, ...) {
     ),
     "R/run_app.R"
   )
+  # Include `package_name` as `app_title` in in run_app()
+  run_app <- readLines(
+    "R/run_app.R"
+  )
+  run_app <- gsub(
+    "REPLACEME",
+    package_name,
+    run_app
+  )
+  write(run_app, "R/run_app.R")
+  
   file.copy(
     system.file(
       "golem/mod_home.R",
@@ -42,7 +54,7 @@ golem_hook <- function(path, package_name, ...) {
     ),
     "R/mod_home.R"
   )
-
+  
   dev_R <- readLines(
     "dev/02_dev.R"
   )
@@ -54,7 +66,7 @@ golem_hook <- function(path, package_name, ...) {
       )
     )
   ] <- 'golem::add_module(name = "name_of_module1", with_test = TRUE, module_template = brochure::new_page) # Name of the module'
-
+  
   dev_R[
     which(
       grepl(
@@ -76,12 +88,23 @@ if (requireNamespace("golem") & interactive()) {
 
 ```{r tests-my_fun}
 test_that("golem_hook works", {
+  
   skip_if_not_installed("golem")
-  old <- setwd(tempdir())
-  on.exit(setwd(old))
-  unlink("testgolembrochure", TRUE, TRUE)
-  golem::create_golem("testgolembrochure", project_hook = brochure::golem_hook)
-  setwd("testgolembrochure")
+  
+  path_dummy_golem <- tempfile(pattern = "dummygolem")
+  
+  golem::create_golem(
+    path = path_dummy_golem,
+    open = FALSE,
+    project_hook = brochure::golem_hook
+  )
+  
+  old_wd <- setwd(path_dummy_golem)
+  on.exit({
+    unlink(path_dummy_golem, TRUE, TRUE)
+    setwd(old_wd)
+  })
+  
   expect_true(
     file.exists("R/mod_home.R")
   )
@@ -99,24 +122,44 @@ test_that("golem_hook works", {
       "R/mod_home.R"
     )
   )
-  expect_equal(
-    readLines(
-      system.file(
-        "golem/run_app.R",
-        package = "brochure"
-      )
-    ),
-    readLines(
-      "R/run_app.R"
+  
+  remove_app_title_line <- function(run_app_lines) {
+    grep(
+      pattern = "app_title = ",
+      x = run_app_lines,
+      value = TRUE, 
+      invert = TRUE
+    )
+  }
+  run_app_brochure_template <-readLines(
+    system.file(
+      "golem/run_app.R",
+      package = "brochure"
     )
   )
-
+  run_app_dummy_golem <- readLines("R/run_app.R")
+  ## run_app is properly copied and...
+  expect_equal(
+    remove_app_title_line(run_app_brochure_template),
+    remove_app_title_line(run_app_dummy_golem)
+  )
+  # ...app_title was modified
+  expect_error(
+    expect_equal(
+      run_app_brochure_template,
+      run_app_dummy_golem
+    ),
+    regexp = "app_title = "
+  ) 
+  
+  # Module template was added in calls to golem::add_module() in 02_dev.R
   expect_true(
     grepl(
-      "brochure",
+      "module_template = brochure::new_page",
       paste(readLines("dev/02_dev.R"), collapse = " ")
     )
   )
+  
 })
 ```
 
@@ -124,6 +167,11 @@ test_that("golem_hook works", {
 ```{r development-inflate, eval=FALSE}
 # Run but keep eval=FALSE to avoid infinite loop
 # Execute in the console directly
-fusen::inflate(flat_file = "dev/flat_golem_hook.Rmd", vignette_name = NA, document = FALSE)
+fusen::inflate(
+  flat_file = "dev/flat_golem_hook.Rmd",
+  vignette_name = NA,
+  check = FALSE,
+  document = FALSE
+)
 ```
 
