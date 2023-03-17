@@ -11,7 +11,7 @@
 #' The only elements that should be injected on top of `page()`s are HTML elements
 #' and/or `tagList/tags` that are invisible on screen (for example a `<script></script>`).
 #' @param wrapped A UI function wrapping the Brochure UI.
-#' Default is `shiny::fluidPage`.
+#' Default is `shiny::tagList`.
 #' @param basepath The base path of your app. This pattern will be removed from the
 #' url, so that it matches the href of your `page()`. For example, it you have
 #' an app at `http://connect.thinkr.fr/brochure/`, and your page is names `page1`,
@@ -38,7 +38,7 @@ brochureApp <- function(
   basepath = "",
   req_handlers = list(),
   res_handlers = list(),
-  wrapped = shiny::fluidPage
+  wrapped = shiny::tagList
 ) {
 
   # Saving the brochure
