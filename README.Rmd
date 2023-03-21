@@ -31,7 +31,7 @@ desc::desc_get_version()
 
 The goal of `{brochure}` is to provide a mechanism for creating natively multi-page `{shiny}` applications, _i.e_ that can serve content on multiple endpoints.
 
-__Disclaimer__: the way you will build app with `{brochure}` is different from the way you usually build `{shiny}` apps, as we no longer operate under the single page app paradigm. 
+__Disclaimer__: the way you will build app with `{brochure}` is different from the way you usually build `{shiny}` apps, as we no longer operate under the single page app paradigm.
 Please read the "Design Pattern" of this README for more info.
 
 ## Installation
@@ -55,9 +55,12 @@ library(shiny)
 A `brochureApp` is a series of `page`s that are defined by an `href` (the path/endpoint where the page is available), a `{shiny}` UI and a `server` function.
 This is conceptually important: each page has its own shiny session, its own UI, and its own server.
 
-Note that the server is optional if you want to display a static page. 
+Note that the server is optional if you want to display a static page.
 
 ```{r}
+pkgload::load_all()
+library(shiny)
+options(shiny.launch.browser = FALSE)
 brochureApp(
   # First page
   page(
@@ -67,6 +70,7 @@ brochureApp(
       plotOutput("plot")
     ),
     server = function(input, output, session) {
+      cli::cat_rule("page 1 server")
       output$plot <- renderPlot({
         plot(iris)
       })
@@ -74,14 +78,40 @@ brochureApp(
   ),
   # Second page, without any server-side function
   page(
-    href = "/page2",
+    href = "/page2/pif/:name",
     ui = fluidPage(
       h1("This is my second page"),
       tags$p("There is no server function in this one")
-    )
+    ),
+    server = function(input, output, session) {
+      print("coucou")
+      output$id <- renderUI({
+        browser()
+        paste(
+          "The id is: ",
+          get_params()$id
+        )
+      })
+    }
+  ),
+  # Third page, without any server-side function
+  page(
+    href = "/page3/this/is/a/path",
+    ui = fluidPage(
+      h1("This is my third page"),
+      plotOutput("plot")
+    ),
+    server = function(input, output, session) {
+      cli::cat_rule("page 3 server")
+      output$plot <- renderPlot({
+        plot(iris)
+      })
+    }
   )
 )
+browseURL("http://127.0.0.1:7407/page3/ip?id=1")
 ```
+
 
 > You can now navigate to /, and to /page2 inside your browser.
 
@@ -106,7 +136,7 @@ brochureApp(
 
 > You can now navigate to /nothere, you'll be redirected to /
 
-A more elaborate example: 
+A more elaborate example:
 
 ```{r}
 # Creating a navlink
@@ -189,9 +219,9 @@ brochureApp(
 )
 ```
 
-__IMPORTANT NOTE__ all elements which are not of class `"brochure_*"` (`brochure_page` and `brochure_redirect`) will be injected __as is__ in the page. 
+__IMPORTANT NOTE__ all elements which are not of class `"brochure_*"` (`brochure_page` and `brochure_redirect`) will be injected __as is__ in the page.
 In other word, if you use a function that return a string, the string will be added as is to the pages.
-For example, this will inject a `"x"` on each page. 
+For example, this will inject a `"x"` on each page.
 This is probably __NOT__ what you want to do, but can be the source of some bugs you'll have with your app.
 
 ```{r}
@@ -211,17 +241,17 @@ Each page, and the global app, have a `req_handlers` and `res_handlers` paramete
 
 An `*_handler` is a function that takes as parameter(s):
 
-- For `req_handlers`, `req`, which is the request object (see below for when these objects are created). 
+- For `req_handlers`, `req`, which is the request object (see below for when these objects are created).
 For example `function(req){ print(req$PATH_INFO); return(req)}`.
 
 - For `res_handlers`, `res`, the response object, & `req`.
 For example `function(res, req){ print(res$content); return(res)}`.
 
-`req_handlers` __must__ return `req` & `res_handlers` __must__ return `res`. 
-Both can be potentially modified. 
+`req_handlers` __must__ return `req` & `res_handlers` __must__ return `res`.
+Both can be potentially modified.
 
 They can be used to register log, or to modify the objects, or any kind of things you can think of.
-If you are familiar with `express.js`, you can think of `req_handlers` as what express calls "middleware". 
+If you are familiar with `express.js`, you can think of `req_handlers` as what express calls "middleware".
 These functions are run when R is building the HTTP response to send to the browser (i.e, no server code has been run yet), following this process:
 
 1. R receives a `GET` request from the browser, creating a request object, called `req`
@@ -230,13 +260,13 @@ These functions are run when R is building the HTTP response to send to the brow
 1. The `res_handlers` are run on this `httpResponse` (first app level `res_handlers`, then page level `res_handlers`)
 1. The `httpResponse` is sent back to the browser
 
-Note that if any `req_handlers` returns an `httpResponse` object, it will be returned to the browser immediately, without any further computation. 
+Note that if any `req_handlers` returns an `httpResponse` object, it will be returned to the browser immediately, without any further computation.
 This early `httpResponse` will not be passed to the `res_handlers` of the app or the page.
 This process can for example be used to send custom `httpResponse`, as shown below with the `healthcheck` endpoint.
 
-You can use formulas inside your handlers. `.x` and `..1` will be `req`  for req_handlers, `.x` and `..1` will be `res` & `.y` and `..2` will be `req` for res_handlers. 
+You can use formulas inside your handlers. `.x` and `..1` will be `req`  for req_handlers, `.x` and `..1` will be `res` & `.y` and `..2` will be `req` for res_handlers.
 
-Design pattern side-note: you'd probably want to define the handlers outside of the app, for better code organization (as with `log_where` below). 
+Design pattern side-note: you'd probably want to define the handlers outside of the app, for better code organization (as with `log_where` below).
 
 ### Example: Logging with `req_handlers()`, and building a healthcheck point
 
@@ -318,9 +348,9 @@ Note that you can get them from the server with `get_cookies()`, and parse the c
 parse_cookie_string("a=12;session=blabla")
 ```
 
-In the example, we'll also use `brochure::server_redirect("/")` to redirect the user after login. 
+In the example, we'll also use `brochure::server_redirect("/")` to redirect the user after login.
 
-```{r} 
+```{r}
 # Creating a navlink
 nav_links <- tags$ul(
   tags$li(
@@ -422,17 +452,17 @@ brochureApp(
 
 ## Design pattern
 
-Note that every time you open a new page, a __new shiny session is launched__. 
-This is different from what you usually do when you are building a `{shiny}` app that works as a single page application. 
+Note that every time you open a new page, a __new shiny session is launched__.
+This is different from what you usually do when you are building a `{shiny}` app that works as a single page application.
 This is no longer the case in  `{brochure}`.
 
-What that means is that there is no data persistence in R when navigating from one page to the other. 
+What that means is that there is no data persistence in R when navigating from one page to the other.
 That might seem like a downside, but I believe that it will actually be for the best: it will make developers think more carefully about the data flow of their application.
 
 That being said, how do we keep track of a user though pages, so that if they do something in a page, it's reflected on another?
 
-To do that, you'd need to add a form of session identifier, like a cookie: this can for example be done using the [`{glouton}`](https://github.com/colinfay/glouton) package if you want to manage it with JS. 
-You can also use the cookie example from before. 
+To do that, you'd need to add a form of session identifier, like a cookie: this can for example be done using the [`{glouton}`](https://github.com/colinfay/glouton) package if you want to manage it with JS.
+You can also use the cookie example from before.
 
 You'll also need a form of backend storage (here in the example, we use [`{cachem}`](https://github.com/r-lib/cachem), but you can also use an external DB like SQLite or MongoDB).
 
@@ -543,7 +573,7 @@ brochureApp(
 
 ### Fresh `{golem}` App
 
-You can set up a `{brochure}` based app with `{golem}` using the `brochure::golem_hook()` function. 
+You can set up a `{brochure}` based app with `{golem}` using the `brochure::golem_hook()` function.
 
 ```r
 golem::create_golem("mapmyrace", project_hook = brochure::golem_hook)
@@ -557,11 +587,11 @@ golem::add_module(name = "pouet", module_template = brochure::new_page)
 
 ### Adapt old app
 
-To adapt your `{golem}` based application to `{brochure}`, here are the two steps to follow: 
+To adapt your `{golem}` based application to `{brochure}`, here are the two steps to follow:
 
 + Remove the app_server.R file, and the top of app_ui => You'll still need `golem_add_external_resources()`.
 
-+ Build the pages inside separate R scripts, following the example from this `README`. 
++ Build the pages inside separate R scripts, following the example from this `README`.
 
 ```
 .
@@ -569,10 +599,10 @@ To adapt your `{golem}` based application to `{brochure}`, here are the two step
 ├── NAMESPACE
 ├── R
 │   ├── app_config.R
-│   ├── home.R ### YOUR PAGE 
-│   ├── login.R ### YOUR PAGE 
-│   ├── logout.R ### YOUR PAGE 
-│   └── run_app.R ### YOUR PAGE 
+│   ├── home.R ### YOUR PAGE
+│   ├── login.R ### YOUR PAGE
+│   ├── logout.R ### YOUR PAGE
+│   └── run_app.R ### YOUR PAGE
 ├── dev
 │   ├── 01_start.R
 │   ├── 02_dev.R
@@ -587,7 +617,7 @@ To adapt your `{golem}` based application to `{brochure}`, here are the two step
 │   └── run_app.Rd
 ```
 
-+ Replace `shinyApp` with `brochureApp` in `run_app()`, add the external resources, then your pages. 
++ Replace `shinyApp` with `brochureApp` in `run_app()`, add the external resources, then your pages.
 
 ```{r}
 run_app <- function(
@@ -614,7 +644,7 @@ run_app <- function(
 
 ## Previous work
 
-Other packages that implements features that are closed to what `{brochure}` does: 
+Other packages that implements features that are closed to what `{brochure}` does:
 
 + [`{shiny.router}`](https://appsilon.com/shiny-router-020/)
 

@@ -13,7 +13,7 @@ brochureApp(
   basepath = "",
   req_handlers = list(),
   res_handlers = list(),
-  wrapped = shiny::fluidPage
+  wrapped = shiny::tagList
 )
 }
 \arguments{
@@ -57,7 +57,7 @@ object before it is send to the browser. Each function must take a \code{res} an
 \code{req} parameter.}
 
 \item{wrapped}{A UI function wrapping the Brochure UI.
-Default is \code{shiny::fluidPage}.}
+Default is \code{shiny::tagList}.}
 }
 \value{
 A shiny.appobj
