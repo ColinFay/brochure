@@ -58,6 +58,42 @@ This is conceptually important: each page has its own shiny session, its own UI,
 Note that the server is optional if you want to display a static page.
 
 ```{r}
+brochureApp(
+  # First page
+  page(
+    href = "/",
+    ui = fluidPage(
+      h1("This is my first page"),
+      plotOutput("plot")
+    ),
+    server = function(input, output, session) {
+      output$plot <- renderPlot({
+        plot(iris)
+      })
+    }
+  ),
+  # Second page, without any server-side function
+  page(
+    href = "/page2",
+    ui = fluidPage(
+      h1("This is my second page"),
+      tags$p("There is no server function in this one")
+    )
+  )
+)
+```
+
+> You can now navigate to /, and to /page2 inside your browser.
+
+## Route matching
+
+Route matching can be done through various approach:
+
+- `href` is a string, and the route is matched exactly
+- `href` is a regular expression, and the route is matched against it
+- `href` is a string patterns (`/page/:id/:name`). The route is matched against it, and the parameters are available in the `get_params()` function from the server side.
+
+```{r}
 pkgload::load_all()
 library(shiny)
 options(shiny.launch.browser = FALSE)
@@ -78,33 +114,26 @@ brochureApp(
   ),
   # Second page, without any server-side function
   page(
-    href = "/page2/pif/:name",
+    href = "/page2/.*",
     ui = fluidPage(
       h1("This is my second page"),
-      tags$p("There is no server function in this one")
-    ),
-    server = function(input, output, session) {
-      print("coucou")
-      output$id <- renderUI({
-        browser()
-        paste(
-          "The id is: ",
-          get_params()$id
-        )
-      })
-    }
+      tags$p("It will match any path after /page2/")
+    )
   ),
-  # Third page, without any server-side function
   page(
-    href = "/page3/this/is/a/path",
+    href = "/page3/:id",
     ui = fluidPage(
       h1("This is my third page"),
-      plotOutput("plot")
+      tags$p("It will match any path with that pattern: /page3/:colin, /page3/:john, etc., and the parameter will be available in the server function"),
+      uiOutput("id")
     ),
     server = function(input, output, session) {
       cli::cat_rule("page 3 server")
-      output$plot <- renderPlot({
-        plot(iris)
+      output$id <- renderUI({
+        paste(
+          "You used the id",
+          get_params()$id
+        )
       })
     }
   )
@@ -113,7 +142,13 @@ browseURL("http://127.0.0.1:7407/page3/ip?id=1")
 ```
 
 
-> You can now navigate to /, and to /page2 inside your browser.
+When using paths, you should be aware of the fact that:
+
+- `/page2/` and `/page2` are treated as different paths.
+- The first path found is matched. For example, if you have a page with `/.*` and another one with `/[a-z]*`, the first one will always be matched.
+
+The routing path is heavily inspired by (if not copied from) how it works with ExpressJS <https://expressjs.com/en/guide/routing.html>.
+Please read the [routing]() vignette for more details.
 
 ### `redirect()`
 
