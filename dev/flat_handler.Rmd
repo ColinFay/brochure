@@ -13,6 +13,7 @@ library(testthat)
 # Load already included functions if relevant
 pkgload::load_all(export_all = FALSE)
 ```
+## Routing in `{brochure}`
 
 # Route
 
@@ -92,7 +93,7 @@ Route <- R6::R6Class(
       )[[1]]
       list(
         route = matches[1],
-        params = matches[-1]
+        params = as.list(matches[-1])
       )
     }
   )
@@ -162,7 +163,7 @@ test_that("Route works", {
   )
   expect_equal(
     extracted$params,
-    c(id = "aaa", postid = "aaa")
+    list(id = "aaa", postid = "aaa")
   )
 
   r_with_regex <- Route$new(
@@ -198,7 +199,7 @@ test_that("Route works", {
   )
   expect_equal(
     extracted$params,
-    character(0)
+    list()
   )
 
   # Test the `initialize` method with missing arguments
@@ -550,7 +551,7 @@ test_that("set_params works", {
   session <- shiny::MockShinySession$new()
   expect_equal(
       set_params(
-        list(params = c(id = "aaa", postid = "aaa")),
+        list(params = list(id = "aaa", postid = "aaa")),
         session = session
     ),
     NULL
@@ -559,7 +560,7 @@ test_that("set_params works", {
     get_params(
       session
     ),
-    c(id = "aaa", postid = "aaa")
+    list(id = "aaa", postid = "aaa")
   )
 })
 ```

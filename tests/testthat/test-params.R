@@ -4,7 +4,7 @@ test_that("set_params works", {
   session <- shiny::MockShinySession$new()
   expect_equal(
       set_params(
-        list(params = c(id = "aaa", postid = "aaa")),
+        list(params = list(id = "aaa", postid = "aaa")),
         session = session
     ),
     NULL
@@ -13,6 +13,6 @@ test_that("set_params works", {
     get_params(
       session
     ),
-    c(id = "aaa", postid = "aaa")
+    list(id = "aaa", postid = "aaa")
   )
 })

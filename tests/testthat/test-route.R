@@ -51,7 +51,7 @@ test_that("Route works", {
   )
   expect_equal(
     extracted$params,
-    c(id = "aaa", postid = "aaa")
+    list(id = "aaa", postid = "aaa")
   )
 
   r_with_regex <- Route$new(
@@ -87,7 +87,7 @@ test_that("Route works", {
   )
   expect_equal(
     extracted$params,
-    character(0)
+    list()
   )
 
   # Test the `initialize` method with missing arguments

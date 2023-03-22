@@ -13,7 +13,7 @@
 match_route <- function(
   href,
   routes
-) {
+    ) {
   for (route in routes) {
     if (route$matches(href)) {
       return(route)

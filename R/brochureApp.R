@@ -64,12 +64,13 @@ brochureApp <- function(
         request$PATH_INFO,
         ...multipage$pages
       )$ui
+
       if (is.function(ui)) {
         ui <- ui(request)
       }
 
       ...multipage_opts$wrapped(
-        tags$head(
+        shiny::tags$head(
           tagList(
             shiny::includeScript(
               system.file(
@@ -100,7 +101,7 @@ brochureApp <- function(
       )
 
       set_params(
-        brochure_server,
+        brochure_server$extract(),
         session = session
       )
 

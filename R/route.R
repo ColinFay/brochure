@@ -83,7 +83,7 @@ Route <- R6::R6Class(
       )[[1]]
       list(
         route = matches[1],
-        params = matches[-1]
+        params = as.list(matches[-1])
       )
     }
   )
