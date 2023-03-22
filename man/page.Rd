@@ -7,7 +7,8 @@
 page(
   href,
   ui = tagList(),
-  server = function(input, output, session) { },
+  server = function(input, output, session) {
+ },
   req_handlers = list(),
   res_handlers = list()
 )
