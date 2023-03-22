@@ -65,27 +65,24 @@ brochureApp <- function(
         request$PATH_INFO,
         ...multipage$pages
       )$ui
-      #browser()
       if (is.function(ui)) {
         ui <- ui(request)
       }
 
       ...multipage_opts$wrapped(
-        tagList(
-          shiny::includeScript(
-            system.file(
-              "redirect.js",
-              package = "brochure"
-            )
-          ),
-          tags$head(
-            tags$base(
-              href = gsub("^(/[^/]+)/.*", "\\1", request$PATH_INFO)
-            )
-          ),
-          ...multipage_opts$extra,
-          ui
+        tags$head(
+          tagList(
+            shiny::includeScript(
+              system.file(
+                "redirect.js",
+                package = "brochure"
+              )
+            ),
+            ...multipage_opts$extra,
+            ui
+          )
         )
+
       )
     },
     server = function(input, output, session) {
@@ -138,9 +135,6 @@ brochureApp <- function(
         }
       }
     }
-    # REGEX for path should be handled here
-
-    # req$PATH_INFO <- rm_backslash(req$PATH_INFO)
 
     # Handle redirect
     if (req$PATH_INFO %in% ...multipage_opts$redirect$from) {
@@ -184,6 +178,7 @@ brochureApp <- function(
 
     # Res handling
     res <- handle_res_with_handlers(res, req)
+
     return(res)
   }
 
