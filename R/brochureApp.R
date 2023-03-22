@@ -40,7 +40,6 @@ brochureApp <- function(
   res_handlers = list(),
   wrapped = shiny::tagList
 ) {
-
   # Saving the brochure
   brochure(
     ...,
@@ -178,7 +177,13 @@ brochureApp <- function(
 
     # Res handling
     res <- handle_res_with_handlers(res, req)
-
+    # Injecting the base tag in the head of the response
+    # This allows shiny to be able to look for its assets
+    # We should only inject the base tag if the response does not
+    # already have one
+    if (!grepl("<base href", res$content)) {
+      res$content <- sub("<head>", "<head><base href=\'/'>", res$content, ignore.case = TRUE)
+    }
     return(res)
   }
 
