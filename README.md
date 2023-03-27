@@ -9,16 +9,10 @@
 status](https://github.com/ColinFay/brochure/workflows/R-CMD-check/badge.svg)](https://github.com/ColinFay/brochure/actions)
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+[![R-CMD-check](https://github.com/ColinFay/brochure/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ColinFay/brochure/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 **THIS IS A WORK IN PROGRESS, DO NOT USE**
-
-You’re reading the documentation for version:
-
-``` r
-desc::desc_get_version()
-#> [1] '0.0.0.9023'
-```
 
 The goal of `{brochure}` is to provide a mechanism for creating natively
 multi-page `{shiny}` applications, *i.e* that can serve content on
@@ -45,6 +39,43 @@ library(brochure)
 #> 
 #>     page
 library(shiny)
+```
+
+## About
+
+You’re reading the doc about version : 0.0.0.9024
+
+This README has been compiled on the
+
+``` r
+Sys.time()
+#> [1] "2023-03-27 14:00:48 CEST"
+```
+
+Here are the test & coverage results :
+
+``` r
+devtools::check(quiet = TRUE)
+#> ℹ Loading brochure
+#> ── R CMD check results ──────────────────────────────── brochure 0.0.0.9024 ────
+#> Duration: 12.1s
+#> 
+#> 0 errors ✔ | 0 warnings ✔ | 0 notes ✔
+```
+
+``` r
+covr::package_coverage()
+#> brochure Coverage: 42.07%
+#> R/brochure-fns.R: 0.00%
+#> R/brochureApp.R: 0.00%
+#> R/req_res_handlers.R: 0.00%
+#> R/server-side.R: 0.00%
+#> R/utils_page.R: 0.00%
+#> R/utils_req.R: 0.00%
+#> R/cookie.R: 93.91%
+#> R/golem_hook.R: 100.00%
+#> R/new_page.R: 100.00%
+#> R/utils.R: 100.00%
 ```
 
 ## Minimal `{brochure}` App
@@ -215,12 +246,12 @@ parameters, that can take a **list of functions**.
 
 An `*_handler` is a function that takes as parameter(s):
 
-  - For `req_handlers`, `req`, which is the request object (see below
-    for when these objects are created). For example `function(req){
-    print(req$PATH_INFO); return(req)}`.
+- For `req_handlers`, `req`, which is the request object (see below for
+  when these objects are created). For example
+  `function(req){ print(req$PATH_INFO); return(req)}`.
 
-  - For `res_handlers`, `res`, the response object, & `req`. For example
-    `function(res, req){ print(res$content); return(res)}`.
+- For `res_handlers`, `res`, the response object, & `req`. For example
+  `function(res, req){ print(res$content); return(res)}`.
 
 `req_handlers` **must** return `req` & `res_handlers` **must** return
 `res`. Both can be potentially modified.
@@ -248,8 +279,8 @@ used to send custom `httpResponse`, as shown below with the
 `healthcheck` endpoint.
 
 You can use formulas inside your handlers. `.x` and `..1` will be `req`
-for req\_handlers, `.x` and `..1` will be `res` & `.y` and `..2` will be
-`req` for res\_handlers.
+for req_handlers, `.x` and `..1` will be `res` & `.y` and `..2` will be
+`req` for res_handlers.
 
 Design pattern side-note: you’d probably want to define the handlers
 outside of the app, for better code organization (as with `log_where`
@@ -580,7 +611,7 @@ You can set up a `{brochure}` based app with `{golem}` using the
 golem::create_golem("mapmyrace", project_hook = brochure::golem_hook)
 ```
 
-You can also use the module\_template function to create a `{brochure}`
+You can also use the module_template function to create a `{brochure}`
 module :
 
 ``` r
@@ -592,23 +623,23 @@ golem::add_module(name = "pouet", module_template = brochure::new_page)
 To adapt your `{golem}` based application to `{brochure}`, here are the
 two steps to follow:
 
-  - Remove the app\_server.R file, and the top of app\_ui =\> You’ll
-    still need `golem_add_external_resources()`.
+- Remove the app_server.R file, and the top of app_ui =\> You’ll still
+  need `golem_add_external_resources()`.
 
-  - Build the pages inside separate R scripts, following the example
-    from this `README`.
+- Build the pages inside separate R scripts, following the example from
+  this `README`.
 
-<!-- end list -->
+<!-- -->
 
     .
     ├── DESCRIPTION
     ├── NAMESPACE
     ├── R
     │   ├── app_config.R
-    │   ├── home.R ### YOUR PAGE 
-    │   ├── login.R ### YOUR PAGE 
-    │   ├── logout.R ### YOUR PAGE 
-    │   └── run_app.R ### YOUR PAGE 
+    │   ├── home.R ### YOUR PAGE
+    │   ├── login.R ### YOUR PAGE
+    │   ├── logout.R ### YOUR PAGE
+    │   └── run_app.R ### YOUR PAGE
     ├── dev
     │   ├── 01_start.R
     │   ├── 02_dev.R
@@ -622,10 +653,8 @@ two steps to follow:
     ├── man
     │   └── run_app.Rd
 
-  - Replace `shinyApp` with `brochureApp` in `run_app()`, add the
-    external resources, then your pages.
-
-<!-- end list -->
+- Replace `shinyApp` with `brochureApp` in `run_app()`, add the external
+  resources, then your pages.
 
 ``` r
 run_app <- function(
@@ -655,9 +684,9 @@ run_app <- function(
 Other packages that implements features that are closed to what
 `{brochure}` does:
 
-  - [`{shiny.router}`](https://appsilon.com/shiny-router-020/)
+- [`{shiny.router}`](https://appsilon.com/shiny-router-020/)
 
-  - [`{blaze}`](https://github.com/nteetor/blaze)
+- [`{blaze}`](https://github.com/nteetor/blaze)
 
 As far as I can tell, these packages doesn’t serve the same goal as what
 `{brochure}` does, as they both still serve Single Page Applications.
