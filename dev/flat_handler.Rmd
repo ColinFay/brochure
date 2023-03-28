@@ -1,0 +1,577 @@
+---
+title: "flat_handler.Rmd empty"
+output: html_document
+editor_options:
+  chunk_output_type: console
+---
+
+```{r development, include=FALSE}
+library(testthat)
+```
+
+```{r development-load}
+# Load already included functions if relevant
+pkgload::load_all(export_all = FALSE)
+```
+## Routing in `{brochure}`
+
+# Route
+
+```{r function-route}
+#' Route builder
+#'
+#' Build a shiny brochure route
+#'
+#' @export
+#' @importFrom R6 R6Class
+Route <- R6::R6Class(
+  "Route",
+  public = list(
+    #' @field href url
+    href = NULL,
+    #' @field ui UI function or tagList
+    ui = NULL,
+    #' @field server server function
+    server = NULL,
+    #' @field path_regex conversion to regex
+    path_regex = NULL,
+    #' @field matched_route last matched route
+    matched_route = NULL,
+    #' @description
+    #' Create a new route.
+    #' @param href url
+    #' @param ui UI function or tagList
+    #' @param server server function
+    #' @return A new `Route` object.
+    initialize = function(
+      href,
+      ui,
+      server
+    ) {
+      self$href <- href
+      self$ui <- ui
+      self$server <- server
+      self$path_regex <- sprintf(
+        "^%s$",
+        gsub(
+          ":([^/]+)",
+          "(?<\\1>[^/]+)",
+          href
+        )
+      )
+    },
+    #' @description
+    #' Does the route object matches the url?
+    #' @param route url to match
+    #' @return Boolean. Does the route object matches the url?
+    matches = function(route) {
+      if (
+        grepl(self$path_regex, route, perl = TRUE)
+      ) {
+        self$matched_route <- route
+        return(TRUE)
+      } else {
+        return(FALSE)
+      }
+    },
+    #' @description
+    #' Extract the route and the parameters from the url.
+    #' @return List with the route and the parameters.
+    #' @param route url
+    extract = function(route) {
+      if (missing(route)){
+        route <- self$matched_route
+      }
+      m <- regexec(
+        self$path_regex,
+          self$matched_route,
+         perl = TRUE
+      )
+      matches <- regmatches(
+        self$matched_route,
+        m
+      )[[1]]
+      list(
+        route = matches[1],
+        params = as.list(matches[-1])
+      )
+    }
+  )
+)
+```
+
+
+```{r examples-route}
+Route$new(
+  "/users/",
+  ui = list("ui"),
+  server = function(input, output, session) {
+    print("server")
+  }
+)
+```
+
+```{r tests-route}
+test_that("Route works", {
+  r <- Route$new(
+    "/users/",
+    ui = list("ui"),
+    server = function(input, output, session) {
+      print("server")
+    }
+  )
+  expect_equal(
+    r$path_regex,
+    "^/users/$"
+  )
+  expect_true(
+    r$matches("/users/")
+  )
+  expect_false(
+    r$matches("/users")
+  )
+  expect_false(
+    r$matches("/colin")
+  )
+
+  r_with_params <- Route$new(
+    "/users/:id/posts/:postid",
+    ui = list("ui"),
+    server = function(input, output, session) {
+      print("server")
+    }
+  )
+  expect_equal(
+    r_with_params$path_regex,
+    "^/users/(?<id>[^/]+)/posts/(?<postid>[^/]+)$"
+  )
+  r_with_params$path_regex
+  expect_true(
+    r_with_params$matches("/users/aaa/posts/aaa")
+  )
+  expect_false(
+    r_with_params$matches("/users")
+  )
+  expect_false(
+    r_with_params$matches("/colin")
+  )
+  r_with_params$matches("/users/aaa/posts/aaa")
+  extracted <- r_with_params$extract()
+  expect_equal(
+    unname(extracted$route),
+    "/users/aaa/posts/aaa"
+  )
+  expect_equal(
+    extracted$params,
+    list(id = "aaa", postid = "aaa")
+  )
+
+  r_with_regex <- Route$new(
+    "/users/posts/.*",
+    ui = list("ui"),
+    server = function(input, output, session) {
+      print("server")
+    }
+  )
+  expect_equal(
+    r_with_regex$path_regex,
+    "^/users/posts/.*$"
+  )
+
+  expect_true(
+    r_with_regex$matches("/users/posts/aaa")
+  )
+  expect_true(
+    r_with_regex$matches("/users/posts/jjj")
+  )
+  expect_false(
+    r_with_regex$matches("/users")
+  )
+  expect_false(
+    r_with_regex$matches("/colin")
+  )
+
+  r_with_regex$matches("/users/posts/aaa")
+  extracted <- r_with_regex$extract()
+  expect_equal(
+    unname(extracted$route),
+    "/users/posts/aaa"
+  )
+  expect_equal(
+    extracted$params,
+    list()
+  )
+
+  # Test the `initialize` method with missing arguments
+  expect_error(
+    Route$new(),
+    'argument "href" is missing, with no default'
+  )
+
+   # Test the `matches` method with an empty route
+  expect_false(
+    Route$new("/users/:id",
+    function() {},
+    function() {})$matches("")
+  )
+
+  # Test different kind of href format
+   no_backslash <- Route$new(
+    "/users",
+    ui = list("ui"),
+    server = function(input, output, session) {
+      print("server")
+    }
+  )
+  expect_equal(
+    no_backslash$path_regex,
+    "^/users$"
+  )
+  expect_true(
+    no_backslash$matches("/users")
+  )
+  expect_false(
+    no_backslash$matches("/users/")
+  )
+  expect_false(
+    no_backslash$matches("users/")
+  )
+  expect_false(
+    no_backslash$matches("users")
+  )
+
+  no_slash_at_all<- Route$new(
+    "users",
+    ui = list("ui"),
+    server = function(input, output, session) {
+      print("server")
+    }
+  )
+  expect_equal(
+    no_slash_at_all$path_regex,
+    "^users$"
+  )
+  expect_true(
+    no_slash_at_all$matches("users")
+  )
+  expect_false(
+    no_slash_at_all$matches("/users/")
+  )
+  expect_false(
+    no_slash_at_all$matches("users/")
+  )
+  expect_false(
+    no_slash_at_all$matches(".*")
+  )
+
+  w_regex <- Route$new(
+    "/.*/",
+    ui = list("ui"),
+    server = function(input, output, session) {
+      print("server")
+    }
+  )
+  expect_equal(
+    w_regex$path_regex,
+    "^/.*/$"
+  )
+  expect_true(
+    w_regex$matches("/users/")
+  )
+  expect_false(
+    w_regex$matches("/users/colin")
+  )
+  expect_false(
+    w_regex$matches("users/")
+  )
+  expect_false(
+    w_regex$matches(".*")
+  )
+
+  w_regex_2 <- Route$new(
+    "/.{1,10}/",
+    ui = list("ui"),
+    server = function(input, output, session) {
+      print("server")
+    }
+  )
+  expect_equal(
+    w_regex_2$path_regex,
+    "^/.{1,10}/$"
+  )
+  expect_true(
+    w_regex_2$matches("/users/")
+  )
+  expect_false(
+    w_regex_2$matches("/users/colin")
+  )
+  expect_false(
+    w_regex_2$matches("users/")
+  )
+  expect_false(
+    w_regex_2$matches(".*")
+  )
+  expect_false(
+    w_regex_2$matches("/polikujyhtgfrdeswqazxcvbnm/")
+  )
+})
+```
+
+# build_routes
+
+```{r function-build_routes}
+#' Build routes from a list
+#'
+#' @return A list of routes
+#'
+#' @noRd
+#' @importFrom stats setNames
+build_routes <- function(routes){
+  built_routes <- lapply(routes, function(route){
+    Route$new(
+      href = route$href,
+      ui = route$ui,
+      server = route$server
+    )
+  })
+  setNames(
+    built_routes,
+    vapply(
+      built_routes,
+      function(route){
+        route$href
+      },
+      character(1)
+    )
+  )
+}
+```
+
+```{r example-build_routes}
+routes <- build_routes(
+  list(
+    list(
+      href = "/users/",
+      ui = list("ui"),
+      server = function(input, output, session) {
+        print("server")
+      }
+    ),
+    list(
+      href = "/users/:id/posts/:postid",
+      ui = list("ui"),
+      server = function(input, output, session) {
+        print("server")
+      }
+    ),
+    list(
+      href = "/users/posts/.*",
+      ui = list("ui"),
+      server = function(input, output, session) {
+        print("server")
+      }
+    )
+  )
+)
+```
+
+```{r tests-build_routes}
+routes <- build_routes(
+  list(
+    list(
+      href = "/users/",
+      ui = list("ui"),
+      server = function(input, output, session) {
+        print("server")
+      }
+    ),
+    list(
+      href = "/users/:id/posts/:postid",
+      ui = list("ui"),
+      server = function(input, output, session) {
+        print("server")
+      }
+    ),
+    list(
+      href = "/users/posts/.*",
+      ui = list("ui"),
+      server = function(input, output, session) {
+        print("server")
+      }
+    )
+  )
+)
+test_that("build_routes works", {
+  expect_true(
+    length(routes) == 3
+  )
+  expect_true(
+    all(
+      vapply(
+        routes,
+        function(route){
+          inherits(route, "Route")
+        },
+        logical(1)
+      )
+    )
+  )
+
+})
+```
+
+# match_route
+
+```{r function-match_route}
+#' Match a route
+#'
+#' @return The matched route or FALSE
+#'
+#' @noRd
+match_route <- function(
+  href,
+  routes
+    ) {
+  for (route in routes) {
+    if (route$matches(href)) {
+      return(route)
+    }
+  }
+  return(FALSE)
+}
+```
+
+```{r example-match_route}
+match_route(
+  "/users/aaa/posts/aaa",
+  routes
+)
+```
+
+```{r tests-match_route}
+routes <- build_routes(
+  list(
+    list(
+      href = "/users/",
+      ui = list("ui"),
+      server = function(input, output, session) {
+        print("server")
+      }
+    ),
+    list(
+      href = "/users/:id/posts/:postid",
+      ui = list("ui"),
+      server = function(input, output, session) {
+        print("server")
+      }
+    ),
+    list(
+      href = "/users/posts/.*",
+      ui = list("ui"),
+      server = function(input, output, session) {
+        print("server")
+      }
+    ),
+    list(
+      href = "/users/.*/.*",
+      ui = list("ui"),
+      server = function(input, output, session) {
+        print("server")
+      }
+    )
+  )
+)
+test_that("match_route works", {
+  expect_true(
+    inherits(
+      match_route(
+        "/users/aaa/posts/aaa",
+        routes
+      ),
+      "Route"
+    )
+  )
+  # Checking that we match the first route
+  # defined in the list, i.e "/users/posts/.*" here
+  res <- match_route(
+    "/users/posts/aaa/",
+    routes
+  )
+  expect_equal(
+    res$path_regex,
+    "^/users/posts/.*$"
+  )
+
+})
+```
+
+# push_params
+
+```{r function-push_params}
+#' Manipulate the path params
+#'
+#' Set or get the path params
+#'
+#' @param object The object to set the params on
+#' @param session The shiny session to set the params on or get from
+#'
+#' @return The param list as a named character vector, or NULL for set
+#' @rdname params
+#' @export
+set_params <- function(
+  object,
+  session = shiny::getDefaultReactiveDomain()
+){
+    session$userData$brochure_params <- object$params
+    NULL
+}
+
+#' @rdname params
+#' @export
+get_params <- function(
+  session = shiny::getDefaultReactiveDomain()
+){
+  session$userData$brochure_params
+}
+```
+
+```{r example-push_params}
+session <- shiny::MockShinySession$new()
+set_params(
+  list(params = c(id = "aaa", postid = "aaa")),
+  session = session
+)
+get_params(
+  session
+)
+```
+
+```{r tests-push_params}
+test_that("set_params works", {
+  session <- shiny::MockShinySession$new()
+  expect_equal(
+      set_params(
+        list(params = list(id = "aaa", postid = "aaa")),
+        session = session
+    ),
+    NULL
+  )
+  expect_equal(
+    get_params(
+      session
+    ),
+    list(id = "aaa", postid = "aaa")
+  )
+})
+```
+
+
+```{r development-inflate, eval=FALSE}
+# Run but keep eval=FALSE to avoid infinite loop
+# Execute in the console directly
+devtools::document()
+fusen::inflate(flat_file = "dev/flat_handler.Rmd", vignette_name = NA, document = FALSE)
+```
+
+
+

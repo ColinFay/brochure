@@ -7,3 +7,4 @@
 ^dev$
 ^\.here$
 ^README\.html$
+^\.vscode$

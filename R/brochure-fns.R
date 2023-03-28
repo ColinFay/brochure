@@ -78,14 +78,8 @@ brochure <- function(
     stop("You must specify a root page (one with `href = '/')`.")
   }
 
-  # Saving all the UIs
-  x <- lapply(
-    pages,
-    function(x, extra = extra) {
-      ...multipage[[x$href]]$ui <- x$ui
-      ...multipage[[x$href]]$server <- x$server
-    }
-  )
+  # Saving all the pages
+  ...multipage$pages <- build_routes(pages)
 }
 
 #' A Brochure Page

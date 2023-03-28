@@ -60,33 +60,34 @@ brochureApp <- function(
       # Extract the correct UI, wrap it
       # and add the redirect from brochure
       # REGEX for path should be handled here
-
-      ui <- ...multipage[[
-        rm_backslash(request$PATH_INFO)
-      ]]$ui
+      ui <- match_route(
+        request$PATH_INFO,
+        ...multipage$pages
+      )$ui
 
       if (is.function(ui)) {
         ui <- ui(request)
       }
 
       ...multipage_opts$wrapped(
-        tagList(
-          shiny::includeScript(
-            system.file(
-              "redirect.js",
-              package = "brochure"
-            )
-          ),
-          ...multipage_opts$extra,
-          ui
+        shiny::tags$head(
+          tagList(
+            shiny::includeScript(
+              system.file(
+                "redirect.js",
+                package = "brochure"
+              )
+            ),
+            ...multipage_opts$extra,
+            ui
+          )
         )
+
       )
     },
     server = function(input, output, session) {
       # Same logic as the UI, we look for the correct
       # server function
-      # REGEX for path should be handled here
-
       path <- rm_backslash(
         gsub(
           "websocket/",
@@ -94,9 +95,17 @@ brochureApp <- function(
           session$request$PATH_INFO
         )
       )
-      ...multipage[[
-        path
-      ]]$server(input, output, session)
+      brochure_server <- match_route(
+        path,
+        ...multipage$pages
+      )
+
+      set_params(
+        brochure_server$extract(),
+        session = session
+      )
+
+      brochure_server$server(input, output, session)
     },
     onStart = onStart,
     options = options,
@@ -107,13 +116,18 @@ brochureApp <- function(
   # We're keeping the old `httpHandler`
   old_httpHandler <- res$httpHandler
 
+  # This is where the magic happens
+  # We're overwriting the `httpHandler` of the shinyApp
+  # to manage multiple pages
+
   res$httpHandler <- function(req) {
     # Handling the app level req_handlers
     app_req_handlers <- get_req_handlers_app()
 
+
     if (length(app_req_handlers)) {
-      for (i in app_req_handlers) {
-        req <- i(req)
+      for (app_req_handler in app_req_handlers) {
+        req <- app_req_handler(req)
         # If any req_handlers return an 'httpResponse', return it directly without doing
         # anything else.
         if ("httpResponse" %in% class(req)) {
@@ -121,9 +135,6 @@ brochureApp <- function(
         }
       }
     }
-    # REGEX for path should be handled here
-
-    req$PATH_INFO <- rm_backslash(req$PATH_INFO)
 
     # Handle redirect
     if (req$PATH_INFO %in% ...multipage_opts$redirect$from) {
@@ -133,7 +144,15 @@ brochureApp <- function(
     }
 
     # Returning a 404 if the page doesn't exist
-    if (!req$PATH_INFO %in% names(...multipage)) {
+
+    if (
+      isFALSE(
+        match_route(
+        req$PATH_INFO,
+        ...multipage$pages
+      )
+      )
+    ) {
       return(make_404(content_404))
     }
 
@@ -168,5 +187,6 @@ brochureApp <- function(
     }
     return(res)
   }
+
   return(res)
 }
