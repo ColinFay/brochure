@@ -77,6 +77,7 @@ This is conceptually important: each page has its own shiny session, its own UI,
 Note that the server is optional if you want to display a static page.
 
 ```{r}
+pkgload::load_all()
 brochureApp(
   # First page
   page(
@@ -98,6 +99,19 @@ brochureApp(
       h1("This is my second page"),
       tags$p("There is no server function in this one")
     )
+  ),
+  page(
+    href = "/name/:id",
+    ui = fluidPage(
+      h1(
+        "This is my third page"
+      )
+    ), ,
+    server = function(input, output, session) {
+      output$plot <- renderPlot({
+        plot(iris)
+      })
+    }
   )
 )
 ```
@@ -610,11 +624,10 @@ To adapt your `{golem}` based application to `{brochure}`, here are the two step
 
 ```{r}
 run_app <- function(
-  onStart = NULL,
-  options = list(),
-  enableBookmarking = NULL,
-  ...
-) {
+    onStart = NULL,
+    options = list(),
+    enableBookmarking = NULL,
+    ...) {
   with_golem_options(
     app = brochureApp(
       # Putting the resources here

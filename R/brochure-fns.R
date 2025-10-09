@@ -3,6 +3,7 @@
 # Env to store the options
 ...multipage_opts <- new.env()
 
+brochure_routing <- routr::Route$new()
 #' @param ... a list of `Page()`
 #' @param wrapped A UI function wrapping the Brochure UI.
 #' Default is `shiny::fluidPage`.
@@ -74,16 +75,39 @@ brochure <- function(
     FUN.VALUE = character(1)
   )
 
-  if (!"/" %in% all_href) {
-    stop("You must specify a root page (one with `href = '/')`.")
+  if (
+    !"/" %in%
+      all_href
+  ) {
+    stop(
+      "You must specify a root page (one with `href = '/')`."
+    )
   }
 
   # Saving all the UIs
   x <- lapply(
     pages,
     function(x, extra = extra) {
-      ...multipage[[x$href]]$ui <- x$ui
-      ...multipage[[x$href]]$server <- x$server
+      if (is.null(x$method)) {
+        x$method <- "all"
+      }
+      brochure_routing$add_handler(
+        "get",
+        x$href,
+        function(
+          request,
+          response,
+          keys,
+          ...,
+          ignore_trailing_slash = TRUE
+        ) {
+          list(
+            ui = x$ui,
+            server = x$server,
+            args = ...
+          )
+        }
+      )
     }
   )
 }
@@ -150,7 +174,6 @@ redirect <- function(
   to,
   code = 301
 ) {
-
   # We need the redirect to be a specific HTTP code
   check_redirect_code(code)
 

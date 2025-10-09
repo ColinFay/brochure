@@ -53,17 +53,16 @@ brochureApp <- function(
   # `brochure_enable` is called inside a
   # `brochureApp`
   ...multipage_opts$enabled <- TRUE
-
   # We build the shinyApp object here
   res <- shinyApp(
     ui = function(request) {
       # Extract the correct UI, wrap it
       # and add the redirect from brochure
       # REGEX for path should be handled here
-
-      ui <- ...multipage[[
-        rm_backslash(request$PATH_INFO)
-      ]]$ui
+      ui <- brochure_routing$get_handler(
+        tolower(request$REQUEST_METHOD),
+        request$PATH_INFO
+      )()$ui
 
       if (is.function(ui)) {
         ui <- ui(request)
@@ -86,7 +85,6 @@ brochureApp <- function(
       # Same logic as the UI, we look for the correct
       # server function
       # REGEX for path should be handled here
-
       path <- rm_backslash(
         gsub(
           "websocket/",
@@ -94,9 +92,11 @@ brochureApp <- function(
           session$request$PATH_INFO
         )
       )
-      ...multipage[[
+      #browser()
+      brochure_routing$get_handler(
+        tolower(session$request$REQUEST_METHOD),
         path
-      ]]$server(input, output, session)
+      )()$server(input, output, session)
     },
     onStart = onStart,
     options = options,
@@ -108,6 +108,7 @@ brochureApp <- function(
   old_httpHandler <- res$httpHandler
 
   res$httpHandler <- function(req) {
+    # browser()
     # Handling the app level req_handlers
     app_req_handlers <- get_req_handlers_app()
 
@@ -133,9 +134,9 @@ brochureApp <- function(
     }
 
     # Returning a 404 if the page doesn't exist
-    if (!req$PATH_INFO %in% names(...multipage)) {
-      return(make_404(content_404))
-    }
+    # if (!req$PATH_INFO %in% brochure_routing$) {
+    #   return(make_404(content_404))
+    # }
 
     # Setting the path info for reuse in brochure()
     # Id from path should be added here as an opt
@@ -164,7 +165,12 @@ brochureApp <- function(
     # We should only inject the base tag if the response does not
     # already have one
     if (!grepl("<base href", res$content)) {
-      res$content <- sub("<head>", "<head><base href=\'/'>", res$content, ignore.case = TRUE)
+      res$content <- sub(
+        "<head>",
+        "<head><base href=\'/'>",
+        res$content,
+        ignore.case = TRUE
+      )
     }
     return(res)
   }
