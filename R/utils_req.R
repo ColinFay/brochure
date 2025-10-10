@@ -35,9 +35,7 @@ handle_res_with_handlers <- function(res, req) {
     req$PATH_INFO
   )
 
-  if (
-    length(page_res_handlers)
-  ) {
+  if (length(page_res_handlers)) {
     for (i in page_res_handlers) {
       res <- i(res, req)
     }

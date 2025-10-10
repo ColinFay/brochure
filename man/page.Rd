@@ -9,6 +9,7 @@ page(
   ui = tagList(),
   server = function(input, output, session) {
  },
+  method = "GET",
   req_handlers = list(),
   res_handlers = list()
 )

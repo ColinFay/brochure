@@ -3,6 +3,7 @@
 # Env to store the options
 ...multipage_opts <- new.env()
 
+
 #' @param ... a list of `Page()`
 #' @param wrapped A UI function wrapping the Brochure UI.
 #' Default is `shiny::fluidPage`.
@@ -27,10 +28,10 @@ brochure <- function(
   basepath = "",
   req_handlers = list(),
   res_handlers = list(),
-  wrapped = shiny::fluidPage
+  wrapped = shiny::fluidPage,
+  brochure_id = brochure_id
 ) {
   # Put the basepath and the req_handlerss
-  ...multipage_opts$basepath <- basepath
   ...multipage_opts$req_handlers <- req_handlers
   ...multipage_opts$res_handlers <- res_handlers
 
@@ -75,15 +76,45 @@ brochure <- function(
   )
 
   if (!"/" %in% all_href) {
-    stop("You must specify a root page (one with `href = '/')`.")
+    stop(
+      "You must specify a root page (one with `href = '/')`."
+    )
   }
 
-  # Saving all the UIs
-  x <- lapply(
+  purrr::iwalk(
     pages,
-    function(x, extra = extra) {
-      ...multipage[[x$href]]$ui <- x$ui
-      ...multipage[[x$href]]$server <- x$server
+    function(x, y) {
+      first <- routr::Route$new()
+      first$add_handler(
+        tolower(
+          x$method
+        ),
+        x$href,
+        function(
+          request,
+          response,
+          keys,
+          ...
+        ) {
+          print(
+            sprintf(
+              "dispatching %s",
+              y
+            )
+          )
+          brochure_routing[[
+            brochure_id
+          ]]$ui <- x$ui
+          brochure_routing[[
+            brochure_id
+          ]]$server <- x$server
+          TRUE
+        }
+      )
+      brochure_routes$add_route(
+        first,
+        as.character(y)
+      )
     }
   )
 }
@@ -112,15 +143,19 @@ page <- function(
   href,
   ui = tagList(),
   server = function(input, output, session) {},
+  method = "GET",
   req_handlers = list(),
   res_handlers = list()
 ) {
-  href <- rm_backslash(href)
+  # href <- rm_backslash(href)
   # Page are href + ui
   res <- list(
     href = href,
     ui = ui,
-    server = server
+    server = server,
+    method = tolower(
+      method
+    )
   )
   # Adding the page level req_handlerss
   add_req_handlers_page(
@@ -148,20 +183,19 @@ page <- function(
 redirect <- function(
   from,
   to,
-  code = 301
+  code = 301,
+  method = "GET"
 ) {
-
   # We need the redirect to be a specific HTTP code
   check_redirect_code(code)
 
-  res <- list(
-    from = from,
-    to = to,
-    code = code
-  )
-
   with_class(
-    res,
+    list(
+      from = from,
+      to = to,
+      code = code,
+      method = method
+    ),
     "redirect"
   )
 }
