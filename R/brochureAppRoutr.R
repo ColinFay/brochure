@@ -1,3 +1,4 @@
+globals <- fastmap::fastmap()
 #' Create a brochureApp
 #'
 #' This function  is to be used in place of
@@ -43,6 +44,14 @@ brochureApp <- function(
   brochure_routing <- new.env()
   brochure_routes <- RouteStack$new()
   brochure_id <- uuid::UUIDgenerate()
+  globals$set(
+    "req_handlers",
+    req_handlers
+  )
+  globals$set(
+    "res_handlers",
+    res_handlers
+  )
   # Extracting the dots
   content <- list(...)
 
@@ -67,7 +76,9 @@ brochureApp <- function(
   purrr::iwalk(
     pages,
     function(page, index) {
-      route <- routr::Route$new()
+      route <- routr::Route$new(
+        ignore_trailing_slash = TRUE
+      )
       route$add_handler(
         tolower(
           page$method
@@ -77,14 +88,14 @@ brochureApp <- function(
           request,
           response,
           keys,
-          ...,
-          ignore_trailing_slash = TRUE
+          ...
         ) {
           list(
             ui = page$ui,
             server = page$server,
             keys = keys,
-            redirect = NULL
+            redirect = NULL,
+            static_path = page$href
           )
         }
       )
@@ -101,7 +112,9 @@ brochureApp <- function(
   purrr::iwalk(
     redirect,
     function(page, index) {
-      route <- routr::Route$new()
+      route <- routr::Route$new(
+        ignore_trailing_slash = TRUE
+      )
       route$add_handler(
         tolower(
           page$method
@@ -111,8 +124,7 @@ brochureApp <- function(
           request,
           response,
           keys,
-          ...,
-          ignore_trailing_slash = TRUE
+          ...
         ) {
           list(
             redirect = httpResponse(
@@ -162,6 +174,26 @@ brochureApp <- function(
     output,
     session
   ) {
+    # We add the resource path if needed
+    # So that Connect and all can find the
+    # resources
+    if (
+      brochure_routing[[
+        brochure_id
+      ]]$static_path !=
+        "/"
+    ) {
+      paths <- shinyOptions()$server$getStaticPaths()
+      for (path in paths) {
+        shiny::addResourcePath(
+          brochure_routing[[
+            brochure_id
+          ]]$static_path,
+          shinyOptions()$server$getStaticPaths()[[path]]path
+        )
+      }
+    }
+
     brochure_routing[[
       brochure_id
     ]]$server(
@@ -183,6 +215,14 @@ brochureApp <- function(
   old_httpHandler <- res$httpHandler
 
   res$httpHandler <- function(req) {
+    if (length(globals$get("req_handlers")) > 0) {
+      for (handler in globals$get("req_handlers")) {
+        req <- handler(req)
+        if (inherits(req, "httpResponse")) {
+          return(req)
+        }
+      }
+    }
     dispatched <- brochure_routes$dispatch_to_first_match(req)
     brochure_routing[[
       brochure_id
@@ -202,9 +242,20 @@ brochureApp <- function(
         dispatched$redirect
       )
     }
+    brochure_routing[[
+      brochure_id
+    ]]$static_path <- dispatched$static_path
     res <- old_httpHandler(req)
     if (is.null(res)) {
       return(res)
+    }
+    if (length(globals$get("res_handlers")) > 0) {
+      for (handler in globals$get("res_handlers")) {
+        res <- handler(res)
+        if (inherits(req, "httpResponse")) {
+          return(req)
+        }
+      }
     }
     if (!grepl("<base href", res$content)) {
       res$content <- sub(
