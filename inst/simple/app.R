@@ -1,3 +1,5 @@
+library(shiny)
+library(brochure)
 # Creating a navlink
 nav_links <- tags$ul(
   tags$li(
