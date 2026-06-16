@@ -9,9 +9,12 @@ License: MIT + file LICENSE
 URL: https://github.com/colinfay/brochure
 Imports:
     attempt (>= 0.3.1),
+    fastmap,
+    purrr,
     rlang (>= 0.4.12),
     routr (>= 1.0.0.9000),
-    shiny (>= 1.6.0)
+    shiny (>= 1.6.0),
+    uuid
 Suggests:
     golem (>= 0.3.0),
     testthat (>= 3.0.0)
