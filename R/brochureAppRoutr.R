@@ -1,4 +1,16 @@
 globals <- fastmap::fastmap()
+
+# Client-side base/URL fixer injected at the top of <head>.
+#
+# Reverse proxies like Posit Connect inject a RELATIVE <base href="_w_<token>/">
+# that the browser resolves against the (possibly deep) document URL. On non-root
+# pages (e.g. /page1/sous-page/) this resolves resources and links to the wrong
+# place -> 404. This script promotes that base to an ABSOLUTE, depth-independent
+# one (origin + mount + token): it computes the mount from location.pathname by
+# stripping the current page's depth (`%d`, injected server-side), preserves the
+# worker token (so the Shiny websocket / reactivity keeps working), then rewrites
+# internal absolute links (<a href="/...">) to include the mount path.
+base_fixer_js <- '(function(){var d=%d;var loc=window.location;var segs=loc.pathname.replace(/\\/+$/,"").split("/");var mount=segs.slice(0,Math.max(1,segs.length-d)).join("/");var token="";var bases=document.getElementsByTagName("base");for(var i=0;i<bases.length;i++){var h=bases[i].getAttribute("href")||"";var mm=h.match(/_w_[^\\/]+/);if(mm){token=mm[0]+"/";break;}}var ab=loc.origin+mount+"/"+token;var head=document.head||document.getElementsByTagName("head")[0];for(var j=bases.length-1;j>=0;j--){bases[j].parentNode.removeChild(bases[j]);}var b=document.createElement("base");b.setAttribute("href",ab);head.insertBefore(b,head.firstChild);function fixLinks(){var as=document.getElementsByTagName("a");for(var k=0;k<as.length;k++){var href=as[k].getAttribute("href");if(href&&href.charAt(0)==="/"&&href.charAt(1)!=="/"){as[k].setAttribute("href",(mount==="/"?"":mount)+href);}}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",fixLinks);}else{fixLinks();}})();/*__brochure_base_fixer__*/'
 #' Create a brochureApp
 #'
 #' This function  is to be used in place of
@@ -275,13 +287,38 @@ brochureApp <- function(
         }
       }
     }
-    if (!grepl("<base href", res$content)) {
-      res$content <- sub(
-        "<head>",
-        "<head><base href=\'/'>",
-        res$content,
-        ignore.case = TRUE
-      )
+    # Inject the brochure base/URL fixer right after <head>, so it runs before
+    # the page resources (and after Connect's injected base) are parsed.
+    sp <- brochure_routing[[
+      brochure_id
+    ]]$static_path
+    if (is.null(sp)) {
+      sp <- "/"
+    }
+    if (
+      !is.null(res$content) &&
+        !grepl("__brochure_base_fixer__", res$content, fixed = TRUE)
+    ) {
+      m <- regexpr("<head>", res$content, ignore.case = TRUE)
+      if (m > 0) {
+        trimmed <- gsub("^/+|/+$", "", sp)
+        depth <- if (identical(trimmed, "")) {
+          0L
+        } else {
+          length(strsplit(trimmed, "/", fixed = TRUE)[[1]])
+        }
+        at <- m + attr(m, "match.length")
+        scripttag <- paste0(
+          "<script>",
+          sprintf(base_fixer_js, depth),
+          "</script>"
+        )
+        res$content <- paste0(
+          substr(res$content, 1, at - 1),
+          scripttag,
+          substring(res$content, at)
+        )
+      }
     }
     ## --- TEMP DEBUG (Phase 0 sous-page / Connect) -------------------
     ## A RETIRER une fois le diagnostic Connect terminé.
