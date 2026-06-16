@@ -174,25 +174,24 @@ brochureApp <- function(
     output,
     session
   ) {
-    # We add the resource path if needed
-    # So that Connect and all can find the
-    # resources
-    if (
-      brochure_routing[[
-        brochure_id
-      ]]$static_path !=
-        "/"
-    ) {
-      paths <- shinyOptions()$server$getStaticPaths()
-      for (path in paths) {
-        shiny::addResourcePath(
-          brochure_routing[[
-            brochure_id
-          ]]$static_path,
-          shinyOptions()$server$getStaticPaths()[[path]]path
-        )
-      }
-    }
+    ## --- DÉSACTIVÉ pour la Phase 0 (sous-page / Connect) ------------
+    ## Tentative "alias serveur" (famille B) : ré-enregistrer les
+    ## static paths de Shiny sous le préfixe de la page courante.
+    ## Cassé en l'état : (1) erreur de syntaxe `[[path]]path`,
+    ## (2) addResourcePath() refuse un préfixe contenant des "/"
+    ## (or static_path vaut p.ex. "/page1/sous-page"), donc plantait
+    ## sur toute page non-racine. À redessiner en Phase 1 selon les logs.
+    ##
+    ## if (brochure_routing[[brochure_id]]$static_path != "/") {
+    ##   paths <- shinyOptions()$server$getStaticPaths()
+    ##   for (path in paths) {
+    ##     shiny::addResourcePath(
+    ##       brochure_routing[[brochure_id]]$static_path,
+    ##       path$path
+    ##     )
+    ##   }
+    ## }
+    ## --- FIN DÉSACTIVÉ ----------------------------------------------
 
     brochure_routing[[
       brochure_id
@@ -215,6 +214,25 @@ brochureApp <- function(
   old_httpHandler <- res$httpHandler
 
   res$httpHandler <- function(req) {
+    ## --- TEMP DEBUG (Phase 0 sous-page / Connect) -------------------
+    ## Activer avec options("brochure.debug" = TRUE).
+    ## A RETIRER une fois le diagnostic Connect terminé.
+    if (isTRUE(getOption("brochure.debug", FALSE))) {
+      message("== brochure.debug == REQUEST PATH_INFO: ", req$PATH_INFO)
+      for (k in sort(ls(req))) {
+        if (grepl(
+          "^(HTTP_|PATH_INFO$|SCRIPT_NAME$|QUERY_STRING$|SERVER_NAME$|SERVER_PORT$)",
+          k
+        )) {
+          v <- tryCatch(
+            paste(as.character(req[[k]]), collapse = " "),
+            error = function(e) "<unprintable>"
+          )
+          message("== brochure.debug ==   ", k, ": ", v)
+        }
+      }
+    }
+    ## --- END TEMP DEBUG ---------------------------------------------
     if (length(globals$get("req_handlers")) > 0) {
       for (handler in globals$get("req_handlers")) {
         req <- handler(req)
@@ -265,6 +283,30 @@ brochureApp <- function(
         ignore.case = TRUE
       )
     }
+    ## --- TEMP DEBUG (Phase 0 sous-page / Connect) -------------------
+    ## A RETIRER une fois le diagnostic Connect terminé.
+    if (
+      isTRUE(getOption("brochure.debug", FALSE)) &&
+        !is.null(res$content)
+    ) {
+      message(
+        "== brochure.debug == RESPONSE static_path: ",
+        brochure_routing[[brochure_id]]$static_path
+      )
+      message(
+        "== brochure.debug == RESPONSE has <base>: ",
+        grepl("<base", res$content, ignore.case = TRUE)
+      )
+      head_html <- regmatches(
+        res$content,
+        regexpr("(?is)<head.*?</head>", res$content, perl = TRUE)
+      )
+      message(
+        "== brochure.debug == RESPONSE <head> (1ers 1500 car.): ",
+        substr(paste(head_html, collapse = ""), 1, 1500)
+      )
+    }
+    ## --- END TEMP DEBUG ---------------------------------------------
     return(res)
   }
   return(res)
