@@ -5,9 +5,6 @@ library(brochure)
 # On veut reproduire le 404 des ressources (jquery, shiny.min.js, ...)
 # quand on visite une page profonde AVEC slash final, p.ex.
 #   https://connect.thinkr.fr/<mount>/page1/sous-page/
-#
-# Active les logs temporaires du httpHandler (voir R/brochureAppRoutr.R).
-options("brochure.debug" = TRUE)
 
 # Liens de navigation : on met bien un slash final sur la sous-page
 # car c'est ce slash (profondeur du "répertoire" du document) qui
