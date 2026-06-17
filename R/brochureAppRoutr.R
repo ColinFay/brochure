@@ -1,16 +1,34 @@
 globals <- fastmap::fastmap()
 
-# Client-side base/URL fixer injected at the top of <head>.
-#
-# Reverse proxies like Posit Connect inject a RELATIVE <base href="_w_<token>/">
-# that the browser resolves against the (possibly deep) document URL. On non-root
-# pages (e.g. /page1/sous-page/) this resolves resources and links to the wrong
-# place -> 404. This script promotes that base to an ABSOLUTE, depth-independent
-# one (origin + mount + token): it computes the mount from location.pathname by
-# stripping the current page's depth (`%d`, injected server-side), preserves the
-# worker token (so the Shiny websocket / reactivity keeps working), then rewrites
-# internal absolute links (<a href="/...">) to include the mount path.
-base_fixer_js <- '(function(){var d=%d;var loc=window.location;var segs=loc.pathname.replace(/\\/+$/,"").split("/");var mount=segs.slice(0,Math.max(1,segs.length-d)).join("/");var token="";var bases=document.getElementsByTagName("base");for(var i=0;i<bases.length;i++){var h=bases[i].getAttribute("href")||"";var mm=h.match(/_w_[^\\/]+/);if(mm){token=mm[0]+"/";break;}}var ab=loc.origin+mount+"/"+token;var head=document.head||document.getElementsByTagName("head")[0];for(var j=bases.length-1;j>=0;j--){bases[j].parentNode.removeChild(bases[j]);}var b=document.createElement("base");b.setAttribute("href",ab);head.insertBefore(b,head.firstChild);function fixLinks(){var as=document.getElementsByTagName("a");for(var k=0;k<as.length;k++){var href=as[k].getAttribute("href");if(href&&href.charAt(0)==="/"&&href.charAt(1)!=="/"){as[k].setAttribute("href",(mount==="/"?"":mount)+href);}}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",fixLinks);}else{fixLinks();}})();/*__brochure_base_fixer__*/'
+# Determine the external mount path of the app (the part the reverse proxy
+# serves it under, e.g. "/brochuresubpage"). Posit Connect forwards it in the
+# `RSTUDIO_CONNECT_APP_BASE_URL` header. Falls back to the `basepath` argument,
+# then to "" (app served at the domain root, e.g. local dev).
+get_mount <- function(req, basepath = "") {
+  base_url <- req[["HTTP_RSTUDIO_CONNECT_APP_BASE_URL"]]
+  if (!is.null(base_url) && nzchar(base_url)) {
+    path <- sub("^[a-zA-Z][a-zA-Z0-9+.-]*://[^/]+", "", base_url)
+    path <- sub("/+$", "", path)
+    if (nzchar(path)) {
+      return(path)
+    }
+  }
+  bp <- gsub("^/+|/+$", "", basepath)
+  if (nzchar(bp)) {
+    return(paste0("/", bp))
+  }
+  ""
+}
+
+# Minimal client-side fixer for the Shiny WEBSOCKET only. Resources and links
+# are made absolute server-side (immune to the browser preload scanner); but the
+# websocket URL is computed at runtime by shiny-server-client against the page's
+# <base>. Under a worker-tokenized proxy (Connect) that base is RELATIVE
+# (`_w_<token>/`) and resolves wrong on deep pages. This script, which runs
+# before the socket connects, promotes it to an ABSOLUTE base (origin + mount +
+# token), preserving the worker token. `%s` is the server-known mount. It is a
+# no-op when there is no worker token (e.g. local dev).
+base_fixer_js <- '(function(){var mount="%s";var bs=document.getElementsByTagName("base");var token="";for(var i=0;i<bs.length;i++){var h=bs[i].getAttribute("href")||"";var m=h.match(/_w_[^\\/]+/);if(m){token=m[0]+"/";break;}}if(token){for(var j=bs.length-1;j>=0;j--){bs[j].parentNode.removeChild(bs[j]);}var b=document.createElement("base");b.setAttribute("href",window.location.origin+mount+"/"+token);var head=document.head||document.getElementsByTagName("head")[0];head.insertBefore(b,head.firstChild);}})();/*__brochure_base_fixer__*/'
 #' Create a brochureApp
 #'
 #' This function  is to be used in place of
@@ -254,27 +272,24 @@ brochureApp <- function(
       }
     }
     dispatched <- brochure_routes$dispatch_to_first_match(req)
-    brochure_routing[[
-      brochure_id
-    ]]$ui <- dispatched$ui
-    brochure_routing[[
-      brochure_id
-    ]]$server <- dispatched$server
-    brochure_routing[[
-      brochure_id
-    ]]$keys <- dispatched$keys
-    if (
-      !is.null(
-        dispatched$redirect
-      )
-    ) {
-      return(
-        dispatched$redirect
-      )
+    if (is.list(dispatched) && !is.null(dispatched$redirect)) {
+      return(dispatched$redirect)
     }
-    brochure_routing[[
-      brochure_id
-    ]]$static_path <- dispatched$static_path
+    # Only update the stored page state when the request actually matched a
+    # brochure page. Stray requests (resources, favicon, sockjs, ...) that fall
+    # through here must NOT clobber the current page's ui/server with NULL, or
+    # the next Shiny session would call a non-function server.
+    if (
+      is.list(dispatched) &&
+        (!is.null(dispatched$ui) ||
+          !is.null(dispatched$server) ||
+          !is.null(dispatched$static_path))
+    ) {
+      brochure_routing[[brochure_id]]$ui <- dispatched$ui
+      brochure_routing[[brochure_id]]$server <- dispatched$server
+      brochure_routing[[brochure_id]]$keys <- dispatched$keys
+      brochure_routing[[brochure_id]]$static_path <- dispatched$static_path
+    }
     res <- old_httpHandler(req)
     if (is.null(res)) {
       return(res)
@@ -287,30 +302,37 @@ brochureApp <- function(
         }
       }
     }
-    # Inject the brochure base/URL fixer right after <head>, so it runs before
-    # the page resources (and after Connect's injected base) are parsed.
-    sp <- brochure_routing[[
-      brochure_id
-    ]]$static_path
-    if (is.null(sp)) {
-      sp <- "/"
-    }
+    # Make the page work under a reverse-proxy mount. We rewrite resource URLs
+    # and internal links to be absolute to the mount (immune to the browser
+    # preload scanner, unlike a client-side <base> swap), and inject a tiny
+    # script that fixes the <base> for the Shiny websocket only.
+    mount <- get_mount(req, basepath)
     if (
       !is.null(res$content) &&
         !grepl("__brochure_base_fixer__", res$content, fixed = TRUE)
     ) {
+      if (nzchar(mount)) {
+        # Internal absolute links: <a href="/x"> -> <a href="/<mount>/x">
+        res$content <- gsub(
+          '(<a\\b[^>]*?\\shref=")/(?!/)',
+          paste0("\\1", mount, "/"),
+          res$content,
+          perl = TRUE
+        )
+        # Relative resource URLs (src/href="foo") -> "/<mount>/foo"
+        res$content <- gsub(
+          '\\b(src|href)="(?![a-zA-Z][a-zA-Z0-9+.-]*:|//|/|#|\\?)',
+          paste0("\\1=\"", mount, "/"),
+          res$content,
+          perl = TRUE
+        )
+      }
       m <- regexpr("<head>", res$content, ignore.case = TRUE)
       if (m > 0) {
-        trimmed <- gsub("^/+|/+$", "", sp)
-        depth <- if (identical(trimmed, "")) {
-          0L
-        } else {
-          length(strsplit(trimmed, "/", fixed = TRUE)[[1]])
-        }
         at <- m + attr(m, "match.length")
         scripttag <- paste0(
           "<script>",
-          sprintf(base_fixer_js, depth),
+          sprintf(base_fixer_js, mount),
           "</script>"
         )
         res$content <- paste0(
