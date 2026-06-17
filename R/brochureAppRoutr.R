@@ -103,12 +103,14 @@ brochureApp <- function(
   pages <- content[are_pages]
 
   extra <- content[!are_pages]
-  redirect <- extra[
-    extract(
-      extra,
-      "redirect"
-    )
-  ]
+  are_redirect <- extract(
+    extra,
+    "redirect"
+  )
+  redirect <- extra[are_redirect]
+  # Non-redirect extras (deps, scripts, golem resources, ...) are injected into
+  # every page on top of the page() content, as documented.
+  extra_content <- extra[!are_redirect]
 
   purrr::iwalk(
     pages,
@@ -204,7 +206,14 @@ brochureApp <- function(
     if (is.function(ui)) {
       ui <- ui(request)
     }
-    ui
+    # Wrap with the user's `wrapped` and inject the extra content (deps, etc.)
+    # on top of the page UI.
+    wrapped(
+      do.call(
+        shiny::tagList,
+        c(extra_content, list(ui))
+      )
+    )
   }
   server = function(
     input,
