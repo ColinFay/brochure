@@ -12,7 +12,7 @@ Imports:
     fastmap,
     purrr,
     rlang (>= 0.4.12),
-    routr (>= 1.0.0.9000),
+    routr (>= 2.0.0),
     shiny (>= 1.6.0),
     uuid
 Suggests:
@@ -23,5 +23,3 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
-Remotes:
-    thomasp85/routr
