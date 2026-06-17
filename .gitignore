@@ -4,3 +4,5 @@
 inst/cache/
 README.html
 dev/.posit/
+
+inst/subpage/rsconnect/

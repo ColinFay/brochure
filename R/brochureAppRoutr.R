@@ -22,15 +22,20 @@ get_mount <- function(req, basepath = "") {
 
 # This has been vibe coded
 
-# Minimal client-side fixer for the Shiny WEBSOCKET only. Resources and links
-# are made absolute server-side (immune to the browser preload scanner); but the
-# websocket URL is computed at runtime by shiny-server-client against the page's
-# <base>. Under a worker-tokenized proxy (Connect) that base is RELATIVE
-# (`_w_<token>/`) and resolves wrong on deep pages. This script, which runs
-# before the socket connects, promotes it to an ABSOLUTE base (origin + mount +
-# token), preserving the worker token. `%s` is the server-known mount. It is a
-# no-op when there is no worker token (e.g. local dev).
-base_fixer_js <- '(function(){var mount="%s";var bs=document.getElementsByTagName("base");var token="";for(var i=0;i<bs.length;i++){var h=bs[i].getAttribute("href")||"";var m=h.match(/_w_[^\\/]+/);if(m){token=m[0]+"/";break;}}if(token){for(var j=bs.length-1;j>=0;j--){bs[j].parentNode.removeChild(bs[j]);}var b=document.createElement("base");b.setAttribute("href",window.location.origin+mount+"/"+token);var head=document.head||document.getElementsByTagName("head")[0];head.insertBefore(b,head.firstChild);}})();/*__brochure_base_fixer__*/'
+# Tiny client-side bootstrap injected at the top of <head>. `%s` is the
+# server-known mount path. It does two things:
+#
+# 1. WEBSOCKET base. Resources and links are made absolute server-side (immune
+#    to the browser preload scanner), but the websocket URL is computed at
+#    runtime by shiny-server-client against the page's <base>. Under a
+#    worker-tokenized proxy (Connect) that base is RELATIVE (`_w_<token>/`) and
+#    resolves wrong on deep pages, so we promote it to an ABSOLUTE base
+#    (origin + mount + token), preserving the worker token. No-op when there is
+#    no worker token (e.g. local dev).
+# 2. server_redirect(). Registers the "redirect" custom message handler (this
+#    replaces the old inst/redirect.js), mount-prefixing internal targets so a
+#    redirect to "/page2" works under a proxy mount.
+brochure_client_js <- '(function(){var mount="%s";var bs=document.getElementsByTagName("base");var token="";for(var i=0;i<bs.length;i++){var h=bs[i].getAttribute("href")||"";var m=h.match(/_w_[^\\/]+/);if(m){token=m[0]+"/";break;}}if(token){for(var j=bs.length-1;j>=0;j--){bs[j].parentNode.removeChild(bs[j]);}var b=document.createElement("base");b.setAttribute("href",window.location.origin+mount+"/"+token);var head=document.head||document.getElementsByTagName("head")[0];head.insertBefore(b,head.firstChild);}function reg(){if(window.Shiny&&Shiny.addCustomMessageHandler){Shiny.addCustomMessageHandler("redirect",function(to){if(to&&to.charAt(0)==="/"&&to.charAt(1)!=="/"){to=mount+to;}window.location.href=to;});}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",reg);}else{reg();}})();/*__brochure_client__*/'
 #' Create a brochureApp
 #'
 #' This function  is to be used in place of
@@ -270,7 +275,7 @@ brochureApp <- function(
     mount <- get_mount(req, basepath)
     if (
       !is.null(res$content) &&
-        !grepl("__brochure_base_fixer__", res$content, fixed = TRUE)
+        !grepl("__brochure_client__", res$content, fixed = TRUE)
     ) {
       if (nzchar(mount)) {
         # Internal absolute links: <a href="/x"> -> <a href="/<mount>/x">
@@ -293,7 +298,7 @@ brochureApp <- function(
         at <- m + attr(m, "match.length")
         scripttag <- paste0(
           "<script>",
-          sprintf(base_fixer_js, mount),
+          sprintf(brochure_client_js, mount),
           "</script>"
         )
         res$content <- paste0(

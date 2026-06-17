@@ -23,10 +23,15 @@ home <- function() {
       nav_links,
       # Force le chargement de jQuery + shiny.min.js + htmlwidgets-like deps
       textInput("txt", "Un input"),
+      # Démo server_redirect() : doit rediriger vers la sous-page (sous le mount)
+      actionButton("goto_sp", "server_redirect() vers /page1/sous-page"),
       plotOutput("plot")
     ),
     server = function(input, output, session) {
       output$plot <- renderPlot(plot(mtcars))
+      observeEvent(input$goto_sp, {
+        server_redirect("/page1/sous-page")
+      })
     }
   )
 }
