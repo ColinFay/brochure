@@ -27,6 +27,8 @@ a single argument function that returns the UI definition.}
 \code{session}. The function is called once for each session ensuring that each
 app is independent.}
 
+\item{method}{The HTTP method the page answers to. Defaults to \code{"GET"}.}
+
 \item{req_handlers}{a list of functions that can manipulate the \code{req} object.
 These functions should take \code{req} as a parameters, and return the \code{req} object
 (potentially modified), or an object of class httpResponse. If any of the

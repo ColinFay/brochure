@@ -1,6 +1,7 @@
 #' A Brochure Page
 #'
 #' @param href The endpoint to serve the UI on
+#' @param method The HTTP method the page answers to. Defaults to `"GET"`.
 #' @inheritParams brochureApp
 #' @inheritParams shiny::shinyApp
 #'
@@ -50,6 +51,8 @@ page <- function(
 #' @param from redirect from
 #' @param to redirect to
 #' @param code redirectin http code (one of `c(301:308, 310)`)
+#' @param method The HTTP method the redirection answers to.
+#' Defaults to `"GET"`.
 #'
 #' @return A redirection
 #' @export
