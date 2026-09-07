@@ -21,8 +21,7 @@ Imports:
     shiny (>= 1.6.0)
 Suggests:
     golem (>= 0.3.0),
-    testthat (>= 3.0.0),
-    withr
+    testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

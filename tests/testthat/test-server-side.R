@@ -10,25 +10,20 @@ test_that("server_redirect only accepts paths and http(s) URLs", {
   expect_error(check_redirect_to(NULL))
 })
 
-test_that("get_mount only trusts the Connect header on Connect", {
-  req <- new.env()
-  req$HTTP_RSTUDIO_CONNECT_APP_BASE_URL <- "https://connect.example/app/x"
-
-  withr::with_envvar(c(RSTUDIO_PRODUCT = ""), {
-    expect_equal(get_mount(req), "")
-  })
-
-  withr::with_envvar(c(RSTUDIO_PRODUCT = "CONNECT"), {
-    expect_equal(get_mount(req), "/app/x")
-
-    # A path that is not a plain path is dropped rather than reused
-    req$HTTP_RSTUDIO_CONNECT_APP_BASE_URL <- "https://connect.example/a b<script>"
-    expect_equal(get_mount(req), "")
-  })
+test_that("normalize_basepath accepts every spelling of a mount", {
+  expect_equal(normalize_basepath("brochure"), "/brochure")
+  expect_equal(normalize_basepath("/brochure"), "/brochure")
+  expect_equal(normalize_basepath("/brochure/"), "/brochure")
+  expect_equal(normalize_basepath(""), "")
 })
 
-test_that("get_mount falls back on basepath", {
-  expect_equal(get_mount(new.env(), "brochure"), "/brochure")
-  expect_equal(get_mount(new.env(), "/brochure/"), "/brochure")
-  expect_equal(get_mount(new.env()), "")
+test_that("strip_basepath only drops a whole segment", {
+  expect_equal(strip_basepath("/brochure/page2", "/brochure"), "/page2")
+  expect_equal(strip_basepath("/brochure", "/brochure"), "/")
+  expect_equal(strip_basepath("/brochure/", "/brochure"), "/")
+  # "/brochurette" is not mounted under "/brochure"
+  expect_equal(strip_basepath("/brochurette/x", "/brochure"), "/brochurette/x")
+  # a proxy that already stripped the mount
+  expect_equal(strip_basepath("/page2", "/brochure"), "/page2")
+  expect_equal(strip_basepath("/page2", ""), "/page2")
 })

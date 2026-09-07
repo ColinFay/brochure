@@ -68,10 +68,9 @@ This function  is to be used in place of
 \code{shinyApp()}.
 }
 \details{
-Behind a reverse proxy, \code{basepath} is the supported way to tell the app
-where it is mounted. Brochure also tries to read the mount from the
-\code{RSTUDIO_CONNECT_APP_BASE_URL} header when it detects it runs on Posit
-Connect, and injects a small script to point the websocket at that mount:
-both are \strong{experimental}, and set \code{basepath} if you need the behaviour to
-be guaranteed.
+Behind a reverse proxy, \code{basepath} is how you tell the app where it is
+mounted: it is removed from the incoming path, and prepended to the urls the
+app emits. On top of that, brochure injects a small script pointing the
+websocket at the mount, needed when the proxy hands out a worker token
+(Posit Connect does). That script is \strong{experimental}.
 }
