@@ -8,11 +8,9 @@
 [![R build
 status](https://github.com/ColinFay/brochure/workflows/R-CMD-check/badge.svg)](https://github.com/ColinFay/brochure/actions)
 [![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![R-CMD-check](https://github.com/ColinFay/brochure/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ColinFay/brochure/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
-
-**THIS IS A WORK IN PROGRESS, DO NOT USE**
 
 The goal of `{brochure}` is to provide a mechanism for creating natively
 multi-page `{shiny}` applications, *i.e* that can serve content on
@@ -41,55 +39,22 @@ library(brochure)
 library(shiny)
 ```
 
-## About
-
-You’re reading the doc about version : 0.0.0.9024
-
-This README has been compiled on the
-
-``` r
-Sys.time()
-#> [1] "2023-03-27 14:00:48 CEST"
-```
-
-Here are the test & coverage results :
-
-``` r
-devtools::check(quiet = TRUE)
-#> ℹ Loading brochure
-#> ── R CMD check results ──────────────────────────────── brochure 0.0.0.9024 ────
-#> Duration: 12.1s
-#> 
-#> 0 errors ✔ | 0 warnings ✔ | 0 notes ✔
-```
-
-``` r
-covr::package_coverage()
-#> brochure Coverage: 42.07%
-#> R/brochure-fns.R: 0.00%
-#> R/brochureApp.R: 0.00%
-#> R/req_res_handlers.R: 0.00%
-#> R/server-side.R: 0.00%
-#> R/utils_page.R: 0.00%
-#> R/utils_req.R: 0.00%
-#> R/cookie.R: 93.91%
-#> R/golem_hook.R: 100.00%
-#> R/new_page.R: 100.00%
-#> R/utils.R: 100.00%
-```
-
 ## Minimal `{brochure}` App
 
 ### `page()`
 
 A `brochureApp` is a series of `page`s that are defined by an `href`
-(the path/endpoint where the page is available), a `{shiny}` UI and a
-`server` function. This is conceptually important: each page has its own
-shiny session, its own UI, and its own server.
+(the path/endpoint where the page is available), a `{shiny}` UI, a
+`server` function, and the HTTP `method` to access the page.
+
+This is conceptually important: **each page has its own shiny session,
+its own UI, and its own server**.
 
 Note that the server is optional if you want to display a static page.
 
 ``` r
+library(shiny)
+pkgload::load_all()
 brochureApp(
   # First page
   page(
@@ -115,13 +80,80 @@ brochureApp(
 )
 ```
 
-> You can now navigate to /, and to /page2 inside your browser.
+You can now navigate to `/`, and to `/page2` inside your browser.
+
+### About routing
+
+`{brochure}` routing is built on top of `{routr}` when it comes to
+dispatching the routes. This allows to build parametrized routes *à la*
+express, like this:
+
+``` r
+library(shiny)
+pkgload::load_all()
+brochureApp(
+  # First page
+  page(
+    href = "/",
+    ui = fluidPage(
+      h1("This is my first page"),
+      plotOutput("plot")
+    ),
+    server = function(input, output, session) {
+      output$plot <- renderPlot({
+        plot(iris)
+      })
+    }
+  ),
+  page(
+    href = "/who/:id",
+    ui = function(request) {
+      fluidPage(
+        h1("This is your page"),
+        tags$p(
+          sprintf(
+            "Hello %s",
+            get_keys(request)$id
+          )
+        )
+      )
+    },
+    server = function(input, output, session) {
+      print(get_keys())
+    }
+  ),
+  page(
+    href = "/this/:name/:surname",
+    ui = fluidPage(
+      h1("This is your page"),
+      textOutput("who")
+    ),
+    server = function(input, output, session) {
+      output$who <- renderText({
+        sprintf(
+          "Hello %s %s",
+          get_keys()$name,
+          get_keys()$surname
+        )
+      })
+    }
+  )
+)
+```
+
+You can now move to `who/colin` & `this/colin/fay` and see your
+parameters displayed here.
+
+The matched values are read with `get_keys()`: with no argument inside a
+page `server`, and with the `request` the page `ui` receives when you
+need them in the UI.
 
 ### `redirect()`
 
 Redirections can be used to redirect from one endpoint to the other:
 
 ``` r
+pkgload::load_all()
 brochureApp(
   page(
     href = "/",
@@ -129,97 +161,23 @@ brochureApp(
       h1("This is my first page")
     )
   ),
+  page(
+    href = "/there",
+    ui = tagList(
+      h1("This is there")
+    )
+  ),
   redirect(
     from = "/nothere",
-    to = "/"
+    to = "/there"
   )
 )
 ```
 
-> You can now navigate to /nothere, you’ll be redirected to /
+You can now navigate to `/nothere`, you’ll be redirected to `/there`.
 
-A more elaborate example:
-
-``` r
-# Creating a navlink
-nav_links <- tags$ul(
-  tags$li(
-    tags$a(href = "/", "home"),
-  ),
-  tags$li(
-    tags$a(href = "/page2", "page2"),
-  ),
-  tags$li(
-    tags$a(href = "/contact", "contact"),
-  )
-)
-
-page_1 <- function() {
-  page(
-    href = "/",
-    ui = function(request) {
-      tagList(
-        h1("This is my first page"),
-        nav_links,
-        plotOutput("plot")
-      )
-    },
-    server = function(input, output, session) {
-      output$plot <- renderPlot({
-        plot(mtcars)
-      })
-    }
-  )
-}
-
-page_2 <- function() {
-  page(
-    href = "/page2",
-    ui = function(request) {
-      tagList(
-        h1("This is my second page"),
-        nav_links,
-        plotOutput("plot")
-      )
-    },
-    server = function(input, output, session) {
-      output$plot <- renderPlot({
-        plot(mtcars)
-      })
-    }
-  )
-}
-
-page_contact <- function() {
-  page(
-    href = "/contact",
-    ui = tagList(
-      h1("Contact us"),
-      nav_links,
-      tags$ul(
-        tags$li("Here"),
-        tags$li("There")
-      )
-    )
-  )
-}
-
-brochureApp(
-  # Pages
-  page_1(),
-  page_2(),
-  page_contact(),
-  # Redirections
-  redirect(
-    from = "/page3",
-    to = "/page2"
-  ),
-  redirect(
-    from = "/page4",
-    to = "/"
-  )
-)
-```
+> Note that depending on the code you’ve used for the redirection, your
+> browser might cache the redirection.
 
 **IMPORTANT NOTE** all elements which are not of class `"brochure_*"`
 (`brochure_page` and `brochure_redirect`) will be injected **as is** in
@@ -430,7 +388,7 @@ login <- function() {
       ~ set_cookie(.x, "BROCHURECOOKIE", 12)
       # If you had to do it yourself
       # function(res, req){
-      #   res$headers$`Set-Cookie` <- "BROCHURECOOKIE=12; HttpOnly;"
+      #   res$headers$`Set-Cookie` <- "BROCHURECOOKIE=12; HttpOnly; SameSite = Lax;"
       #   res
       # }
     )
@@ -658,11 +616,10 @@ two steps to follow:
 
 ``` r
 run_app <- function(
-  onStart = NULL,
-  options = list(),
-  enableBookmarking = NULL,
-  ...
-) {
+    onStart = NULL,
+    options = list(),
+    enableBookmarking = NULL,
+    ...) {
   with_golem_options(
     app = brochureApp(
       # Putting the resources here

@@ -6,5 +6,6 @@
 ^\.github$
 ^dev$
 ^\.here$
-^README\.html$
 ^tests/playwright$
+^\.claude$
+^AUDIT-v1\.0\.0\.md$
