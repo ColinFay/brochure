@@ -326,14 +326,16 @@ brochureApp <- function(
           res$content,
           perl = TRUE
         )
-        # Relative resource URLs (src/href="foo") -> "/<mount>/foo"
-        res$content <- gsub(
-          '\\b(src|href)="(?![a-zA-Z][a-zA-Z0-9+.-]*:|//|/|#|\\?)',
-          paste0("\\1=\"", mount, "/"),
-          res$content,
-          perl = TRUE
-        )
       }
+      # Relative resource URLs (src/href="foo") -> "/<mount>/foo". Always
+      # needed, not only under a mount: on a nested page such as "/who/colin"
+      # they would otherwise resolve against "/who/" and 404.
+      res$content <- gsub(
+        '\\b(src|href)="(?![a-zA-Z][a-zA-Z0-9+.-]*:|//|/|#|\\?)',
+        paste0("\\1=\"", mount, "/"),
+        res$content,
+        perl = TRUE
+      )
       m <- regexpr("<head>", res$content, ignore.case = TRUE)
       if (m > 0) {
         at <- m + attr(m, "match.length")
