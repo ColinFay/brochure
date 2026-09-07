@@ -1,5 +1,3 @@
-globals <- fastmap::fastmap()
-
 # Determine the external mount path of the app (the part the reverse proxy
 # serves it under, e.g. "/brochuresubpage"). Posit Connect forwards it in the
 # `RSTUDIO_CONNECT_APP_BASE_URL` header. Falls back to the `basepath` argument,
@@ -118,14 +116,10 @@ brochureApp <- function(
   wrapped = shiny::tagList
 ) {
   brochure_routes <- RouteStack$new()
-  globals$set(
-    "req_handlers",
-    lapply(req_handlers, as_function)
-  )
-  globals$set(
-    "res_handlers",
-    lapply(res_handlers, as_function)
-  )
+  # Kept as locals: the httpHandler closure below is the only reader, so two
+  # apps running in the same process never see each other's handlers.
+  req_handlers <- lapply(req_handlers, as_function)
+  res_handlers <- lapply(res_handlers, as_function)
   # Extracting the dots
   content <- list(...)
 
@@ -278,7 +272,7 @@ brochureApp <- function(
   old_httpHandler <- res$httpHandler
 
   res$httpHandler <- function(req) {
-    req <- run_req_handlers(req, globals$get("req_handlers"))
+    req <- run_req_handlers(req, req_handlers)
     if (inherits(req, "httpResponse")) {
       return(req)
     }
@@ -298,7 +292,7 @@ brochureApp <- function(
       return(res)
     }
     # App level res handlers first, then the ones of the matched page.
-    res <- run_res_handlers(res, req, globals$get("res_handlers"))
+    res <- run_res_handlers(res, req, res_handlers)
     res <- run_res_handlers(res, req, dispatched$res_handlers)
     # Make the page work under a reverse-proxy mount. We rewrite resource URLs
     # and internal links to be absolute to the mount (immune to the browser
