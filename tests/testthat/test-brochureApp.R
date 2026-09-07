@@ -157,3 +157,53 @@ test_that("the client bootstrap is injected once", {
     1
   )
 })
+
+test_that("a bare list of pages is spliced", {
+  app <- brochureApp(
+    list(
+      page(href = "/", ui = shiny::tagList(shiny::h1("home"))),
+      page(href = "/page2", ui = shiny::tagList(shiny::h1("second")))
+    )
+  )
+
+  expect_match(app$httpHandler(mock_req("/"))$content, "home")
+  expect_match(app$httpHandler(mock_req("/page2"))$content, "second")
+})
+
+test_that("`...` rejects what it cannot use", {
+  ok <- page(href = "/", ui = shiny::tagList())
+
+  expect_error(brochureApp(ok, mtcars), "data.frame")
+  expect_error(brochureApp(ok, 1:3), "integer")
+  expect_error(brochureApp(ok, function(x) x), "function")
+
+  # NULL is dropped, tags and dependencies go through
+  expect_s3_class(brochureApp(ok, NULL), "shiny.appobj")
+  expect_s3_class(brochureApp(ok, shiny::tags$script("x")), "shiny.appobj")
+})
+
+test_that("basepath is stripped from the incoming path", {
+  app <- brochureApp(
+    page(href = "/", ui = shiny::tagList(shiny::h1("home"))),
+    page(href = "/page2", ui = shiny::tagList(shiny::h1("second"))),
+    basepath = "brochure"
+  )
+
+  # A proxy that passes the mount through
+  expect_match(app$httpHandler(mock_req("/brochure/page2"))$content, "second")
+  expect_match(app$httpHandler(mock_req("/brochure"))$content, "home")
+  # ... and one that strips it, like Posit Connect
+  expect_match(app$httpHandler(mock_req("/page2"))$content, "second")
+
+  expect_equal(app$httpHandler(mock_req("/nope"))$status, 404)
+})
+
+test_that("basepath prefixes the emitted urls", {
+  app <- brochureApp(
+    page(href = "/", ui = shiny::tagList()),
+    basepath = "brochure"
+  )
+
+  content <- app$httpHandler(mock_req("/brochure"))$content
+  expect_match(content, 'src="/brochure/shiny-javascript')
+})

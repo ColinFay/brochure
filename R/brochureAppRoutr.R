@@ -1,3 +1,30 @@
+# "brochure", "/brochure/" and "/brochure" all mean the same mount.
+normalize_basepath <- function(basepath) {
+  bp <- gsub("^/+|/+$", "", basepath)
+  if (nzchar(bp)) {
+    paste0("/", bp)
+  } else {
+    ""
+  }
+}
+
+# Some reverse proxies strip the mount before forwarding (Posit Connect does),
+# others pass it through. Drop it here so a page href matches either way.
+strip_basepath <- function(path, basepath) {
+  if (!nzchar(basepath) || !startsWith(path, basepath)) {
+    return(path)
+  }
+  rest <- substring(path, nchar(basepath) + 1)
+  if (!nzchar(rest)) {
+    return("/")
+  }
+  if (startsWith(rest, "/")) {
+    rest
+  } else {
+    path
+  }
+}
+
 # Determine the external mount path of the app (the part the reverse proxy
 # serves it under, e.g. "/brochuresubpage"). Posit Connect forwards it in the
 # `RSTUDIO_CONNECT_APP_BASE_URL` header. Falls back to the `basepath` argument,
@@ -18,11 +45,7 @@ get_mount <- function(req, basepath = "") {
       return(path)
     }
   }
-  bp <- gsub("^/+|/+$", "", basepath)
-  if (nzchar(bp)) {
-    return(paste0("/", bp))
-  }
-  ""
+  normalize_basepath(basepath)
 }
 
 # The websocket handshake of a page hits `<href>/websocket/`; drop that suffix
@@ -62,8 +85,6 @@ run_res_handlers <- function(res, req, handlers) {
   res
 }
 
-# This has been vibe coded
-
 # Tiny client-side bootstrap injected at the top of <head>. `%s` is the
 # server-known mount path. It does two things:
 #
@@ -93,10 +114,11 @@ brochure_client_js <- '(function(){var mount="%s";var bs=document.getElementsByT
 #' and/or `tagList/tags` that are invisible on screen (for example a `<script></script>`).
 #' @param wrapped A UI function wrapping the Brochure UI.
 #' Default is `shiny::tagList`.
-#' @param basepath The base path of your app. This pattern will be removed from the
-#' url, so that it matches the href of your `page()`. For example, it you have
-#' an app at `http://connect.thinkr.fr/brochure/`, and your page is names `page1`,
-#' use `basepath = "brochure"`
+#' @param basepath The path your app is served under by a reverse proxy. It is
+#' removed from the incoming url, so that what is left matches the href of your
+#' `page()`, and it is prepended to the urls the app emits. For example, if your
+#' app is served at `http://connect.thinkr.fr/brochure/` and your page is named
+#' `page1`, use `basepath = "brochure"`.
 #' @param req_handlers a list of functions that can manipulate the `req` object.
 #' These functions should take `req` as a parameters, and return the `req` object
 #' (potentially modified), or an object of class httpResponse. If any of the
@@ -106,6 +128,15 @@ brochure_client_js <- '(function(){var mount="%s";var bs=document.getElementsByT
 #' object before it is send to the browser. Each function must take a `res` and
 #' `req` parameter.
 #' @param content_404 The content to dislay when a 404 is sent
+#'
+#' @details
+#' Behind a reverse proxy, `basepath` is the supported way to tell the app
+#' where it is mounted. Brochure also tries to read the mount from the
+#' `RSTUDIO_CONNECT_APP_BASE_URL` header when it detects it runs on Posit
+#' Connect, and injects a small script to point the websocket at that mount:
+#' both are **experimental**, and set `basepath` if you need the behaviour to
+#' be guaranteed.
+#'
 #' @importFrom shiny shinyApp
 #' @importFrom rlang as_function
 #' @importFrom routr RouteStack
@@ -124,12 +155,13 @@ brochureApp <- function(
   wrapped = shiny::tagList
 ) {
   brochure_routes <- RouteStack$new()
+  basepath <- normalize_basepath(basepath)
   # Kept as locals: the httpHandler closure below is the only reader, so two
   # apps running in the same process never see each other's handlers.
   req_handlers <- lapply(req_handlers, as_function)
   res_handlers <- lapply(res_handlers, as_function)
   # Extracting the dots
-  content <- list(...)
+  content <- check_content(splice_lists(list(...)))
 
   # Separate the extra content from the pages
   # This allows to add extra deps
@@ -255,7 +287,10 @@ brochureApp <- function(
     matched <- brochure_routes$dispatch_to_first_match(
       req_with_path(
         session$request,
-        page_path(session$request$PATH_INFO)
+        strip_basepath(
+          page_path(session$request$PATH_INFO),
+          basepath
+        )
       )
     )
     session$request$BROCHURE_KEYS <- matched$keys
@@ -284,6 +319,9 @@ brochureApp <- function(
     if (inherits(req, "httpResponse")) {
       return(req)
     }
+    # Stripped in place, so the `ui()` called further down by the Shiny handler
+    # dispatches on the same path we do.
+    req$PATH_INFO <- strip_basepath(req$PATH_INFO, basepath)
     dispatched <- brochure_routes$dispatch_to_first_match(req)
     if (is.null(dispatched)) {
       return(make_404(content_404))

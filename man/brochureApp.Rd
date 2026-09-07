@@ -41,10 +41,11 @@ for more information on bookmarking your app.}
 
 \item{content_404}{The content to dislay when a 404 is sent}
 
-\item{basepath}{The base path of your app. This pattern will be removed from the
-url, so that it matches the href of your \code{page()}. For example, it you have
-an app at \verb{http://connect.thinkr.fr/brochure/}, and your page is names \code{page1},
-use \code{basepath = "brochure"}}
+\item{basepath}{The path your app is served under by a reverse proxy. It is
+removed from the incoming url, so that what is left matches the href of your
+\code{page()}, and it is prepended to the urls the app emits. For example, if your
+app is served at \verb{http://connect.thinkr.fr/brochure/} and your page is named
+\code{page1}, use \code{basepath = "brochure"}.}
 
 \item{req_handlers}{a list of functions that can manipulate the \code{req} object.
 These functions should take \code{req} as a parameters, and return the \code{req} object
@@ -65,4 +66,12 @@ A shiny.appobj
 \description{
 This function  is to be used in place of
 \code{shinyApp()}.
+}
+\details{
+Behind a reverse proxy, \code{basepath} is the supported way to tell the app
+where it is mounted. Brochure also tries to read the mount from the
+\code{RSTUDIO_CONNECT_APP_BASE_URL} header when it detects it runs on Posit
+Connect, and injects a small script to point the websocket at that mount:
+both are \strong{experimental}, and set \code{basepath} if you need the behaviour to
+be guaranteed.
 }
