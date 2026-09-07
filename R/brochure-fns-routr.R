@@ -27,7 +27,6 @@ page <- function(
   req_handlers = list(),
   res_handlers = list()
 ) {
-  # href <- rm_backslash(href)
   # Page are href + ui
   res <- list(
     href = href,

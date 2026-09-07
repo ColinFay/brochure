@@ -106,7 +106,7 @@ check_cookie_part <- function(x, arg, ok) {
 #'
 #' @examples
 #' set_cookie(
-#'   shiny:::httpResponse(),
+#'   shiny::httpResponse(),
 #'   "this",
 #'   12
 #' )

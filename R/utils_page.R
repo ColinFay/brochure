@@ -88,19 +88,3 @@ extract <- function(content, class) {
     logical(1)
   )
 }
-
-build_redirect <- function(redirect) {
-  do.call(
-    rbind,
-    lapply(
-      redirect,
-      function(x) {
-        data.frame(
-          from = x$from,
-          to = x$to,
-          code = x$code
-        )
-      }
-    )
-  )
-}

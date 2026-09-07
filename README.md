@@ -8,7 +8,7 @@
 [![R build
 status](https://github.com/ColinFay/brochure/workflows/R-CMD-check/badge.svg)](https://github.com/ColinFay/brochure/actions)
 [![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 [![R-CMD-check](https://github.com/ColinFay/brochure/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ColinFay/brochure/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
@@ -284,10 +284,7 @@ brochureApp(
     # This response will be returned directly to the browser,
     # without passing through the usual shiny http dance
     req_handlers = list(
-      # If you have shiny < 1.6.0, you'll need to
-      # do shiny:::httpResponse (triple `:`)
-      # as it is not exported until 1.6.0.
-      # Otherwise, see ?shiny::httpResponse
+      # See ?shiny::httpResponse
       ~ shiny::httpResponse(200, content = "OK")
     )
   )

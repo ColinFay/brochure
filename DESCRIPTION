@@ -21,9 +21,12 @@ Imports:
     shiny (>= 1.6.0)
 Suggests:
     golem (>= 0.3.0),
+    knitr,
+    rmarkdown,
     testthat (>= 3.0.0),
     withr
 Config/testthat/edition: 3
+VignetteBuilder: knitr
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Config/roxygen2/version: 8.0.0

@@ -5,7 +5,12 @@
 ^LICENSE\.md$
 ^\.github$
 ^dev$
+^inst/rsconnect$
+^inst/cache$
+^inst/complex\.R$
 ^\.here$
 ^tests/playwright$
 ^\.claude$
 ^AUDIT-v1\.0\.0\.md$
+^doc$
+^Meta$

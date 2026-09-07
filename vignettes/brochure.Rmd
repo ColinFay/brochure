@@ -1,0 +1,173 @@
+---
+title: "Getting started with brochure"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with brochure}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+A `{shiny}` app usually lives at a single url, and everything you show is a
+matter of hiding and showing pieces of one page. `{brochure}` takes the other
+road: an app serves several endpoints, and each of them is its own page, with
+its own UI and its own server function.
+
+```{r}
+library(shiny)
+library(brochure)
+```
+
+## A page
+
+`page()` binds an href to a UI and a server function. The server is optional:
+a page that only shows static content does not need one.
+
+```{r}
+home <- function() {
+  page(
+    href = "/",
+    ui = tagList(
+      h1("Home"),
+      plotOutput("plot")
+    ),
+    server = function(input, output, session) {
+      output$plot <- renderPlot(plot(mtcars))
+    }
+  )
+}
+
+contact <- function() {
+  page(
+    href = "/contact",
+    ui = tagList(
+      h1("Contact"),
+      tags$p("here@example.com")
+    )
+  )
+}
+```
+
+## An app
+
+`brochureApp()` replaces `shinyApp()`, and takes the pages:
+
+```{r}
+brochureApp(
+  home(),
+  contact()
+)
+```
+
+Navigating between pages is done with plain links — `tags$a(href = "/contact")`.
+There is no router to configure on the client: a link is a real navigation, and
+the browser asks the server for that url.
+
+Which brings the one thing to keep in mind: **every page is a new Shiny
+session**. Nothing you compute on `/` is available on `/contact`. That is the
+point rather than a limitation — it forces the data flowing between pages to be
+explicit — but it means state has to live somewhere shared: a cookie, a
+database, a disk cache.
+
+## Parameters in the url
+
+An href can carry parameters, `{routr}` style. Read them back with
+`get_keys()`: with no argument inside the server, and with the `request` the ui
+receives inside the ui.
+
+```{r}
+brochureApp(
+  page(
+    href = "/who/:id",
+    ui = function(request) {
+      tagList(
+        h1(sprintf("Hello %s", get_keys(request)$id)),
+        verbatimTextOutput("from_server")
+      )
+    },
+    server = function(input, output, session) {
+      output$from_server <- renderText(get_keys()$id)
+    }
+  )
+)
+```
+
+`/who/colin` and `/who/fay` are two sessions of the same page, each with its
+own `id`.
+
+## Redirections
+
+```{r}
+brochureApp(
+  home(),
+  redirect(from = "/index.html", to = "/")
+)
+```
+
+`redirect()` answers at the http level, before any Shiny code runs. From inside
+a server, `server_redirect("/contact")` sends the browser to another page.
+
+## Middleware
+
+Every page, and the app itself, takes `req_handlers` and `res_handlers`: lists
+of functions run on the request before the response is built, and on the
+response before it is sent. App level handlers run first, then those of the
+matched page.
+
+A `req_handler` returning an `httpResponse` short-circuits everything else,
+which is how you serve something that is not a page at all:
+
+```{r}
+brochureApp(
+  home(),
+  page(
+    href = "/healthcheck",
+    ui = tagList(),
+    req_handlers = list(
+      ~ shiny::httpResponse(200, content = "OK")
+    )
+  )
+)
+```
+
+A `res_handler` is where you set a cookie:
+
+```{r}
+page(
+  href = "/login",
+  ui = tagList(h1("Logged in")),
+  res_handlers = list(
+    ~ set_cookie(.x, "SESSION", "abc123")
+  )
+)
+```
+
+Read it back from the server with `get_cookies()` and `parse_cookie_string()`.
+
+## Behind a reverse proxy
+
+If the app is not served at the root of its domain, tell it where it is
+mounted with `basepath`:
+
+```{r}
+brochureApp(
+  home(),
+  basepath = "myapp"
+)
+```
+
+The prefix is removed from incoming urls, so it keeps matching your `page()`
+hrefs, and prepended to the urls the app emits. On Posit Connect the mount is
+picked up on its own and `basepath` is not needed.
+
+## What's next
+
+The README covers the golem integration, the design patterns for sharing state
+between pages, and the full cookie API.

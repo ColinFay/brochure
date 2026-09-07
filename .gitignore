@@ -2,7 +2,11 @@
 .Rhistory
 .RData
 inst/cache/
+inst/rsconnect/
 README.html
 dev/.posit/
 
 inst/subpage/rsconnect/
+/doc/
+/Meta/
+inst/doc/
