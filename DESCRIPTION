@@ -13,8 +13,7 @@ Imports:
     purrr,
     rlang (>= 0.4.12),
     routr (>= 2.0.0),
-    shiny (>= 1.6.0),
-    uuid
+    shiny (>= 1.6.0)
 Suggests:
     golem (>= 0.3.0),
     testthat (>= 3.0.0)

@@ -13,19 +13,13 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests',
-  /* A brochure app keeps the "current page" (its ui/server) in shared,
-   * per-process state. The server is bound when the page's websocket connects,
-   * *after* the HTTP response — so a concurrent navigation in another worker can
-   * clobber the stored server before a page's socket connects, and a page would
-   * then run the wrong server (e.g. its plot never renders). We therefore run
-   * the suite serially, which mirrors how a single brochure process is used. */
-  fullyParallel: false,
+  /* A brochure app resolves its page per request (UI) and per session
+   * (server), so concurrent navigations never share state. */
+  fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  /* One worker: see the `fullyParallel` note above. */
-  workers: 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */

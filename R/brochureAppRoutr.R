@@ -20,6 +20,24 @@ get_mount <- function(req, basepath = "") {
   ""
 }
 
+# The websocket handshake of a page hits `<href>/websocket/`; drop that suffix
+# to get back the href of the page the session belongs to.
+page_path <- function(path) {
+  sub("websocket/?$", "", path)
+}
+
+# routr dispatches on a Rook environment: hand it a copy of `req` with
+# `PATH_INFO` swapped, so a page can be looked up by a path other than the
+# requested one (and without mutating Shiny's own request object).
+req_with_path <- function(req, path) {
+  out <- as.environment(
+    as.list(req, all.names = TRUE)
+  )
+  out$PATH_INFO <- path
+  out$.__reqres_Request__ <- NULL
+  out
+}
+
 # This has been vibe coded
 
 # Tiny client-side bootstrap injected at the top of <head>. `%s` is the
@@ -78,9 +96,9 @@ brochureApp <- function(
   res_handlers = list(),
   wrapped = shiny::tagList
 ) {
-  brochure_routing <- new.env()
   brochure_routes <- RouteStack$new()
-  brochure_id <- uuid::UUIDgenerate()
+  # Backing store of the `keys` active binding below.
+  keys_store <- new.env(parent = emptyenv())
   globals$set(
     "req_handlers",
     req_handlers
@@ -132,9 +150,7 @@ brochureApp <- function(
           list(
             ui = page$ui,
             server = page$server,
-            keys = keys,
-            redirect = NULL,
-            static_path = page$href
+            keys = keys
           )
         }
       )
@@ -189,9 +205,7 @@ brochureApp <- function(
   makeActiveBinding(
     "keys",
     function() {
-      brochure_routing[[
-        brochure_id
-      ]]$keys
+      keys_store$keys
     },
     env = sys.frame()
   )
@@ -199,9 +213,9 @@ brochureApp <- function(
   ui <- function(
     request
   ) {
-    ui <- brochure_routing[[
-      brochure_id
-    ]]$ui
+    matched <- brochure_routes$dispatch_to_first_match(request)
+    keys_store$keys <- matched$keys
+    ui <- matched$ui
 
     if (is.function(ui)) {
       ui <- ui(request)
@@ -220,13 +234,22 @@ brochureApp <- function(
     output,
     session
   ) {
-    brochure_routing[[
-      brochure_id
-    ]]$server(
-      input,
-      output,
-      session
+    # Resolve the page from the session's own handshake request, so that
+    # concurrent sessions on different pages never see each other's server.
+    matched <- brochure_routes$dispatch_to_first_match(
+      req_with_path(
+        session$request,
+        page_path(session$request$PATH_INFO)
+      )
     )
+    keys_store$keys <- matched$keys
+    if (is.function(matched$server)) {
+      matched$server(
+        input,
+        output,
+        session
+      )
+    }
   }
   res <- shinyApp(
     ui = ui,
@@ -250,23 +273,11 @@ brochureApp <- function(
       }
     }
     dispatched <- brochure_routes$dispatch_to_first_match(req)
-    if (is.list(dispatched) && !is.null(dispatched$redirect)) {
-      return(dispatched$redirect)
+    if (is.null(dispatched)) {
+      return(make_404(content_404))
     }
-    # Only update the stored page state when the request actually matched a
-    # brochure page. Stray requests (resources, favicon, sockjs, ...) that fall
-    # through here must NOT clobber the current page's ui/server with NULL, or
-    # the next Shiny session would call a non-function server.
-    if (
-      is.list(dispatched) &&
-        (!is.null(dispatched$ui) ||
-          !is.null(dispatched$server) ||
-          !is.null(dispatched$static_path))
-    ) {
-      brochure_routing[[brochure_id]]$ui <- dispatched$ui
-      brochure_routing[[brochure_id]]$server <- dispatched$server
-      brochure_routing[[brochure_id]]$keys <- dispatched$keys
-      brochure_routing[[brochure_id]]$static_path <- dispatched$static_path
+    if (!is.null(dispatched$redirect)) {
+      return(dispatched$redirect)
     }
     res <- old_httpHandler(req)
     if (is.null(res)) {
