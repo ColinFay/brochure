@@ -63,11 +63,31 @@ page_contact <- function() {
   )
 }
 
+# A parameterised route: the matched values are read with get_keys()
+page_who <- function() {
+  page(
+    href = "/who/:id",
+    ui = function(request) {
+      tagList(
+        h1(sprintf("Hello %s", get_keys(request)$id)),
+        nav_links,
+        verbatimTextOutput("from_server")
+      )
+    },
+    server = function(input, output, session) {
+      output$from_server <- renderText({
+        sprintf("server sees %s", get_keys()$id)
+      })
+    }
+  )
+}
+
 brochureApp(
   # Pages
   page_1(),
   page_2(),
   page_contact(),
+  page_who(),
   # Redirections
   redirect(
     from = "/page3",

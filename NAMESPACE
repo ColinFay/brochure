@@ -2,6 +2,7 @@
 
 export(brochureApp)
 export(get_cookies)
+export(get_keys)
 export(golem_hook)
 export(new_page)
 export(page)

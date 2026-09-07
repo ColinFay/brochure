@@ -111,13 +111,13 @@ brochureApp(
         tags$p(
           sprintf(
             "Hello %s",
-            keys$id
+            get_keys(request)$id
           )
         )
       )
     },
     server = function(input, output, session) {
-      print(keys)
+      print(get_keys())
     }
   ),
   page(
@@ -130,8 +130,8 @@ brochureApp(
       output$who <- renderText({
         sprintf(
           "Hello %s %s",
-          keys$name,
-          keys$surname
+          get_keys()$name,
+          get_keys()$surname
         )
       })
     }
@@ -140,6 +140,8 @@ brochureApp(
 ```
 
 You can now move to `who/colin` & `this/colin/fay` and see your parameters displayed here.
+
+The matched values are read with `get_keys()`: with no argument inside a page `server`, and with the `request` the page `ui` receives when you need them in the UI.
 
 ### `redirect()`
 

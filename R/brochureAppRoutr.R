@@ -118,8 +118,6 @@ brochureApp <- function(
   wrapped = shiny::tagList
 ) {
   brochure_routes <- RouteStack$new()
-  # Backing store of the `keys` active binding below.
-  keys_store <- new.env(parent = emptyenv())
   globals$set(
     "req_handlers",
     lapply(req_handlers, as_function)
@@ -225,19 +223,12 @@ brochureApp <- function(
     }
   )
 
-  makeActiveBinding(
-    "keys",
-    function() {
-      keys_store$keys
-    },
-    env = sys.frame()
-  )
-
   ui <- function(
     request
   ) {
     matched <- brochure_routes$dispatch_to_first_match(request)
-    keys_store$keys <- matched$keys
+    # Stored on the request so that `get_keys(request)` can read them back.
+    request$BROCHURE_KEYS <- matched$keys
     ui <- matched$ui
 
     if (is.function(ui)) {
@@ -265,7 +256,7 @@ brochureApp <- function(
         page_path(session$request$PATH_INFO)
       )
     )
-    keys_store$keys <- matched$keys
+    session$request$BROCHURE_KEYS <- matched$keys
     if (is.function(matched$server)) {
       matched$server(
         input,
