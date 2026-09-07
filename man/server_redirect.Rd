@@ -7,9 +7,13 @@
 server_redirect(to, session = shiny::getDefaultReactiveDomain())
 }
 \arguments{
-\item{to}{the destination of the redirection}
+\item{to}{the destination of the redirection: a path (\code{"/page2"}) or an
+\code{http(s)} URL. Other schemes are rejected.}
 
 \item{session}{shiny session object, default is \code{shiny::getDefaultReactiveDomain()}}
+}
+\value{
+Used for side effect
 }
 \description{
 Do a server side redirection

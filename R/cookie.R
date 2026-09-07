@@ -37,6 +37,35 @@ get_cookies <- function(session = shiny::getDefaultReactiveDomain()) {
 }
 
 
+# RFC 6265. A cookie name is a token: printable US-ASCII (which already rules
+# out CR, LF and every other control character) minus the separators. A value
+# may hold separators, but not whitespace, double quotes, comma, semicolon or
+# backslash. Letting any of those through lets a caller close the cookie and
+# append attributes -- or, with CR/LF, a header of their own.
+cookie_separators <- strsplit("()<>@,;:\\\"/[]?={}", "")[[1]]
+
+cookie_token_ok <- function(x) {
+  grepl("^[!-~]+$", x) &&
+    !any(strsplit(x, "")[[1]] %in% cookie_separators)
+}
+
+cookie_value_ok <- function(x) {
+  grepl("^[!-~]*$", x) &&
+    !any(strsplit(x, "")[[1]] %in% c(",", ";", "\\", "\""))
+}
+
+check_cookie_part <- function(x, arg, ok) {
+  attempt::stop_if_not(
+    length(x) == 1 && ok(x),
+    isTRUE,
+    sprintf(
+      "`%s` contains characters that are not allowed in a cookie.",
+      arg
+    )
+  )
+  x
+}
+
 #' Middleware to set cookies
 #'
 #' Please read https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
@@ -66,9 +95,10 @@ get_cookies <- function(session = shiny::getDefaultReactiveDomain()) {
 #'  resistent to man-in-the-middle attacks.
 #' @param http_only Forbids JavaScript from accessing the
 #'  cookie, for example, through the Document.cookie property.
+#' Defaults to `TRUE`.
 #' @param same_site Controls whether a cookie is sent with
 #' cross-origin requests, providing some protection against
-#' cross-site request forgery attacks (CSRF).
+#' cross-site request forgery attacks (CSRF). Defaults to `"Lax"`.
 #'
 #' @return the httpResponse, with a cookie header
 #' @export
@@ -89,8 +119,8 @@ set_cookie <- function(
   domain = NULL,
   path = NULL,
   secure = NULL,
-  http_only = NULL,
-  same_site = NULL
+  http_only = TRUE,
+  same_site = "Lax"
 ) {
   attempt::stop_if(
     name,
@@ -98,10 +128,13 @@ set_cookie <- function(
     "`name` is required "
   )
   attempt::stop_if(
-    name,
+    value,
     missing,
     "`value` is required "
   )
+
+  name <- check_cookie_part(as.character(name), "name", cookie_token_ok)
+  value <- check_cookie_part(as.character(value), "value", cookie_value_ok)
 
   cook <- sprintf("%s=%s;", name, value)
 
@@ -125,7 +158,7 @@ set_cookie <- function(
     cook <- sprintf(
       "%s Domain = %s;",
       cook,
-      domain
+      check_cookie_part(as.character(domain), "domain", cookie_value_ok)
     )
   }
 
@@ -133,7 +166,7 @@ set_cookie <- function(
     cook <- sprintf(
       "%s Path = %s;",
       cook,
-      path
+      check_cookie_part(as.character(path), "path", cookie_value_ok)
     )
   }
 
@@ -176,7 +209,7 @@ remove_cookie <- function(
 ) {
   res$headers$`Set-Cookie` <- sprintf(
     "%s=''; Max-Age=0",
-    name
+    check_cookie_part(as.character(name), "name", cookie_token_ok)
   )
   res
 }

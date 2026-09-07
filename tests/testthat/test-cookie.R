@@ -25,9 +25,10 @@ test_that("set_cookie works", {
   cook <- parse_cookie_string(
     output$headers$`Set-Cookie`
   )
+  # HttpOnly and SameSite = Lax are the defaults
   expect_equal(
     cook,
-    c(this = "12")
+    c(this = "12", HttpOnly = NA, SameSite = "Lax")
   )
 
   output <- set_cookie(
@@ -178,5 +179,30 @@ test_that("set_cookie works", {
       12,
       same_site = "gouigoui"
     )
+  )
+})
+
+test_that("set_cookie rejects characters that would break out of the header", {
+  res <- shiny::httpResponse()
+  expect_error(
+    set_cookie(res, "sess", "abc\r\nSet-Cookie: admin=1")
+  )
+  expect_error(
+    set_cookie(res, "sess", "abc; HttpOnly")
+  )
+  expect_error(
+    set_cookie(res, "a name", 12)
+  )
+  expect_error(
+    set_cookie(res, "na=me", 12)
+  )
+  expect_error(
+    set_cookie(res, "sess", 12, domain = "x; HttpOnly")
+  )
+  expect_error(
+    set_cookie(res, "sess", 12, path = "/x; HttpOnly")
+  )
+  expect_error(
+    remove_cookie(res, "a\r\nX-Injected: 1")
   )
 })

@@ -363,7 +363,7 @@ login <- function() {
       ~ set_cookie(.x, "BROCHURECOOKIE", 12)
       # If you had to do it yourself
       # function(res, req){
-      #   res$headers$`Set-Cookie` <- "BROCHURECOOKIE=12; HttpOnly;"
+      #   res$headers$`Set-Cookie` <- "BROCHURECOOKIE=12; HttpOnly; SameSite = Lax;"
       #   res
       # }
     )

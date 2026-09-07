@@ -4,10 +4,17 @@
 # then to "" (app served at the domain root, e.g. local dev).
 get_mount <- function(req, basepath = "") {
   base_url <- req[["HTTP_RSTUDIO_CONNECT_APP_BASE_URL"]]
-  if (!is.null(base_url) && nzchar(base_url)) {
+  # The header is only believed when the app really runs on Connect: anywhere
+  # else a client sends it at will, and it decides the prefix every URL of the
+  # page is rewritten with. The extracted path is kept to a plain path too.
+  if (
+    identical(Sys.getenv("RSTUDIO_PRODUCT"), "CONNECT") &&
+      !is.null(base_url) &&
+      nzchar(base_url)
+  ) {
     path <- sub("^[a-zA-Z][a-zA-Z0-9+.-]*://[^/]+", "", base_url)
     path <- sub("/+$", "", path)
-    if (nzchar(path)) {
+    if (grepl("^/[A-Za-z0-9/_-]+$", path)) {
       return(path)
     }
   }
@@ -69,8 +76,9 @@ run_res_handlers <- function(res, req, handlers) {
 #    no worker token (e.g. local dev).
 # 2. server_redirect(). Registers the "redirect" custom message handler (this
 #    replaces the old inst/redirect.js), mount-prefixing internal targets so a
-#    redirect to "/page2" works under a proxy mount.
-brochure_client_js <- '(function(){var mount="%s";var bs=document.getElementsByTagName("base");var token="";for(var i=0;i<bs.length;i++){var h=bs[i].getAttribute("href")||"";var m=h.match(/_w_[^\\/]+/);if(m){token=m[0]+"/";break;}}if(token){for(var j=bs.length-1;j>=0;j--){bs[j].parentNode.removeChild(bs[j]);}var b=document.createElement("base");b.setAttribute("href",window.location.origin+mount+"/"+token);var head=document.head||document.getElementsByTagName("head")[0];head.insertBefore(b,head.firstChild);}function reg(){if(window.Shiny&&Shiny.addCustomMessageHandler){Shiny.addCustomMessageHandler("redirect",function(to){if(to&&to.charAt(0)==="/"&&to.charAt(1)!=="/"){to=mount+to;}window.location.href=to;});}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",reg);}else{reg();}})();/*__brochure_client__*/'
+#    redirect to "/page2" works under a proxy mount. Targets carrying a scheme
+#    other than http(s), and protocol relative ones, are dropped.
+brochure_client_js <- '(function(){var mount="%s";var bs=document.getElementsByTagName("base");var token="";for(var i=0;i<bs.length;i++){var h=bs[i].getAttribute("href")||"";var m=h.match(/_w_[^\\/]+/);if(m){token=m[0]+"/";break;}}if(token){for(var j=bs.length-1;j>=0;j--){bs[j].parentNode.removeChild(bs[j]);}var b=document.createElement("base");b.setAttribute("href",window.location.origin+mount+"/"+token);var head=document.head||document.getElementsByTagName("head")[0];head.insertBefore(b,head.firstChild);}function reg(){if(window.Shiny&&Shiny.addCustomMessageHandler){Shiny.addCustomMessageHandler("redirect",function(to){if(typeof to!=="string"||!to||/^\\/\\//.test(to))return;var sch=to.match(/^[a-zA-Z][a-zA-Z0-9+.-]*:/);if(sch&&!/^https?:$/i.test(sch[0]))return;if(!sch&&to.charAt(0)==="/"){to=mount+to;}window.location.href=to;});}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",reg);}else{reg();}})();/*__brochure_client__*/'
 #' Create a brochureApp
 #'
 #' This function  is to be used in place of

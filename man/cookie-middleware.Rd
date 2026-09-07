@@ -14,8 +14,8 @@ set_cookie(
   domain = NULL,
   path = NULL,
   secure = NULL,
-  http_only = NULL,
-  same_site = NULL
+  http_only = TRUE,
+  same_site = "Lax"
 )
 
 remove_cookie(res, name)
@@ -53,11 +53,12 @@ when a request is made with the https: scheme
 resistent to man-in-the-middle attacks.}
 
 \item{http_only}{Forbids JavaScript from accessing the
-cookie, for example, through the Document.cookie property.}
+cookie, for example, through the Document.cookie property.
+Defaults to \code{TRUE}.}
 
 \item{same_site}{Controls whether a cookie is sent with
 cross-origin requests, providing some protection against
-cross-site request forgery attacks (CSRF).}
+cross-site request forgery attacks (CSRF). Defaults to \code{"Lax"}.}
 }
 \value{
 the httpResponse, with a cookie header
