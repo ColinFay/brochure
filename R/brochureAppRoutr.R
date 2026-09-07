@@ -25,6 +25,32 @@ strip_basepath <- function(path, basepath) {
   }
 }
 
+on_connect <- function() {
+  identical(Sys.getenv("RSTUDIO_PRODUCT"), "CONNECT") ||
+    identical(Sys.getenv("POSIT_PRODUCT"), "CONNECT")
+}
+
+# Determine the external mount path of the app (the part the reverse proxy
+# serves it under). Posit Connect sends it on every request, GET and websocket
+# alike, as the `RStudio-Connect-App-Base-URL` header -- observed as
+# "https://<host>/content/<guid>", with `SCRIPT_NAME` left empty, so the header
+# is the only source Connect gives us. Falls back to the `basepath` argument,
+# then to "" (app served at the domain root, e.g. local dev).
+get_mount <- function(req, basepath = "") {
+  base_url <- req[["HTTP_RSTUDIO_CONNECT_APP_BASE_URL"]]
+  # The header is only believed when the app really runs on Connect: anywhere
+  # else a client sends it at will, and it decides the prefix every URL of the
+  # page is rewritten with. The extracted path is kept to a plain path too.
+  if (on_connect() && !is.null(base_url) && nzchar(base_url)) {
+    path <- sub("^[a-zA-Z][a-zA-Z0-9+.-]*://[^/]+", "", base_url)
+    path <- sub("/+$", "", path)
+    if (grepl("^/[A-Za-z0-9/_-]+$", path)) {
+      return(path)
+    }
+  }
+  normalize_basepath(basepath)
+}
+
 # The websocket handshake of a page hits `<href>/websocket/`; drop that suffix
 # to get back the href of the page the session belongs to.
 page_path <- function(path) {
@@ -63,7 +89,7 @@ run_res_handlers <- function(res, req, handlers) {
 }
 
 # Tiny client-side bootstrap injected at the top of <head>. `%s` is the
-# mount path, taken from `basepath`. It does two things:
+# server-known mount path. It does two things:
 #
 # 1. WEBSOCKET base. Resources and links are made absolute server-side (immune
 #    to the browser preload scanner), but the websocket URL is computed at
@@ -107,11 +133,13 @@ brochure_client_js <- '(function(){var mount="%s";var bs=document.getElementsByT
 #' @param content_404 The content to dislay when a 404 is sent
 #'
 #' @details
-#' Behind a reverse proxy, `basepath` is how you tell the app where it is
-#' mounted: it is removed from the incoming path, and prepended to the urls the
-#' app emits. On top of that, brochure injects a small script pointing the
-#' websocket at the mount, needed when the proxy hands out a worker token
-#' (Posit Connect does). That script is **experimental**.
+#' Behind a reverse proxy, `basepath` tells the app where it is mounted: it is
+#' removed from the incoming path, and prepended to the urls the app emits.
+#' On Posit Connect the mount is picked up on its own, from the
+#' `RStudio-Connect-App-Base-URL` header, and `basepath` is not needed. That
+#' header is not part of any published contract, so set `basepath` if you want
+#' the behaviour pinned. The small script brochure injects to point the
+#' websocket at the mount is **experimental**.
 #'
 #' @importFrom shiny shinyApp
 #' @importFrom rlang as_function
@@ -320,7 +348,7 @@ brochureApp <- function(
     # and internal links to be absolute to the mount (immune to the browser
     # preload scanner, unlike a client-side <base> swap), and inject a tiny
     # script that fixes the <base> for the Shiny websocket only.
-    mount <- basepath
+    mount <- get_mount(req, basepath)
     if (
       !is.null(res$content) &&
         !grepl("__brochure_client__", res$content, fixed = TRUE)
