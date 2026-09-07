@@ -1,9 +1,3 @@
-# Storing the content of the multipage
-...multipage <- new.env()
-# Env to store the options
-...multipage_opts <- new.env()
-
-
 #' A Brochure Page
 #'
 #' @param href The endpoint to serve the UI on
@@ -40,16 +34,10 @@ page <- function(
     server = server,
     method = tolower(
       method
-    )
-  )
-  # Adding the page level req_handlerss
-  add_req_handlers_page(
-    href,
-    req_handlers
-  )
-  add_res_handlers_page(
-    href,
-    res_handlers
+    ),
+    # Carried with the page, so the dispatch can run them for the matched route.
+    req_handlers = lapply(req_handlers, as_function),
+    res_handlers = lapply(res_handlers, as_function)
   )
   with_class(
     res,

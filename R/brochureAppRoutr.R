@@ -38,6 +38,25 @@ req_with_path <- function(req, path) {
   out
 }
 
+# Run `req` through a list of req handlers. A handler returning an httpResponse
+# short-circuits: that response is sent to the browser as is.
+run_req_handlers <- function(req, handlers) {
+  for (handler in handlers) {
+    req <- handler(req)
+    if (inherits(req, "httpResponse")) {
+      return(req)
+    }
+  }
+  req
+}
+
+run_res_handlers <- function(res, req, handlers) {
+  for (handler in handlers) {
+    res <- handler(res, req)
+  }
+  res
+}
+
 # This has been vibe coded
 
 # Tiny client-side bootstrap injected at the top of <head>. `%s` is the
@@ -82,6 +101,8 @@ brochure_client_js <- '(function(){var mount="%s";var bs=document.getElementsByT
 #' `req` parameter.
 #' @param content_404 The content to dislay when a 404 is sent
 #' @importFrom shiny shinyApp
+#' @importFrom rlang as_function
+#' @importFrom routr RouteStack
 #'
 #' @return A shiny.appobj
 #' @export
@@ -101,11 +122,11 @@ brochureApp <- function(
   keys_store <- new.env(parent = emptyenv())
   globals$set(
     "req_handlers",
-    req_handlers
+    lapply(req_handlers, as_function)
   )
   globals$set(
     "res_handlers",
-    res_handlers
+    lapply(res_handlers, as_function)
   )
   # Extracting the dots
   content <- list(...)
@@ -150,7 +171,9 @@ brochureApp <- function(
           list(
             ui = page$ui,
             server = page$server,
-            keys = keys
+            keys = keys,
+            req_handlers = page$req_handlers,
+            res_handlers = page$res_handlers
           )
         }
       )
@@ -264,13 +287,9 @@ brochureApp <- function(
   old_httpHandler <- res$httpHandler
 
   res$httpHandler <- function(req) {
-    if (length(globals$get("req_handlers")) > 0) {
-      for (handler in globals$get("req_handlers")) {
-        req <- handler(req)
-        if (inherits(req, "httpResponse")) {
-          return(req)
-        }
-      }
+    req <- run_req_handlers(req, globals$get("req_handlers"))
+    if (inherits(req, "httpResponse")) {
+      return(req)
     }
     dispatched <- brochure_routes$dispatch_to_first_match(req)
     if (is.null(dispatched)) {
@@ -279,15 +298,17 @@ brochureApp <- function(
     if (!is.null(dispatched$redirect)) {
       return(dispatched$redirect)
     }
+    req <- run_req_handlers(req, dispatched$req_handlers)
+    if (inherits(req, "httpResponse")) {
+      return(req)
+    }
     res <- old_httpHandler(req)
     if (is.null(res)) {
       return(res)
     }
-    if (length(globals$get("res_handlers")) > 0) {
-      for (handler in globals$get("res_handlers")) {
-        res <- handler(res, req)
-      }
-    }
+    # App level res handlers first, then the ones of the matched page.
+    res <- run_res_handlers(res, req, globals$get("res_handlers"))
+    res <- run_res_handlers(res, req, dispatched$res_handlers)
     # Make the page work under a reverse-proxy mount. We rewrite resource URLs
     # and internal links to be absolute to the mount (immune to the browser
     # preload scanner, unlike a client-side <base> swap), and inject a tiny
