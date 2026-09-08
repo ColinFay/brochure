@@ -88,7 +88,9 @@ check_cookie_part <- function(x, arg, ok) {
 #' If both Expires and Max-Age are set, Max-Age has precedence.
 #' @param domain Host to which the cookie will be sent.
 #' @param path A path that must exist in the requested URL,
-#'  or the browser won't send the Cookie header.
+#'  or the browser won't send the Cookie header. `remove_cookie()` only
+#' deletes a cookie when it is given the same `path` and `domain` that
+#' `set_cookie()` was given.
 #' @param secure Cookie is only sent to the server
 #' when a request is made with the https: scheme
 #' (except on localhost), and therefore is more
@@ -205,12 +207,37 @@ set_cookie <- function(
 #' @rdname cookie-middleware
 remove_cookie <- function(
   res,
-  name
+  name,
+  path = NULL,
+  domain = NULL
 ) {
-  res$headers$`Set-Cookie` <- sprintf(
-    "%s=''; Max-Age=0",
+  # A cookie is only replaced when name, path and domain all match, so a
+  # deletion has to repeat whatever `set_cookie()` was given. Without them the
+  # browser scopes the deletion to the directory of the current request, which
+  # silently misses a cookie set with an explicit path -- and behind a mount,
+  # that directory is not "/".
+  cook <- sprintf(
+    "%s=; Max-Age=0;",
     check_cookie_part(as.character(name), "name", cookie_token_ok)
   )
+
+  if (!is.null(domain)) {
+    cook <- sprintf(
+      "%s Domain = %s;",
+      cook,
+      check_cookie_part(as.character(domain), "domain", cookie_value_ok)
+    )
+  }
+
+  if (!is.null(path)) {
+    cook <- sprintf(
+      "%s Path = %s;",
+      cook,
+      check_cookie_part(as.character(path), "path", cookie_value_ok)
+    )
+  }
+
+  res$headers$`Set-Cookie` <- cook
   res
 }
 

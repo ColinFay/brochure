@@ -206,3 +206,23 @@ test_that("set_cookie rejects characters that would break out of the header", {
     remove_cookie(res, "a\r\nX-Injected: 1")
   )
 })
+
+test_that("remove_cookie can repeat the path and domain of the cookie it deletes", {
+  res <- shiny::httpResponse()
+
+  expect_equal(
+    remove_cookie(res, "this")$headers$`Set-Cookie`,
+    "this=; Max-Age=0;"
+  )
+  expect_equal(
+    remove_cookie(res, "this", path = "/")$headers$`Set-Cookie`,
+    "this=; Max-Age=0; Path = /;"
+  )
+  expect_equal(
+    remove_cookie(res, "this", path = "/sub", domain = "example.com")$headers$`Set-Cookie`,
+    "this=; Max-Age=0; Domain = example.com; Path = /sub;"
+  )
+
+  expect_error(remove_cookie(res, "this", path = "/x; HttpOnly"))
+  expect_error(remove_cookie(res, "this", domain = "x; HttpOnly"))
+})

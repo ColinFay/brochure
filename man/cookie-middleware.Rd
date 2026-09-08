@@ -18,7 +18,7 @@ set_cookie(
   same_site = "Lax"
 )
 
-remove_cookie(res, name)
+remove_cookie(res, name, path = NULL, domain = NULL)
 }
 \arguments{
 \item{res}{An httpResponse object}
@@ -45,7 +45,9 @@ If both Expires and Max-Age are set, Max-Age has precedence.}
 \item{domain}{Host to which the cookie will be sent.}
 
 \item{path}{A path that must exist in the requested URL,
-or the browser won't send the Cookie header.}
+or the browser won't send the Cookie header. \code{remove_cookie()} only
+deletes a cookie when it is given the same \code{path} and \code{domain} that
+\code{set_cookie()} was given.}
 
 \item{secure}{Cookie is only sent to the server
 when a request is made with the https: scheme

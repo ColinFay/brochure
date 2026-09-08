@@ -51,6 +51,13 @@ from keeping the current page in shared state.
   only prepended to the urls the app emits. Apps work behind a proxy that
   passes the mount through as well as behind one that strips it.
 
+* `remove_cookie()` could not delete a cookie set with an explicit `path` or
+  `domain`. A cookie is only replaced when name, path and domain all match, and
+  the deletion header carried none of them, so the browser scoped it to the
+  directory of the current request and left the original cookie alone. Behind a
+  mount that directory is not `/`, so the documented login/logout pattern
+  silently failed on Posit Connect. It now takes `path` and `domain`.
+
 * Two apps in the same R process shared their app level `req_handlers` and
   `res_handlers`, and the last one built won.
 

@@ -145,7 +145,7 @@ brochureApp(
     ui = tagList(h1("logout"), nav, probe_ui()),
     server = probe_server("logout", pressure),
     res_handlers = list(
-      ~ remove_cookie(.x, "BROCHURE")
+      ~ remove_cookie(.x, "BROCHURE", path = "/")
     )
   ),
 
