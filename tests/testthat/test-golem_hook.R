@@ -3,6 +3,7 @@
 test_that("golem_hook works", {
   skip_on_cran()
   skip_if_not_installed("golem")
+  skip_if_not_installed("usethis")
   old <- setwd(tempdir())
   on.exit(setwd(old))
   unlink("testgolembrochure", TRUE, TRUE)
@@ -60,6 +61,7 @@ test_that("new_page adds a brochure page module", {
 
   skip_on_cran()
   skip_if_not_installed("golem")
+  skip_if_not_installed("usethis")
   old <- setwd(tempdir())
   on.exit(setwd(old))
   unlink("testgolembrochure", TRUE, TRUE)
