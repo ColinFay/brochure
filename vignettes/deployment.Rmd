@@ -11,28 +11,41 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 ```
 
+Your app works. Every page, every link, every plot, at
+`http://127.0.0.1:3000`. You deploy it, open
+`https://example.com/myapp/`, and the home page shows up unstyled — or the
+links go nowhere, or a page comes back "Not found".
+
+Nothing is broken. The app simply does not know it has been moved.
+
+## Does this concern you?
+
+Look at the address your users will type.
+
+- `https://example.com/` — the app is at the root of its domain. Nothing to do,
+  stop reading.
+- `https://example.com/myapp/` — the app is served under a **prefix**. Read on.
+- Posit Connect — a prefix too, but brochure works it out on its own. See below.
+
+## Why a prefix is a problem here
+
+In a normal Shiny app the url is decoration. In brochure it is the app: the url
+is what decides which page you get.
+
+You wrote:
+
 ```{r}
-library(shiny)
-library(brochure)
+page(href = "/contact", ui = tagList(h1("Contact")))
 ```
 
-A single page Shiny app barely notices where it is served from. A brochure app
-does, because it is the URL that decides which page you get. Served at the root
-of a domain there is nothing to do; served under a prefix, the app has to know
-about it.
+Deployed under `/myapp/`, the browser asks for `/myapp/contact`. That is not
+`/contact`, so no page matches, and you get the 404. The other half of the
+problem is the reverse: your link `<a href="/contact">` sends the visitor to
+`https://example.com/contact`, outside the app entirely.
 
-## The problem
+## The fix
 
-Say your app is at `https://example.com/myapp/` and you declared
-`page(href = "/contact")`. Two things have to line up:
-
-- a request for `/myapp/contact` must match the href `/contact`
-- the link `<a href="/contact">` must be emitted as `/myapp/contact`, or it
-  will leave the app
-
-## `basepath`
-
-Tell the app where it is mounted, and both are handled:
+Tell the app where it lives:
 
 ```{r}
 brochureApp(
@@ -42,18 +55,17 @@ brochureApp(
 )
 ```
 
-The prefix is removed from the incoming path before it is matched, and
-prepended to the urls the app emits. `"myapp"`, `"/myapp"` and `"/myapp/"` all
-mean the same thing.
+That is all. Your `page()` hrefs stay as they are — `/` and `/contact`, written
+as if the app were at the root — and brochure adds and removes the prefix on
+the way in and out.
 
-This works whether or not the proxy strips the prefix on its way in. Some do,
-some do not; brochure only removes the prefix when it is actually there.
+`"myapp"`, `"/myapp"` and `"/myapp/"` all mean the same thing, so you do not
+have to remember which one it wanted.
 
-## Posit Connect
+## On Posit Connect
 
-Connect serves content under `/content/<guid>/` and tells the app so on every
-request. Brochure reads that and configures itself, so `basepath` is not
-needed:
+Nothing to do. Connect tells the app where it is mounted, on every request, and
+brochure picks it up:
 
 ```{r}
 brochureApp(
@@ -62,47 +74,72 @@ brochureApp(
 )
 ```
 
-The header this relies on is not part of any published Connect contract, and
-the detection only runs when the environment says the app really is on Connect
-— elsewhere the header would just be something a client sent. If you would
-rather pin the behaviour than rely on it, set `basepath` anyway: an explicit
-`basepath` and Connect's own mount describe the same place.
+Deploy that as it is; `/contact` will work under
+`https://connect.example.com/content/<guid>/contact`.
 
-## What gets rewritten
+You *may* still set `basepath` if you would rather not depend on that. What
+Connect sends is not part of a documented, promised interface — it works, it is
+tested, but Posit never committed to keeping it. Setting `basepath` costs you
+nothing and pins the behaviour.
 
-Every `src` and `href` in the response is made absolute to the mount, including
-the dependencies Shiny emits relative. That is not only a proxy concern: on a
-page with more than one segment, such as `/user/colin`, a relative
-`shiny-javascript-1.14.0/shiny.min.js` resolves against `/user/` and 404s. So
-the rewriting happens for every response, with an empty mount simply yielding
-`/shiny-javascript-1.14.0/...`.
+The detection only runs when the app really is on Connect. Behind your own
+nginx, Apache or Traefik, `basepath` is not optional.
 
-Absolute urls to other hosts, protocol relative ones, fragments and query
-strings are left alone.
+## Reading the symptoms
 
-## Redirections
+| What you see | What it means |
+| --- | --- |
+| The page loads but has no styling, and nothing is interactive | The css and javascript are 404ing. Set `basepath`. |
+| A link takes you out of the app, or to a 404 | The links are missing the prefix. Set `basepath`. |
+| One page works, a deeper one does not | Same cause, and deeper pages fail first. Set `basepath`. |
+| Everything works but `server_redirect()` leaves the app | The redirect target is missing the prefix. Set `basepath`. |
+| It works locally and fails deployed, with `basepath` set | Check the value: it is the prefix in the url, without the host. |
 
-`server_redirect()` goes through the same mount, so a target written the way
-you declared your pages arrives where you expect:
+A single cause, a single fix. If setting `basepath` changes nothing, the value
+is probably wrong: for `https://example.com/team/myapp/`, it is `"team/myapp"`,
+not `"myapp"`.
+
+## Writing links that survive
+
+Write internal links as absolute paths, the way you wrote your hrefs:
 
 ```{r}
-server <- function(input, output, session) {
-  observeEvent(input$go, {
-    server_redirect("/contact")
-  })
-}
+tags$a(href = "/contact", "Contact")        # yes
+tags$a(href = "contact", "Contact")         # depends on the current page
+tags$a(href = "../contact", "Contact")      # depends on the current page
 ```
 
-Under a mount, this navigates to `/myapp/contact`. Targets carrying a scheme
-other than `http(s)` are refused, so a value that reached `to` from user input
-cannot turn into a `javascript:` url.
+Only the first is rewritten with the prefix. The other two are resolved by the
+browser against whatever page the visitor happens to be on, which gives a
+different answer on `/` than on `/team/profile`.
 
-## A checklist
+## Test it deployed
 
-- pages declared with hrefs relative to the app, not to the domain
-- `basepath` set, unless the platform announces the mount itself
-- links written as `/contact`, never `../contact`
-- the app tested at the deployed URL, not only at `127.0.0.1`
+A prefix is the kind of thing that passes every local test and fails the moment
+it ships, because at `127.0.0.1:3000` there is no prefix to get wrong. If you
+can, deploy once to a staging url with a prefix and click through the app.
 
-That last one matters more than it sounds. A prefix is the kind of thing that
-works in every local test and fails the moment it is deployed.
+---
+
+## What happens under the hood
+
+You do not need this to use `basepath`, but it explains what you are looking at
+in the page source.
+
+On the way in, the prefix is removed from the requested path before brochure
+matches it against your pages — so `/myapp/contact` becomes `/contact`. Some
+proxies strip the prefix themselves before passing the request on, Connect
+among them; brochure only removes it when it is actually there, so both kinds
+of proxy work.
+
+On the way out, every `src` and `href` in the response is made absolute:
+`href="/contact"` becomes `href="/myapp/contact"`. This also fixes something
+that has nothing to do with proxies. Shiny declares its own dependencies with
+relative urls, such as `shiny-javascript-1.14.0/shiny.min.js`. On a page like
+`/user/colin`, a browser resolves that against `/user/` and asks for a file
+that is not there — which is why deeper pages break first. So the rewriting
+happens on every response, and with no prefix it simply produces
+`/shiny-javascript-1.14.0/shiny.min.js`.
+
+Urls pointing at other hosts, protocol relative ones, fragments and query
+strings are left untouched.
