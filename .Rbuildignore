@@ -11,7 +11,6 @@
 ^\.here$
 ^tests/playwright$
 ^\.claude$
-^AUDIT-v1\.0\.0\.md$
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
