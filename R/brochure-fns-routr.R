@@ -81,7 +81,7 @@ page <- function(
 #'
 #' @param from the url to redirect from
 #' @param to the url to redirect to
-#' @param code redirectin http code (one of `c(301:308, 310)`)
+#' @param code redirecting http code (one of `c(301:308, 310)`)
 #' @param method The HTTP method the redirection answers to.
 #' Defaults to `"GET"`.
 #'

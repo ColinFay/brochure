@@ -10,6 +10,23 @@ test_that("server_redirect only accepts paths and http(s) URLs", {
   expect_error(check_redirect_to(NULL))
 })
 
+test_that("server_redirect refuses whitespace hiding a scheme", {
+  # A browser ignores leading spaces and strips tabs, newlines and carriage
+  # returns from anywhere in a url, so each of these reaches its parser as
+  # "javascript:" while looking, to a regular expression, like a plain path.
+  expect_error(check_redirect_to(paste0(" ", "javascript:alert(1)")))
+  expect_error(check_redirect_to(paste0("\t", "javascript:alert(1)")))
+  expect_error(check_redirect_to(paste0("java", "\n", "script:alert(1)")))
+  expect_error(check_redirect_to(paste0("java", "\t", "script:alert(1)")))
+  expect_error(check_redirect_to(paste0("java", "\r", "script:alert(1)")))
+  expect_error(check_redirect_to(paste0(" ", "data:text/html,x")))
+  expect_error(check_redirect_to(paste0(" ", "//evil.example.com")))
+
+  # And a space anywhere is refused, not trimmed away
+  expect_error(check_redirect_to("/page 2"))
+  expect_error(check_redirect_to("/page2 "))
+})
+
 test_that("get_mount only trusts the Connect header on Connect", {
   req <- new.env()
   # The value observed on a real Connect deployment

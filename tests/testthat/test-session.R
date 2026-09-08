@@ -109,6 +109,7 @@ test_that("server_redirect sends the target it was given", {
 
   # A refused target never reaches the browser
   expect_error(server_redirect("javascript:alert(1)", session = session))
+  expect_error(server_redirect(paste0(" ", "javascript:alert(1)"), session = session))
   expect_equal(session$sent$redirect, "https://example.com")
 })
 

@@ -2,14 +2,21 @@
 # URL would execute in the page, and a "//host" one would silently leave the
 # app. Paths and http(s) URLs only. The browser handler applies the same rule,
 # since a custom message can also be sent from elsewhere.
+#
+# Whitespace and control characters are refused outright rather than trimmed:
+# a browser drops tabs, newlines and carriage returns anywhere in a url and
+# ignores leading spaces, so " javascript:alert(1)" and "java\nscript:" both
+# reach the parser as "javascript:" while reading, to a regular expression,
+# like something with no scheme at all.
 check_redirect_to <- function(to) {
   has_scheme <- grepl("^[a-zA-Z][a-zA-Z0-9+.-]*:", to)
   attempt::stop_if_not(
     length(to) == 1 &&
+      !grepl("[[:space:][:cntrl:]]", to) &&
       !grepl("^//", to) &&
       (!has_scheme || grepl("^https?:", to, ignore.case = TRUE)),
     isTRUE,
-    "`to` must be a path or an http(s) URL."
+    "`to` must be a path or an http(s) URL, with no whitespace."
   )
   to
 }

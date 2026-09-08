@@ -53,7 +53,7 @@ app is served at \verb{http://connect.thinkr.fr/brochure/} and your page is name
 These functions should take \code{req} as a parameters, and return the \code{req} object
 (potentially modified), or an object of class httpResponse. If any of the
 req_handlers return an httpResponse, this response will be sent to the browser
-immeditately, stopping any other code.}
+immediately, stopping any other code.}
 
 \item{res_handlers}{A list of functions that can manipulate the httpResponse
 object before it is send to the browser. Each function must take a \code{res} and

@@ -92,7 +92,9 @@ run_res_handlers <- function(res, req, handlers) {
 # path. It registers the "redirect" custom message handler backing
 # `server_redirect()` (this replaces the old inst/redirect.js), prefixing
 # internal targets with the mount so a redirect to "/page2" works under a
-# proxy, and dropping any target that is neither a path nor an http(s) url.
+# proxy, and dropping any target that is neither a path nor an http(s) url, or
+# that carries whitespace or a control character -- a browser strips those out
+# of a url, which would turn "java\nscript:" back into a scheme it executes.
 #
 # It used to also promote the page's <base> to an absolute url, on the premise
 # that shiny-server-client computed the websocket url from it. That premise is
@@ -102,7 +104,7 @@ run_res_handlers <- function(res, req, handlers) {
 # from the response, a deep page kept the same websocket url, the same rendered
 # output and no failed request. Connect ships its own <base> script, and
 # brochure already rewrites resource urls absolute server-side.
-brochure_client_js <- '(function(){var mount="%s";function reg(){if(window.Shiny&&Shiny.addCustomMessageHandler){Shiny.addCustomMessageHandler("redirect",function(to){if(typeof to!=="string"||!to||/^\\/\\//.test(to))return;var sch=to.match(/^[a-zA-Z][a-zA-Z0-9+.-]*:/);if(sch&&!/^https?:$/i.test(sch[0]))return;if(!sch&&to.charAt(0)==="/"){to=mount+to;}window.location.href=to;});}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",reg);}else{reg();}})();/*__brochure_client__*/'
+brochure_client_js <- '(function(){var mount="%s";function reg(){if(window.Shiny&&Shiny.addCustomMessageHandler){Shiny.addCustomMessageHandler("redirect",function(to){if(typeof to!=="string"||!to||/[\\s\\u0000-\\u001f\\u007f]/.test(to)||/^\\/\\//.test(to))return;var sch=to.match(/^[a-zA-Z][a-zA-Z0-9+.-]*:/);if(sch&&!/^https?:$/i.test(sch[0]))return;if(!sch&&to.charAt(0)==="/"){to=mount+to;}window.location.href=to;});}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",reg);}else{reg();}})();/*__brochure_client__*/'
 #' Create a brochureApp
 #'
 #' This function is to be used in place of `shinyApp()`. It takes a series of
@@ -129,7 +131,7 @@ brochure_client_js <- '(function(){var mount="%s";function reg(){if(window.Shiny
 #' These functions should take `req` as a parameters, and return the `req` object
 #' (potentially modified), or an object of class httpResponse. If any of the
 #' req_handlers return an httpResponse, this response will be sent to the browser
-#' immeditately, stopping any other code.
+#' immediately, stopping any other code.
 #' @param res_handlers A list of functions that can manipulate the httpResponse
 #' object before it is send to the browser. Each function must take a `res` and
 #' `req` parameter.
