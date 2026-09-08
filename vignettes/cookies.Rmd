@@ -1,0 +1,119 @@
+---
+title: "Cookies and state between pages"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Cookies and state between pages}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+```
+
+```{r}
+library(shiny)
+library(brochure)
+```
+
+Every page of a brochure app is a new Shiny session. Nothing computed on one
+page survives a navigation to another. That is deliberate, and it means state
+shared between pages has to be written down somewhere: a cookie, and usually a
+backend keyed by what the cookie holds.
+
+## Setting a cookie
+
+A cookie is a response header, so it is set from a `res_handler`:
+
+```{r}
+page(
+  href = "/login",
+  ui = tagList(h1("You are logged in")),
+  res_handlers = list(
+    ~ set_cookie(.x, "SESSION", "a-random-id", path = "/")
+  )
+)
+```
+
+`set_cookie()` defaults to `http_only = TRUE` and `same_site = "Lax"`, so the
+cookie is not readable from javascript and is not sent on cross-site requests.
+Pass `secure = TRUE` in production, where the app is served over https.
+
+Names and values are checked against the character set cookies allow. A value
+carrying a `;`, a newline or a quote is rejected rather than silently truncating
+the header or, worse, appending one of its own.
+
+## Reading it back
+
+From a page server:
+
+```{r}
+server <- function(input, output, session) {
+  cookies <- parse_cookie_string(get_cookies())
+  print(cookies[["SESSION"]])
+}
+```
+
+`get_cookies()` gives the raw `Cookie` header; `parse_cookie_string()` turns it
+into a named vector.
+
+## Removing it
+
+```{r}
+page(
+  href = "/logout",
+  ui = tagList(h1("You are logged out")),
+  res_handlers = list(
+    ~ remove_cookie(.x, "SESSION", path = "/")
+  )
+)
+```
+
+Pass `remove_cookie()` the same `path` and `domain` you gave `set_cookie()`. A
+browser only replaces a cookie when the name, the path and the domain all
+match; with a different path it files the deletion as a separate cookie and
+leaves the original alone. This bites hardest behind a reverse proxy, where the
+default path is the mount rather than `/`, so the deletion appears to work
+locally and does nothing once deployed.
+
+## A session across pages
+
+The cookie holds an identifier; the data lives server side, keyed by it.
+
+```{r}
+store <- cachem::cache_disk()
+
+new_session_id <- function() {
+  paste(sample(c(letters, 0:9), 32, replace = TRUE), collapse = "")
+}
+
+login <- function() {
+  id <- new_session_id()
+  page(
+    href = "/login",
+    ui = tagList(h1("Welcome back")),
+    server = function(input, output, session) {
+      store$set(id, list(user = "colin", at = Sys.time()))
+    },
+    res_handlers = list(
+      ~ set_cookie(.x, "SESSION", id, path = "/")
+    )
+  )
+}
+
+home <- function() {
+  page(
+    href = "/",
+    ui = tagList(h1("Home"), verbatimTextOutput("who")),
+    server = function(input, output, session) {
+      output$who <- renderPrint({
+        id <- parse_cookie_string(get_cookies())[["SESSION"]]
+        if (is.na(id)) "anonymous" else store$get(id)
+      })
+    }
+  )
+}
+```
+
+The identifier must be unguessable, and the store is the thing that decides
+what a session may do — the cookie only names it.

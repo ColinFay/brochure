@@ -1,0 +1,108 @@
+---
+title: "Deploying behind a reverse proxy"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Deploying behind a reverse proxy}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+```
+
+```{r}
+library(shiny)
+library(brochure)
+```
+
+A single page Shiny app barely notices where it is served from. A brochure app
+does, because it is the URL that decides which page you get. Served at the root
+of a domain there is nothing to do; served under a prefix, the app has to know
+about it.
+
+## The problem
+
+Say your app is at `https://example.com/myapp/` and you declared
+`page(href = "/contact")`. Two things have to line up:
+
+- a request for `/myapp/contact` must match the href `/contact`
+- the link `<a href="/contact">` must be emitted as `/myapp/contact`, or it
+  will leave the app
+
+## `basepath`
+
+Tell the app where it is mounted, and both are handled:
+
+```{r}
+brochureApp(
+  page(href = "/", ui = tagList(h1("Home"))),
+  page(href = "/contact", ui = tagList(h1("Contact"))),
+  basepath = "myapp"
+)
+```
+
+The prefix is removed from the incoming path before it is matched, and
+prepended to the urls the app emits. `"myapp"`, `"/myapp"` and `"/myapp/"` all
+mean the same thing.
+
+This works whether or not the proxy strips the prefix on its way in. Some do,
+some do not; brochure only removes the prefix when it is actually there.
+
+## Posit Connect
+
+Connect serves content under `/content/<guid>/` and tells the app so on every
+request. Brochure reads that and configures itself, so `basepath` is not
+needed:
+
+```{r}
+brochureApp(
+  page(href = "/", ui = tagList(h1("Home"))),
+  page(href = "/contact", ui = tagList(h1("Contact")))
+)
+```
+
+The header this relies on is not part of any published Connect contract, and
+the detection only runs when the environment says the app really is on Connect
+— elsewhere the header would just be something a client sent. If you would
+rather pin the behaviour than rely on it, set `basepath` anyway: an explicit
+`basepath` and Connect's own mount describe the same place.
+
+## What gets rewritten
+
+Every `src` and `href` in the response is made absolute to the mount, including
+the dependencies Shiny emits relative. That is not only a proxy concern: on a
+page with more than one segment, such as `/user/colin`, a relative
+`shiny-javascript-1.14.0/shiny.min.js` resolves against `/user/` and 404s. So
+the rewriting happens for every response, with an empty mount simply yielding
+`/shiny-javascript-1.14.0/...`.
+
+Absolute urls to other hosts, protocol relative ones, fragments and query
+strings are left alone.
+
+## Redirections
+
+`server_redirect()` goes through the same mount, so a target written the way
+you declared your pages arrives where you expect:
+
+```{r}
+server <- function(input, output, session) {
+  observeEvent(input$go, {
+    server_redirect("/contact")
+  })
+}
+```
+
+Under a mount, this navigates to `/myapp/contact`. Targets carrying a scheme
+other than `http(s)` are refused, so a value that reached `to` from user input
+cannot turn into a `javascript:` url.
+
+## A checklist
+
+- pages declared with hrefs relative to the app, not to the domain
+- `basepath` set, unless the platform announces the mount itself
+- links written as `/contact`, never `../contact`
+- the app tested at the deployed URL, not only at `127.0.0.1`
+
+That last one matters more than it sounds. A prefix is the kind of thing that
+works in every local test and fails the moment it is deployed.

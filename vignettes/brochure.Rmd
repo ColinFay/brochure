@@ -169,5 +169,11 @@ picked up on its own and `basepath` is not needed.
 
 ## What's next
 
-The README covers the golem integration, the design patterns for sharing state
-between pages, and the full cookie API.
+- `vignette("handlers")` — running code before and after a page is built,
+  and answering a request without Shiny at all.
+- `vignette("cookies")` — setting and reading cookies, and carrying a session
+  from one page to the next.
+- `vignette("deployment")` — serving the app under a prefix.
+
+The README covers the golem integration and the design patterns for sharing
+state between pages.
