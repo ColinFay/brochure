@@ -80,3 +80,8 @@ from keeping the current page in shared state.
 
 * The `{routr}` dependency is on the CRAN release, and `{uuid}` and `{fastmap}`
   are no longer needed.
+
+* Four vignettes and a pkgdown site. `vignette("brochure")` gets you started,
+  `vignette("handlers")` covers the request and response middleware,
+  `vignette("cookies")` the cookie API and carrying a session between pages,
+  and `vignette("deployment")` serving the app under a prefix.

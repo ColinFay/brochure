@@ -103,6 +103,8 @@ check_cookie_part <- function(x, arg, ok) {
 #' cross-site request forgery attacks (CSRF). Defaults to `"Lax"`.
 #'
 #' @return the httpResponse, with a cookie header
+#' @seealso [get_cookies()] to read them back, and `vignette("cookies")` for
+#' carrying a session across pages.
 #' @export
 #' @rdname cookie-middleware
 #'

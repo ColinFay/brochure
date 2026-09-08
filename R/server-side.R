@@ -21,7 +21,22 @@ check_redirect_to <- function(to) {
 #' @param session shiny session object, default is `shiny::getDefaultReactiveDomain()`
 #'
 #' @return Used for side effect
+#' @seealso [redirect()] to answer an url with an HTTP redirection instead.
 #' @export
+#'
+#' @examples
+#' library(shiny)
+#'
+#' # `server_redirect()` is called from a page server, so it needs a session:
+#' page(
+#'   href = "/login",
+#'   ui = tagList(actionButton("go", "Take me home")),
+#'   server = function(input, output, session) {
+#'     observeEvent(input$go, {
+#'       server_redirect("/")
+#'     })
+#'   }
+#' )
 server_redirect <- function(
   to,
   session = shiny::getDefaultReactiveDomain()

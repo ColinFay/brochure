@@ -77,3 +77,7 @@ set_cookie(
   12
 )
 }
+\seealso{
+\code{\link[=get_cookies]{get_cookies()}} to read them back, and \code{vignette("cookies")} for
+carrying a session across pages.
+}

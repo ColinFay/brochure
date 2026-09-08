@@ -105,16 +105,19 @@ run_res_handlers <- function(res, req, handlers) {
 brochure_client_js <- '(function(){var mount="%s";function reg(){if(window.Shiny&&Shiny.addCustomMessageHandler){Shiny.addCustomMessageHandler("redirect",function(to){if(typeof to!=="string"||!to||/^\\/\\//.test(to))return;var sch=to.match(/^[a-zA-Z][a-zA-Z0-9+.-]*:/);if(sch&&!/^https?:$/i.test(sch[0]))return;if(!sch&&to.charAt(0)==="/"){to=mount+to;}window.location.href=to;});}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",reg);}else{reg();}})();/*__brochure_client__*/'
 #' Create a brochureApp
 #'
-#' This function  is to be used in place of
-#' `shinyApp()`.
+#' This function is to be used in place of `shinyApp()`. It takes a series of
+#' `page()`s, each with its own url, UI and server function, and serves them
+#' from a single Shiny application.
 #'
 #' @inheritParams shiny::shinyApp
-#' @param ... a list of elements to inject in the brochureApp.
-#' __IMPORTANT NOTE__ all elements which are not of class `"brochure_*"`
-#' will be injected __as is__ in the page. In other word, if you use a function
-#' that return a string, the string will be added as is to the pages.
-#' The only elements that should be injected on top of `page()`s are HTML elements
-#' and/or `tagList/tags` that are invisible on screen (for example a `<script></script>`).
+#' @param ... The `page()`s and `redirect()`s of the app, plus anything to
+#' inject __as is__ into every page: tags, tag lists, html dependencies and
+#' strings. That is how you add something to all your pages at once, a
+#' `<script>` or the resources of a `{golem}` app for example. Note that a
+#' string is injected too, so a stray value ends up rendered on every page.
+#' Anything else is an error naming the element it cannot use. A bare list is
+#' spliced, so `brochureApp(list(page_1(), page_2()))` builds two pages rather
+#' than injecting the list into each of them.
 #' @param wrapped A UI function wrapping the Brochure UI.
 #' Default is `shiny::tagList`.
 #' @param basepath The path your app is served under by a reverse proxy. It is
@@ -130,7 +133,7 @@ brochure_client_js <- '(function(){var mount="%s";function reg(){if(window.Shiny
 #' @param res_handlers A list of functions that can manipulate the httpResponse
 #' object before it is send to the browser. Each function must take a `res` and
 #' `req` parameter.
-#' @param content_404 The content to dislay when a 404 is sent
+#' @param content_404 The content served when no `page()` matches the url.
 #'
 #' @details
 #' Behind a reverse proxy, `basepath` tells the app where it is mounted: it is
@@ -147,7 +150,30 @@ brochure_client_js <- '(function(){var mount="%s";function reg(){if(window.Shiny
 #' @importFrom routr RouteStack
 #'
 #' @return A shiny.appobj
+#' @seealso [page()] to declare a page, [redirect()] to answer an url with a
+#' redirection, and `vignette("deployment")` to serve the app under a prefix.
 #' @export
+#'
+#' @examples
+#' library(shiny)
+#'
+#' app <- brochureApp(
+#'   page(
+#'     href = "/",
+#'     ui = tagList(h1("Home")),
+#'     server = function(input, output, session) {}
+#'   ),
+#'   page(
+#'     href = "/contact",
+#'     ui = tagList(h1("Contact"))
+#'   ),
+#'   redirect(from = "/index.html", to = "/")
+#' )
+#'
+#' # Then run it as you would any Shiny app:
+#' if (interactive()) {
+#'   shiny::runApp(app)
+#' }
 brochureApp <- function(
   ...,
   onStart = NULL,

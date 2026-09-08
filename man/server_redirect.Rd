@@ -18,3 +18,20 @@ Used for side effect
 \description{
 Do a server side redirection
 }
+\examples{
+library(shiny)
+
+# `server_redirect()` is called from a page server, so it needs a session:
+page(
+  href = "/login",
+  ui = tagList(actionButton("go", "Take me home")),
+  server = function(input, output, session) {
+    observeEvent(input$go, {
+      server_redirect("/")
+    })
+  }
+)
+}
+\seealso{
+\code{\link[=redirect]{redirect()}} to answer an url with an HTTP redirection instead.
+}

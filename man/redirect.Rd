@@ -7,9 +7,9 @@
 redirect(from, to, code = 301, method = "GET")
 }
 \arguments{
-\item{from}{redirect from}
+\item{from}{the url to redirect from}
 
-\item{to}{redirect to}
+\item{to}{the url to redirect to}
 
 \item{code}{redirectin http code (one of \code{c(301:308, 310)})}
 
@@ -17,8 +17,25 @@ redirect(from, to, code = 301, method = "GET")
 Defaults to \code{"GET"}.}
 }
 \value{
-A redirection
+A \code{redirect} object, to be passed to \code{\link[=brochureApp]{brochureApp()}}.
 }
 \description{
-Redirection
+Answers an url with an HTTP redirection, before any Shiny code runs. To
+redirect from inside a page server instead, see \code{\link[=server_redirect]{server_redirect()}}.
+}
+\examples{
+redirect(
+  from = "/index.html",
+  to = "/"
+)
+
+# Anything but a temporary move deserves a code of its own
+redirect(
+  from = "/old",
+  to = "/new",
+  code = 302
+)
+}
+\seealso{
+\code{\link[=server_redirect]{server_redirect()}} to redirect from inside a page server.
 }

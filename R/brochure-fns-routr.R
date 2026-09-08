@@ -1,11 +1,17 @@
 #' A Brochure Page
 #'
-#' @param href The endpoint to serve the UI on
+#' A page is an url, a UI and a server function. Opening it starts a Shiny
+#' session of its own, separate from any other page of the app.
+#'
+#' @param href The endpoint to serve the UI on. It can carry parameters, as in
+#' `"/who/:id"`, which are read back with [get_keys()].
 #' @param method The HTTP method the page answers to. Defaults to `"GET"`.
 #' @inheritParams brochureApp
 #' @inheritParams shiny::shinyApp
 #'
-#' @return A list
+#' @return A `brochure_page` object, to be passed to [brochureApp()].
+#' @seealso [get_keys()] to read the parameters of an href, and
+#' `vignette("handlers")` for `req_handlers` and `res_handlers`.
 #' @export
 #'
 #' @importFrom shiny tagList
@@ -47,14 +53,31 @@ page <- function(
 
 #' Redirection
 #'
-#' @param from redirect from
-#' @param to redirect to
+#' Answers an url with an HTTP redirection, before any Shiny code runs. To
+#' redirect from inside a page server instead, see [server_redirect()].
+#'
+#' @param from the url to redirect from
+#' @param to the url to redirect to
 #' @param code redirectin http code (one of `c(301:308, 310)`)
 #' @param method The HTTP method the redirection answers to.
 #' Defaults to `"GET"`.
 #'
-#' @return A redirection
+#' @return A `redirect` object, to be passed to [brochureApp()].
+#' @seealso [server_redirect()] to redirect from inside a page server.
 #' @export
+#'
+#' @examples
+#' redirect(
+#'   from = "/index.html",
+#'   to = "/"
+#' )
+#'
+#' # Anything but a temporary move deserves a code of its own
+#' redirect(
+#'   from = "/old",
+#'   to = "/new",
+#'   code = 302
+#' )
 redirect <- function(
   from,
   to,

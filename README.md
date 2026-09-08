@@ -52,7 +52,7 @@ Note that the server is optional if you want to display a static page.
 
 ``` r
 library(shiny)
-pkgload::load_all()
+library(brochure)
 brochureApp(
   # First page
   page(
@@ -88,7 +88,7 @@ express, like this:
 
 ``` r
 library(shiny)
-pkgload::load_all()
+library(brochure)
 brochureApp(
   # First page
   page(
@@ -151,7 +151,7 @@ need them in the UI.
 Redirections can be used to redirect from one endpoint to the other:
 
 ``` r
-pkgload::load_all()
+library(brochure)
 brochureApp(
   page(
     href = "/",
@@ -177,14 +177,14 @@ You can now navigate to `/nothere`, you’ll be redirected to `/there`.
 > Note that depending on the code you’ve used for the redirection, your
 > browser might cache the redirection.
 
-**IMPORTANT NOTE** all elements which are not of class `"brochure_*"`
-(`brochure_page` and `brochure_redirect`) will be injected **as is** in
-the page. In other word, if you use a function that return a string, the
-string will be added as is to the pages. For example, this will inject a
-`"x"` on each page. This is probably **NOT** what you want to do, but
-can be the source of some bugs you’ll have with your app.
+**IMPORTANT NOTE** on top of `page()`s and `redirect()`s, `...` accepts
+tags, tag lists, html dependencies and strings, and injects them **as
+is** into every page. That is how you add something to all your pages at
+once — a `<script>`, a favicon, the resources of a `{golem}` app. It
+also means a stray value ends up rendered:
 
 ``` r
+# "x" is added to every page, which is probably not what you meant
 brochureApp(
   "x",
   page(
@@ -192,6 +192,12 @@ brochureApp(
   )
 )
 ```
+
+Anything else — a data frame, a number, a function — is an error naming
+the element it cannot use, rather than something odd showing up on
+screen. A bare list is spliced, so
+`brochureApp(list(page_1(), page_2()))` builds two pages instead of
+injecting the list into each of them.
 
 ## `req_handlers` & `res_handlers`
 
@@ -220,12 +226,14 @@ browser (i.e, no server code has been run yet), following this process:
 
 1.  R receives a `GET` request from the browser, creating a request
     object, called `req`
-2.  The `req_handlers` are run using this `req` object
-3.  R creates an `httpResponse`, using this `req` and how you defined
+2.  The app level `req_handlers` are run using this `req` object
+3.  The request is matched against your `page()`s
+4.  The matched page’s `req_handlers` are run
+5.  R creates an `httpResponse`, using this `req` and how you defined
     the UI
-4.  The `res_handlers` are run on this `httpResponse` (first app level
+6.  The `res_handlers` are run on this `httpResponse` (first app level
     `res_handlers`, then page level `res_handlers`)
-5.  The `httpResponse` is sent back to the browser
+7.  The `httpResponse` is sent back to the browser
 
 Note that if any `req_handlers` returns an `httpResponse` object, it
 will be returned to the browser immediately, without any further
@@ -315,6 +323,12 @@ header, using both the `set_cookie()` and `remove_cookie()` functions.
 
 Note that you can get them from the server with `get_cookies()`, and
 parse the cookie string using `parse_cookie_string`.
+
+Give `remove_cookie()` the same `path` and `domain` you gave
+`set_cookie()`: a browser only replaces a cookie when all three match,
+so a deletion sent without them quietly leaves the cookie in place. This
+shows up once the app is served under a prefix, where the default path
+is the mount rather than `/`.
 
 ``` r
 parse_cookie_string("a=12;session=blabla")

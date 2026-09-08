@@ -15,7 +15,8 @@ page(
 )
 }
 \arguments{
-\item{href}{The endpoint to serve the UI on}
+\item{href}{The endpoint to serve the UI on. It can carry parameters, as in
+\code{"/who/:id"}, which are read back with \code{\link[=get_keys]{get_keys()}}.}
 
 \item{ui}{The UI definition of the app (for example, a call to
 \code{fluidPage()} with nested controls).
@@ -40,10 +41,11 @@ object before it is send to the browser. Each function must take a \code{res} an
 \code{req} parameter.}
 }
 \value{
-A list
+A \code{brochure_page} object, to be passed to \code{\link[=brochureApp]{brochureApp()}}.
 }
 \description{
-A Brochure Page
+A page is an url, a UI and a server function. Opening it starts a Shiny
+session of its own, separate from any other page of the app.
 }
 \examples{
 library(shiny)
@@ -54,4 +56,8 @@ page(
     plotOutput("plotb")
   )
 )
+}
+\seealso{
+\code{\link[=get_keys]{get_keys()}} to read the parameters of an href, and
+\code{vignette("handlers")} for \code{req_handlers} and \code{res_handlers}.
 }
