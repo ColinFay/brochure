@@ -73,6 +73,7 @@ removed from the incoming path, and prepended to the urls the app emits.
 On Posit Connect the mount is picked up on its own, from the
 \code{RStudio-Connect-App-Base-URL} header, and \code{basepath} is not needed. That
 header is not part of any published contract, so set \code{basepath} if you want
-the behaviour pinned. The small script brochure injects to point the
-websocket at the mount is \strong{experimental}.
+the behaviour pinned. Brochure also injects a small script registering the
+handler \code{server_redirect()} talks to, which prefixes internal targets with
+the mount.
 }

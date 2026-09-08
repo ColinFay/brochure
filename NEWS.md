@@ -59,6 +59,13 @@ from keeping the current page in shared state.
 
 ## Other
 
+* The script brochure injects now only registers the handler behind
+  `server_redirect()`. It also used to rewrite the page's `<base>`, on the
+  premise that the websocket url was computed from it; shiny builds that url
+  from `window.location.pathname` instead. Checked on a Posit Connect
+  deployment: stripping the script from the response left a deep page with the
+  same websocket url, the same rendered output and no failed request.
+
 * `get_mount()` reads the mount from the `RStudio-Connect-App-Base-URL` header
   only when the app really runs on Posit Connect, and keeps the extracted path
   to a plain path. Elsewhere any client could send that header and decide the

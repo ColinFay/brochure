@@ -38,12 +38,16 @@ page_2 <- function() {
       tagList(
         h1("This is my second page"),
         nav_links,
+        actionButton("to_contact", "Take me to contact"),
         plotOutput("plot")
       )
     },
     server = function(input, output, session) {
       output$plot <- renderPlot({
         plot(mtcars)
+      })
+      observeEvent(input$to_contact, {
+        server_redirect("/contact")
       })
     }
   )

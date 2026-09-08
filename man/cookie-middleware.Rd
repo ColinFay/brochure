@@ -70,7 +70,7 @@ Description of parameters is taken from this page.
 }
 \examples{
 set_cookie(
-  shiny:::httpResponse(),
+  shiny::httpResponse(),
   "this",
   12
 )

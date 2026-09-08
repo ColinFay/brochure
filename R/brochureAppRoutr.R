@@ -88,21 +88,21 @@ run_res_handlers <- function(res, req, handlers) {
   res
 }
 
-# Tiny client-side bootstrap injected at the top of <head>. `%s` is the
-# server-known mount path. It does two things:
+# Tiny client-side bootstrap injected at the top of <head>. `%s` is the mount
+# path. It registers the "redirect" custom message handler backing
+# `server_redirect()` (this replaces the old inst/redirect.js), prefixing
+# internal targets with the mount so a redirect to "/page2" works under a
+# proxy, and dropping any target that is neither a path nor an http(s) url.
 #
-# 1. WEBSOCKET base. Resources and links are made absolute server-side (immune
-#    to the browser preload scanner), but the websocket URL is computed at
-#    runtime by shiny-server-client against the page's <base>. Under a
-#    worker-tokenized proxy (Connect) that base is RELATIVE (`_w_<token>/`) and
-#    resolves wrong on deep pages, so we promote it to an ABSOLUTE base
-#    (origin + mount + token), preserving the worker token. No-op when there is
-#    no worker token (e.g. local dev).
-# 2. server_redirect(). Registers the "redirect" custom message handler (this
-#    replaces the old inst/redirect.js), mount-prefixing internal targets so a
-#    redirect to "/page2" works under a proxy mount. Targets carrying a scheme
-#    other than http(s), and protocol relative ones, are dropped.
-brochure_client_js <- '(function(){var mount="%s";var bs=document.getElementsByTagName("base");var token="";for(var i=0;i<bs.length;i++){var h=bs[i].getAttribute("href")||"";var m=h.match(/_w_[^\\/]+/);if(m){token=m[0]+"/";break;}}if(token){for(var j=bs.length-1;j>=0;j--){bs[j].parentNode.removeChild(bs[j]);}var b=document.createElement("base");b.setAttribute("href",window.location.origin+mount+"/"+token);var head=document.head||document.getElementsByTagName("head")[0];head.insertBefore(b,head.firstChild);}function reg(){if(window.Shiny&&Shiny.addCustomMessageHandler){Shiny.addCustomMessageHandler("redirect",function(to){if(typeof to!=="string"||!to||/^\\/\\//.test(to))return;var sch=to.match(/^[a-zA-Z][a-zA-Z0-9+.-]*:/);if(sch&&!/^https?:$/i.test(sch[0]))return;if(!sch&&to.charAt(0)==="/"){to=mount+to;}window.location.href=to;});}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",reg);}else{reg();}})();/*__brochure_client__*/'
+# It used to also promote the page's <base> to an absolute url, on the premise
+# that shiny-server-client computed the websocket url from it. That premise is
+# wrong: shiny builds the websocket url from `window.location.pathname`, and on
+# Posit Connect sockjs does the same, carrying the worker id in a `w=` segment.
+# Checked against a real Connect deployment: with the whole script stripped
+# from the response, a deep page kept the same websocket url, the same rendered
+# output and no failed request. Connect ships its own <base> script, and
+# brochure already rewrites resource urls absolute server-side.
+brochure_client_js <- '(function(){var mount="%s";function reg(){if(window.Shiny&&Shiny.addCustomMessageHandler){Shiny.addCustomMessageHandler("redirect",function(to){if(typeof to!=="string"||!to||/^\\/\\//.test(to))return;var sch=to.match(/^[a-zA-Z][a-zA-Z0-9+.-]*:/);if(sch&&!/^https?:$/i.test(sch[0]))return;if(!sch&&to.charAt(0)==="/"){to=mount+to;}window.location.href=to;});}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",reg);}else{reg();}})();/*__brochure_client__*/'
 #' Create a brochureApp
 #'
 #' This function  is to be used in place of
@@ -138,8 +138,9 @@ brochure_client_js <- '(function(){var mount="%s";var bs=document.getElementsByT
 #' On Posit Connect the mount is picked up on its own, from the
 #' `RStudio-Connect-App-Base-URL` header, and `basepath` is not needed. That
 #' header is not part of any published contract, so set `basepath` if you want
-#' the behaviour pinned. The small script brochure injects to point the
-#' websocket at the mount is **experimental**.
+#' the behaviour pinned. Brochure also injects a small script registering the
+#' handler `server_redirect()` talks to, which prefixes internal targets with
+#' the mount.
 #'
 #' @importFrom shiny shinyApp
 #' @importFrom rlang as_function
