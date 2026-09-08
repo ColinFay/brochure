@@ -58,6 +58,7 @@ articles:
     contents:
       - brochure
   - title: Going further
+    navbar: ~
     contents:
       - handlers
       - cookies
