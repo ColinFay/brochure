@@ -76,7 +76,7 @@ point rather than a limitation — it forces the data flowing between pages to b
 explicit — but it means state has to live somewhere shared: a cookie, a
 database, a disk cache.
 
-## Parameters in the url
+## How a url finds its page
 
 Matching a request to a page is done by the
 [`{routr}`](https://routr.data-imaginist.com/) package, and an href is written
@@ -89,11 +89,30 @@ the way routr writes a path:
 | `/pair/:a/:b` | `/pair/x/y` | `/pair/x` |
 | `/files/*` | `/files/a/b/c` | `/files/` |
 
-`:name` captures exactly one segment, `*` captures whatever is left, and a
-trailing slash never makes a difference.
+Three rules cover it:
 
-Read the captured values with `get_keys()`: with no argument inside the server,
-and with the `request` the ui receives inside the ui.
+- `:name` captures **exactly one** segment. `/who/:id` will not match `/who`,
+  so if you want that page too, declare it separately.
+- `*` captures whatever is left, however many segments that is.
+- A trailing slash never makes a difference.
+
+**Pages are tried in the order you pass them, and the first match wins.** When
+two hrefs can match the same url, the specific one has to come first:
+
+```{r}
+brochureApp(
+  page(href = "/who/me", ui = tagList(h1("It's you"))),
+  page(href = "/who/:id", ui = tagList(h1("Someone else")))
+)
+```
+
+Swap those two lines and `/who/:id` catches `/who/me` first: the page you wrote
+for it becomes unreachable, silently.
+
+## Reading the parameters
+
+What `:name` and `*` captured is read with `get_keys()`: with no argument
+inside the server, and with the `request` the ui receives inside the ui.
 
 ```{r}
 brochureApp(
@@ -113,23 +132,8 @@ brochureApp(
 ```
 
 `/who/colin` and `/who/fay` are two sessions of the same page, each with its
-own `id`.
-
-### Order decides
-
-Pages are tried in the order you passed them to `brochureApp()`, and the first
-one that matches wins. So when two hrefs can match the same url, the specific
-one goes first:
-
-```{r}
-brochureApp(
-  page(href = "/who/me", ui = tagList(h1("It's you"))),   # tried first
-  page(href = "/who/:id", ui = tagList(h1("Someone else")))
-)
-```
-
-Written the other way round, `/who/:id` catches `/who/me` and the page you
-wrote for it is never reached.
+own `id`. A `*` lands in a key named `*1`, so `/files/*` matched against
+`/files/a/b/c` gives `get_keys()[["*1"]]` equal to `"a/b/c"`.
 
 ## Redirections
 
