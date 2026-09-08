@@ -7,9 +7,9 @@ Authors@R:
 Description: Build natively multi-page 'Shiny' applications, serving
     content on several endpoints instead of a single page. Pages are
     declared with their own user interface and server function and are
-    dispatched by URL, including parameterised routes. Redirections,
-    request and response middleware, and helpers to read and set cookies
-    are also provided.
+    dispatched by URL with 'routr', including parameterised routes.
+    Redirections, request and response middleware, and helpers to read and
+    set cookies are also provided.
 License: MIT + file LICENSE
 URL: https://github.com/colinfay/brochure
 BugReports: https://github.com/colinfay/brochure/issues

@@ -4,10 +4,33 @@
 #' session of its own, separate from any other page of the app.
 #'
 #' @param href The endpoint to serve the UI on. It can carry parameters, as in
-#' `"/who/:id"`, which are read back with [get_keys()].
+#' `"/who/:id"`, which are read back with [get_keys()]. See details.
 #' @param method The HTTP method the page answers to. Defaults to `"GET"`.
 #' @inheritParams brochureApp
 #' @inheritParams shiny::shinyApp
+#'
+#' @details
+#' Requests are matched against hrefs by the \pkg{routr} package, so an href is
+#' written the way routr writes a path:
+#'
+#' - `"/contact"` matches that path and nothing else.
+#' - `":name"` matches exactly one segment and captures it, so `"/who/:id"`
+#'   matches `/who/colin` but neither `/who` nor `/who/colin/edit`. Use several
+#'   of them if you need to: `"/pair/:a/:b"`.
+#' - `"*"` matches whatever is left, so `"/files/*"` matches `/files/a/b/c`.
+#'   The captured value is named `*1`.
+#'
+#' A trailing slash never matters: `/contact` and `/contact/` are the same page.
+#'
+#' Pages are tried in the order you passed them to [brochureApp()], and the
+#' first match wins. That matters when two hrefs can match the same url:
+#' declared as `page("/who/me")` then `page("/who/:id")`, a request for
+#' `/who/me` gets the first; declared the other way round, the parameterised
+#' page catches it and the static one is never reached. Put the specific ones
+#' first.
+#'
+#' See the \pkg{routr} documentation at
+#' <https://routr.data-imaginist.com/> for the full path syntax.
 #'
 #' @return A `brochure_page` object, to be passed to [brochureApp()].
 #' @seealso [get_keys()] to read the parameters of an href, and

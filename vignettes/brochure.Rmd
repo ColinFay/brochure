@@ -78,9 +78,22 @@ database, a disk cache.
 
 ## Parameters in the url
 
-An href can carry parameters, `{routr}` style. Read them back with
-`get_keys()`: with no argument inside the server, and with the `request` the ui
-receives inside the ui.
+Matching a request to a page is done by the
+[`{routr}`](https://routr.data-imaginist.com/) package, and an href is written
+the way routr writes a path:
+
+| href | matches | does not match |
+| --- | --- | --- |
+| `/contact` | `/contact`, `/contact/` | anything else |
+| `/who/:id` | `/who/colin` | `/who`, `/who/colin/edit` |
+| `/pair/:a/:b` | `/pair/x/y` | `/pair/x` |
+| `/files/*` | `/files/a/b/c` | `/files/` |
+
+`:name` captures exactly one segment, `*` captures whatever is left, and a
+trailing slash never makes a difference.
+
+Read the captured values with `get_keys()`: with no argument inside the server,
+and with the `request` the ui receives inside the ui.
 
 ```{r}
 brochureApp(
@@ -101,6 +114,22 @@ brochureApp(
 
 `/who/colin` and `/who/fay` are two sessions of the same page, each with its
 own `id`.
+
+### Order decides
+
+Pages are tried in the order you passed them to `brochureApp()`, and the first
+one that matches wins. So when two hrefs can match the same url, the specific
+one goes first:
+
+```{r}
+brochureApp(
+  page(href = "/who/me", ui = tagList(h1("It's you"))),   # tried first
+  page(href = "/who/:id", ui = tagList(h1("Someone else")))
+)
+```
+
+Written the other way round, `/who/:id` catches `/who/me` and the page you
+wrote for it is never reached.
 
 ## Redirections
 

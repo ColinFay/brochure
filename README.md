@@ -82,9 +82,16 @@ You can now navigate to `/`, and to `/page2` inside your browser.
 
 ### About routing
 
-`{brochure}` routing is built on top of `{routr}` when it comes to
-dispatching the routes. This allows to build parametrized routes *à la*
-express, like this:
+Matching a request to a page is done by the
+[`{routr}`](https://routr.data-imaginist.com/) package, so an href is
+written the way routr writes a path: `:name` captures exactly one
+segment, `*` captures whatever is left, and a trailing slash never makes
+a difference. Pages are tried in the order you pass them, and the first
+match wins — so a specific href goes before a parameterised one that
+could also match it.
+
+This is what lets you build parametrized routes *à la* express, like
+this:
 
 ``` r
 library(shiny)

@@ -16,7 +16,7 @@ page(
 }
 \arguments{
 \item{href}{The endpoint to serve the UI on. It can carry parameters, as in
-\code{"/who/:id"}, which are read back with \code{\link[=get_keys]{get_keys()}}.}
+\code{"/who/:id"}, which are read back with \code{\link[=get_keys]{get_keys()}}. See details.}
 
 \item{ui}{The UI definition of the app (for example, a call to
 \code{fluidPage()} with nested controls).
@@ -46,6 +46,30 @@ A \code{brochure_page} object, to be passed to \code{\link[=brochureApp]{brochur
 \description{
 A page is an url, a UI and a server function. Opening it starts a Shiny
 session of its own, separate from any other page of the app.
+}
+\details{
+Requests are matched against hrefs by the \pkg{routr} package, so an href is
+written the way routr writes a path:
+\itemize{
+\item \code{"/contact"} matches that path and nothing else.
+\item \code{":name"} matches exactly one segment and captures it, so \code{"/who/:id"}
+matches \verb{/who/colin} but neither \verb{/who} nor \verb{/who/colin/edit}. Use several
+of them if you need to: \code{"/pair/:a/:b"}.
+\item \code{"*"} matches whatever is left, so \code{"/files/*"} matches \verb{/files/a/b/c}.
+The captured value is named \verb{*1}.
+}
+
+A trailing slash never matters: \verb{/contact} and \verb{/contact/} are the same page.
+
+Pages are tried in the order you passed them to \code{\link[=brochureApp]{brochureApp()}}, and the
+first match wins. That matters when two hrefs can match the same url:
+declared as \code{page("/who/me")} then \code{page("/who/:id")}, a request for
+\verb{/who/me} gets the first; declared the other way round, the parameterised
+page catches it and the static one is never reached. Put the specific ones
+first.
+
+See the \pkg{routr} documentation at
+\url{https://routr.data-imaginist.com/} for the full path syntax.
 }
 \examples{
 library(shiny)
