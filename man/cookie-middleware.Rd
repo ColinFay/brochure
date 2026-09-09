@@ -14,11 +14,11 @@ set_cookie(
   domain = NULL,
   path = NULL,
   secure = NULL,
-  http_only = NULL,
-  same_site = NULL
+  http_only = TRUE,
+  same_site = "Lax"
 )
 
-remove_cookie(res, name)
+remove_cookie(res, name, path = NULL, domain = NULL)
 }
 \arguments{
 \item{res}{An httpResponse object}
@@ -45,7 +45,9 @@ If both Expires and Max-Age are set, Max-Age has precedence.}
 \item{domain}{Host to which the cookie will be sent.}
 
 \item{path}{A path that must exist in the requested URL,
-or the browser won't send the Cookie header.}
+or the browser won't send the Cookie header. \code{remove_cookie()} only
+deletes a cookie when it is given the same \code{path} and \code{domain} that
+\code{set_cookie()} was given.}
 
 \item{secure}{Cookie is only sent to the server
 when a request is made with the https: scheme
@@ -53,11 +55,12 @@ when a request is made with the https: scheme
 resistent to man-in-the-middle attacks.}
 
 \item{http_only}{Forbids JavaScript from accessing the
-cookie, for example, through the Document.cookie property.}
+cookie, for example, through the Document.cookie property.
+Defaults to \code{TRUE}.}
 
 \item{same_site}{Controls whether a cookie is sent with
 cross-origin requests, providing some protection against
-cross-site request forgery attacks (CSRF).}
+cross-site request forgery attacks (CSRF). Defaults to \code{"Lax"}.}
 }
 \value{
 the httpResponse, with a cookie header
@@ -69,8 +72,12 @@ Description of parameters is taken from this page.
 }
 \examples{
 set_cookie(
-  shiny:::httpResponse(),
+  shiny::httpResponse(),
   "this",
   12
 )
+}
+\seealso{
+\code{\link[=get_cookies]{get_cookies()}} to read them back, and \code{vignette("cookies")} for
+carrying a session across pages.
 }

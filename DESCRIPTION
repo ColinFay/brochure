@@ -1,21 +1,33 @@
 Package: brochure
 Title: Multipage 'Shiny' Apps
-Version: 0.0.0.9024
-Authors@R: 
+Version: 1.0.0
+Authors@R:
     person("Colin", "Fay", , "contact@colinfay.me", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7343-1846"))
-Description: Build multipage 'shiny' apps.
+Description: Build natively multi-page 'Shiny' applications, serving
+    content on several endpoints instead of a single page. Pages are
+    declared with their own user interface and server function and are
+    dispatched by URL with 'routr', including parameterised routes.
+    Redirections, request and response middleware, and helpers to read and
+    set cookies are also provided.
 License: MIT + file LICENSE
 URL: https://github.com/colinfay/brochure
-Imports: 
+BugReports: https://github.com/colinfay/brochure/issues
+Imports:
     attempt (>= 0.3.1),
+    purrr,
     rlang (>= 0.4.12),
+    routr (>= 2.0.0),
     shiny (>= 1.6.0)
-Suggests: 
+Suggests:
     golem (>= 0.3.0),
-    testthat (>= 3.0.0)
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0),
+    usethis,
+    withr
 Config/testthat/edition: 3
+VignetteBuilder: knitr
 Encoding: UTF-8
-LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+Config/roxygen2/version: 8.0.0

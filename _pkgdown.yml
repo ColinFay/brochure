@@ -1,0 +1,66 @@
+url: https://colinfay.me/brochure/
+
+template:
+  bootstrap: 5
+  bslib:
+    primary: "#1c3b5a"
+    base_font: {google: "Inter"}
+    code_font: {google: "JetBrains Mono"}
+
+home:
+  title: Multipage Shiny apps
+  description: >
+    Build Shiny applications that serve content on several endpoints, each page
+    with its own UI and its own server function.
+
+navbar:
+  structure:
+    left: [intro, reference, articles, news]
+    right: [search, github]
+
+reference:
+  - title: Building an app
+    desc: The two functions that replace `shinyApp()` and organise its pages.
+    contents:
+      - brochureApp
+      - page
+
+  - title: Moving between pages
+    desc: Sending the browser somewhere else, from the router or from the server.
+    contents:
+      - redirect
+      - server_redirect
+
+  - title: Reading the url
+    desc: The values a parameterised href matched.
+    contents:
+      - get_keys
+
+  - title: Cookies
+    desc: >
+      Setting cookies from a response handler, and reading them back from a
+      page server.
+    contents:
+      - set_cookie
+      - remove_cookie
+      - get_cookies
+      - parse_cookie_string
+
+  - title: golem
+    desc: Using brochure inside a golem application.
+    contents:
+      - golem_hook
+      - new_page
+
+articles:
+  - title: Get started
+    navbar: ~
+    contents:
+      - brochure
+  - title: Going further
+    navbar: ~
+    contents:
+      - handlers
+      - cookies
+      - deployment
+      - golem

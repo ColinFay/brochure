@@ -37,6 +37,35 @@ get_cookies <- function(session = shiny::getDefaultReactiveDomain()) {
 }
 
 
+# RFC 6265. A cookie name is a token: printable US-ASCII (which already rules
+# out CR, LF and every other control character) minus the separators. A value
+# may hold separators, but not whitespace, double quotes, comma, semicolon or
+# backslash. Letting any of those through lets a caller close the cookie and
+# append attributes -- or, with CR/LF, a header of their own.
+cookie_separators <- strsplit("()<>@,;:\\\"/[]?={}", "")[[1]]
+
+cookie_token_ok <- function(x) {
+  grepl("^[!-~]+$", x) &&
+    !any(strsplit(x, "")[[1]] %in% cookie_separators)
+}
+
+cookie_value_ok <- function(x) {
+  grepl("^[!-~]*$", x) &&
+    !any(strsplit(x, "")[[1]] %in% c(",", ";", "\\", "\""))
+}
+
+check_cookie_part <- function(x, arg, ok) {
+  attempt::stop_if_not(
+    length(x) == 1 && ok(x),
+    isTRUE,
+    sprintf(
+      "`%s` contains characters that are not allowed in a cookie.",
+      arg
+    )
+  )
+  x
+}
+
 #' Middleware to set cookies
 #'
 #' Please read https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
@@ -59,24 +88,29 @@ get_cookies <- function(session = shiny::getDefaultReactiveDomain()) {
 #' If both Expires and Max-Age are set, Max-Age has precedence.
 #' @param domain Host to which the cookie will be sent.
 #' @param path A path that must exist in the requested URL,
-#'  or the browser won't send the Cookie header.
+#'  or the browser won't send the Cookie header. `remove_cookie()` only
+#' deletes a cookie when it is given the same `path` and `domain` that
+#' `set_cookie()` was given.
 #' @param secure Cookie is only sent to the server
 #' when a request is made with the https: scheme
 #' (except on localhost), and therefore is more
 #'  resistent to man-in-the-middle attacks.
 #' @param http_only Forbids JavaScript from accessing the
 #'  cookie, for example, through the Document.cookie property.
+#' Defaults to `TRUE`.
 #' @param same_site Controls whether a cookie is sent with
 #' cross-origin requests, providing some protection against
-#' cross-site request forgery attacks (CSRF).
+#' cross-site request forgery attacks (CSRF). Defaults to `"Lax"`.
 #'
 #' @return the httpResponse, with a cookie header
+#' @seealso [get_cookies()] to read them back, and `vignette("cookies")` for
+#' carrying a session across pages.
 #' @export
 #' @rdname cookie-middleware
 #'
 #' @examples
 #' set_cookie(
-#'   shiny:::httpResponse(),
+#'   shiny::httpResponse(),
 #'   "this",
 #'   12
 #' )
@@ -89,8 +123,8 @@ set_cookie <- function(
   domain = NULL,
   path = NULL,
   secure = NULL,
-  http_only = NULL,
-  same_site = NULL
+  http_only = TRUE,
+  same_site = "Lax"
 ) {
   attempt::stop_if(
     name,
@@ -98,10 +132,13 @@ set_cookie <- function(
     "`name` is required "
   )
   attempt::stop_if(
-    name,
+    value,
     missing,
     "`value` is required "
   )
+
+  name <- check_cookie_part(as.character(name), "name", cookie_token_ok)
+  value <- check_cookie_part(as.character(value), "value", cookie_value_ok)
 
   cook <- sprintf("%s=%s;", name, value)
 
@@ -125,7 +162,7 @@ set_cookie <- function(
     cook <- sprintf(
       "%s Domain = %s;",
       cook,
-      domain
+      check_cookie_part(as.character(domain), "domain", cookie_value_ok)
     )
   }
 
@@ -133,7 +170,7 @@ set_cookie <- function(
     cook <- sprintf(
       "%s Path = %s;",
       cook,
-      path
+      check_cookie_part(as.character(path), "path", cookie_value_ok)
     )
   }
 
@@ -172,12 +209,37 @@ set_cookie <- function(
 #' @rdname cookie-middleware
 remove_cookie <- function(
   res,
-  name
+  name,
+  path = NULL,
+  domain = NULL
 ) {
-  res$headers$`Set-Cookie` <- sprintf(
-    "%s=''; Max-Age=0",
-    name
+  # A cookie is only replaced when name, path and domain all match, so a
+  # deletion has to repeat whatever `set_cookie()` was given. Without them the
+  # browser scopes the deletion to the directory of the current request, which
+  # silently misses a cookie set with an explicit path -- and behind a mount,
+  # that directory is not "/".
+  cook <- sprintf(
+    "%s=; Max-Age=0;",
+    check_cookie_part(as.character(name), "name", cookie_token_ok)
   )
+
+  if (!is.null(domain)) {
+    cook <- sprintf(
+      "%s Domain = %s;",
+      cook,
+      check_cookie_part(as.character(domain), "domain", cookie_value_ok)
+    )
+  }
+
+  if (!is.null(path)) {
+    cook <- sprintf(
+      "%s Path = %s;",
+      cook,
+      check_cookie_part(as.character(path), "path", cookie_value_ok)
+    )
+  }
+
+  res$headers$`Set-Cookie` <- cook
   res
 }
 

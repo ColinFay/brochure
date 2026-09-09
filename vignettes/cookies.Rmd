@@ -1,0 +1,136 @@
+---
+title: "Cookies and state between pages"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Cookies and state between pages}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+```
+
+```{r}
+library(shiny)
+library(brochure)
+```
+
+Every page of a brochure app is a new Shiny session. Nothing computed on one
+page survives a navigation to another. That is deliberate, and it means state
+shared between pages has to be written down somewhere: a cookie, and usually a
+backend keyed by what the cookie holds.
+
+## Setting a cookie
+
+A cookie is a response header, so it is set from a `res_handler`:
+
+```{r}
+page(
+  href = "/login",
+  ui = tagList(h1("You are logged in")),
+  res_handlers = list(
+    ~ set_cookie(.x, "SESSION", "a-random-id", path = "/")
+  )
+)
+```
+
+`set_cookie()` defaults to `http_only = TRUE` and `same_site = "Lax"`, so the
+cookie is not readable from javascript and is not sent on cross-site requests.
+Pass `secure = TRUE` in production, where the app is served over https.
+
+Names and values are checked against the character set cookies allow. A value
+carrying a `;`, a newline or a quote is rejected rather than silently truncating
+the header or, worse, appending one of its own.
+
+## Reading it back
+
+From a page server:
+
+```{r}
+server <- function(input, output, session) {
+  cookies <- parse_cookie_string(get_cookies())
+  print(cookies["SESSION"])
+}
+```
+
+Index with single brackets: a request carrying no `Cookie` header at all gives
+nothing to index into, and `[[` raises "subscript out of bounds" where `[`
+returns `NA`.
+
+`get_cookies()` gives the raw `Cookie` header; `parse_cookie_string()` turns it
+into a named vector.
+
+## Removing it
+
+```{r}
+page(
+  href = "/logout",
+  ui = tagList(h1("You are logged out")),
+  res_handlers = list(
+    ~ remove_cookie(.x, "SESSION", path = "/")
+  )
+)
+```
+
+Pass `remove_cookie()` the same `path` and `domain` you gave `set_cookie()`. A
+browser only replaces a cookie when the name, the path and the domain all
+match; with a different path it files the deletion as a separate cookie and
+leaves the original alone. This bites hardest behind a reverse proxy, where the
+default path is the mount rather than `/`, so the deletion appears to work
+locally and does nothing once deployed.
+
+## A session across pages
+
+The cookie holds an identifier; the data lives server side, keyed by it.
+
+```{r}
+store <- cachem::cache_disk()
+
+# 32 hex characters from the system's cryptographic source. `sample()` would
+# read from R's default generator, whose state is recoverable from its output:
+# fine for a simulation, not for something that has to be unguessable.
+new_session_id <- function() {
+  paste(
+    sprintf("%02x", as.integer(openssl::rand_bytes(16))),
+    collapse = ""
+  )
+}
+
+login <- function() {
+  page(
+    href = "/login",
+    ui = tagList(h1("Welcome back")),
+    res_handlers = list(
+      # Runs once per request, so each visitor gets an identifier of their own.
+      # Building it in `login()` instead would run it once, when the app is
+      # assembled, and hand every visitor the same session.
+      function(res, req) {
+        id <- new_session_id()
+        store$set(id, list(user = "colin", at = Sys.time()))
+        set_cookie(res, "SESSION", id, path = "/")
+      }
+    )
+  )
+}
+
+home <- function() {
+  page(
+    href = "/",
+    ui = tagList(h1("Home"), verbatimTextOutput("who")),
+    server = function(input, output, session) {
+      output$who <- renderPrint({
+        # Single brackets: with no Cookie header at all there is nothing to
+        # index into, and `[[` would raise "subscript out of bounds" before
+        # the fallback below is reached.
+        id <- parse_cookie_string(get_cookies())["SESSION"]
+        if (is.na(id)) "anonymous" else store$get(id)
+      })
+    }
+  )
+}
+```
+
+The store is what decides what a session may do; the cookie only names it. So
+the identifier has to be unguessable, and it has to be minted per visitor —
+two mistakes that are easy to make and silent when made.
