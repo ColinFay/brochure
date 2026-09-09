@@ -50,9 +50,13 @@ From a page server:
 ```{r}
 server <- function(input, output, session) {
   cookies <- parse_cookie_string(get_cookies())
-  print(cookies[["SESSION"]])
+  print(cookies["SESSION"])
 }
 ```
+
+Index with single brackets: a request carrying no `Cookie` header at all gives
+nothing to index into, and `[[` raises "subscript out of bounds" where `[`
+returns `NA`.
 
 `get_cookies()` gives the raw `Cookie` header; `parse_cookie_string()` turns it
 into a named vector.
@@ -83,20 +87,29 @@ The cookie holds an identifier; the data lives server side, keyed by it.
 ```{r}
 store <- cachem::cache_disk()
 
+# 32 hex characters from the system's cryptographic source. `sample()` would
+# read from R's default generator, whose state is recoverable from its output:
+# fine for a simulation, not for something that has to be unguessable.
 new_session_id <- function() {
-  paste(sample(c(letters, 0:9), 32, replace = TRUE), collapse = "")
+  paste(
+    sprintf("%02x", as.integer(openssl::rand_bytes(16))),
+    collapse = ""
+  )
 }
 
 login <- function() {
-  id <- new_session_id()
   page(
     href = "/login",
     ui = tagList(h1("Welcome back")),
-    server = function(input, output, session) {
-      store$set(id, list(user = "colin", at = Sys.time()))
-    },
     res_handlers = list(
-      ~ set_cookie(.x, "SESSION", id, path = "/")
+      # Runs once per request, so each visitor gets an identifier of their own.
+      # Building it in `login()` instead would run it once, when the app is
+      # assembled, and hand every visitor the same session.
+      function(res, req) {
+        id <- new_session_id()
+        store$set(id, list(user = "colin", at = Sys.time()))
+        set_cookie(res, "SESSION", id, path = "/")
+      }
     )
   )
 }
@@ -107,7 +120,10 @@ home <- function() {
     ui = tagList(h1("Home"), verbatimTextOutput("who")),
     server = function(input, output, session) {
       output$who <- renderPrint({
-        id <- parse_cookie_string(get_cookies())[["SESSION"]]
+        # Single brackets: with no Cookie header at all there is nothing to
+        # index into, and `[[` would raise "subscript out of bounds" before
+        # the fallback below is reached.
+        id <- parse_cookie_string(get_cookies())["SESSION"]
         if (is.na(id)) "anonymous" else store$get(id)
       })
     }
@@ -115,5 +131,6 @@ home <- function() {
 }
 ```
 
-The identifier must be unguessable, and the store is the thing that decides
-what a session may do — the cookie only names it.
+The store is what decides what a session may do; the cookie only names it. So
+the identifier has to be unguessable, and it has to be minted per visitor —
+two mistakes that are easy to make and silent when made.

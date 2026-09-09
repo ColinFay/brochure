@@ -122,3 +122,18 @@ test_that("get_cookies reads the header of the session's request", {
   )
   expect_equal(parse_cookie_string(NULL), "")
 })
+
+test_that("a page answering on POST still gets its server", {
+  # The websocket handshake is a GET whatever method the page is served on
+  ran <- FALSE
+  app <- brochureApp(
+    page(
+      href = "/form",
+      method = "POST",
+      ui = shiny::tagList(),
+      server = function(input, output, session) ran <<- TRUE
+    )
+  )
+  app$serverFuncSource()(NULL, NULL, mock_session("/form/websocket/"))
+  expect_true(ran)
+})

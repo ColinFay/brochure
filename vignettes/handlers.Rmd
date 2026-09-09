@@ -122,5 +122,8 @@ An app level handler runs for every matched page. A page level one runs only
 for its own page, which is what you want for anything specific — a cookie for
 the login page, a `Cache-Control` for a page that is expensive to build.
 
-Neither runs for a request that matches no page: those get `content_404`
-directly.
+The app level request handlers are the exception to "for every matched page":
+they run before the request is matched at all, so they see urls that match no
+page, and can answer them. Everything else — the page level handlers, and both
+levels of response handler — is skipped when nothing matches, and the request
+gets `content_404` directly.

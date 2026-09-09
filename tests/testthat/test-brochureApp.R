@@ -191,3 +191,63 @@ test_that("basepath prefixes the emitted urls", {
   content <- app$httpHandler(mock_req("/brochure"))$content
   expect_match(content, 'src="/brochure/shiny-javascript')
 })
+
+test_that("redirect refuses a target it would write into a header", {
+  # `to` lands in a Location header, where a CRLF would append one of its own
+  expect_error(redirect(from = "/x", to = paste0("/y", "\r\n", "Set-Cookie: a=1")))
+  expect_error(redirect(from = "/x", to = "javascript:alert(1)"))
+  expect_error(redirect(from = "/x", to = paste0(" ", "javascript:alert(1)")))
+
+  expect_s3_class(redirect(from = "/x", to = "/y"), "redirect")
+  expect_s3_class(redirect(from = "/x", to = "https://example.com"), "redirect")
+})
+
+test_that("an internal redirect stays under the mount", {
+  app <- brochureApp(
+    page(href = "/page2", ui = shiny::tagList()),
+    redirect(from = "/old", to = "/page2"),
+    redirect(from = "/away", to = "https://example.com"),
+    basepath = "myapp"
+  )
+
+  expect_equal(
+    app$httpHandler(mock_req("/myapp/old"))$headers$Location,
+    "/myapp/page2"
+  )
+  # An absolute target belongs to whoever wrote it
+  expect_equal(
+    app$httpHandler(mock_req("/myapp/away"))$headers$Location,
+    "https://example.com"
+  )
+
+  flat <- brochureApp(
+    page(href = "/page2", ui = shiny::tagList()),
+    redirect(from = "/old", to = "/page2")
+  )
+  expect_equal(flat$httpHandler(mock_req("/old"))$headers$Location, "/page2")
+})
+
+test_that("resource urls go under the mount, navigation links keep their shape", {
+  app <- brochureApp(
+    page(href = "/", ui = shiny::tagList(
+      shiny::tags$a(href = "contact", "relative link"),
+      shiny::tags$a(href = "/contact", "absolute link"),
+      shiny::tags$a(href = "https://example.com", "external link"),
+      shiny::tags$img(src = "logo.png"),
+      shiny::tags$img(src = "/img.png"),
+      shiny::tags$img(src = "https://example.com/x.png")
+    )),
+    basepath = "myapp"
+  )
+  content <- app$httpHandler(mock_req("/myapp/"))$content
+
+  # Both kinds of resource url end up under the mount
+  expect_match(content, 'src="/myapp/logo.png"', fixed = TRUE)
+  expect_match(content, 'src="/myapp/img.png"', fixed = TRUE)
+  # A root absolute link is moved under the mount, a relative one is left alone
+  expect_match(content, 'href="/myapp/contact"', fixed = TRUE)
+  expect_match(content, 'href="contact"', fixed = TRUE)
+  # Nothing pointing elsewhere is touched
+  expect_match(content, 'href="https://example.com"', fixed = TRUE)
+  expect_match(content, 'src="https://example.com/x.png"', fixed = TRUE)
+})

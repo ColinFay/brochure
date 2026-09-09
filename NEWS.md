@@ -58,6 +58,23 @@ from keeping the current page in shared state.
   mount that directory is not `/`, so the documented login/logout pattern
   silently failed on Posit Connect. It now takes `path` and `domain`.
 
+* `redirect()` did not check `to`, which goes straight into a `Location`
+  header: a CRLF in it appended a header of its own. It is now held to the same
+  rule as `server_redirect()`.
+
+* An internal `redirect()` sent the browser out of the app when it was mounted
+  under a prefix. The redirect answers before anything is rewritten, so its
+  `Location` was emitted unprefixed.
+
+* A page declared with a method other than `GET` never ran its server. The
+  websocket handshake is a `GET` whatever the page answers on, so it matched no
+  route; sessions are now resolved against the path alone.
+
+* A root absolute resource url such as `src="/img.png"` was left outside the
+  app under a mount, while a relative navigation link such as
+  `<a href="contact">` was rewritten to `/contact`, moving where its author
+  pointed it. Resource urls and navigation links are now treated separately.
+
 * Two apps in the same R process shared their app level `req_handlers` and
   `res_handlers`, and the last one built won.
 

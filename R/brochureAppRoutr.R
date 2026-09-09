@@ -51,6 +51,24 @@ get_mount <- function(req, basepath = "") {
   normalize_basepath(basepath)
 }
 
+# A redirect answers before anything is rewritten, so its Location has to be
+# moved under the mount here or the browser leaves the app. Only a root
+# absolute, same origin target is touched: a relative one resolves against the
+# current page, which is already inside the mount, and an absolute url belongs
+# to whoever wrote it.
+mount_redirect <- function(res, mount) {
+  location <- res$headers$Location
+  if (
+    nzchar(mount) &&
+      !is.null(location) &&
+      startsWith(location, "/") &&
+      !startsWith(location, "//")
+  ) {
+    res$headers$Location <- paste0(mount, location)
+  }
+  res
+}
+
 # The websocket handshake of a page hits `<href>/websocket/`; drop that suffix
 # to get back the href of the page the session belongs to.
 page_path <- function(path) {
@@ -188,6 +206,9 @@ brochureApp <- function(
   wrapped = shiny::tagList
 ) {
   brochure_routes <- RouteStack$new()
+  # The websocket handshake is always a GET, whatever method the page itself
+  # answers on, so a session is resolved against a stack keyed by path alone.
+  session_routes <- RouteStack$new()
   basepath <- normalize_basepath(basepath)
   # Kept as locals: the httpHandler closure below is the only reader, so two
   # apps running in the same process never see each other's handlers.
@@ -222,28 +243,45 @@ brochureApp <- function(
       route <- routr::Route$new(
         ignore_trailing_slash = TRUE
       )
+      handler <- function(
+        request,
+        response,
+        keys,
+        ...
+      ) {
+        list(
+          ui = page$ui,
+          server = page$server,
+          keys = keys,
+          req_handlers = page$req_handlers,
+          res_handlers = page$res_handlers
+        )
+      }
       route$add_handler(
         tolower(
           page$method
         ),
         page$href,
-        function(
-          request,
-          response,
-          keys,
-          ...
-        ) {
-          list(
-            ui = page$ui,
-            server = page$server,
-            keys = keys,
-            req_handlers = page$req_handlers,
-            res_handlers = page$res_handlers
-          )
-        }
+        handler
       )
       brochure_routes$add_route(
         route,
+        sprintf(
+          "page-%s",
+          as.character(index)
+        )
+      )
+
+      session_route <- routr::Route$new(
+        ignore_trailing_slash = TRUE
+      )
+      session_route$add_handler(
+        "all",
+        page$href,
+        handler
+      )
+      session_routes$add_route(
+        session_route,
         sprintf(
           "page-%s",
           as.character(index)
@@ -317,7 +355,7 @@ brochureApp <- function(
   ) {
     # Resolve the page from the session's own handshake request, so that
     # concurrent sessions on different pages never see each other's server.
-    matched <- brochure_routes$dispatch_to_first_match(
+    matched <- session_routes$dispatch_to_first_match(
       req_with_path(
         session$request,
         strip_basepath(
@@ -360,7 +398,9 @@ brochureApp <- function(
       return(make_404(content_404))
     }
     if (!is.null(dispatched$redirect)) {
-      return(dispatched$redirect)
+      return(
+        mount_redirect(dispatched$redirect, get_mount(req, basepath))
+      )
     }
     req <- run_req_handlers(req, dispatched$req_handlers)
     if (inherits(req, "httpResponse")) {
@@ -382,8 +422,27 @@ brochureApp <- function(
       !is.null(res$content) &&
         !grepl("__brochure_client__", res$content, fixed = TRUE)
     ) {
+      # Resource urls have to end up under the mount whether they were written
+      # relative ("shiny.min.js", which a deep page would resolve against its
+      # own directory) or root absolute ("/img.png", which under a mount points
+      # outside the app). `src` on any tag, `href` on a <link>.
+      res$content <- gsub(
+        '\\bsrc="(?![a-zA-Z][a-zA-Z0-9+.-]*:|//|#|\\?)/?',
+        paste0('src="', mount, "/"),
+        res$content,
+        perl = TRUE
+      )
+      res$content <- gsub(
+        '(<link\\b[^>]*?\\shref=")(?![a-zA-Z][a-zA-Z0-9+.-]*:|//|#|\\?)/?',
+        paste0("\\1", mount, "/"),
+        res$content,
+        perl = TRUE
+      )
+      # A navigation link is different: only a root absolute one needs the
+      # mount. A relative <a href="contact"> is left as written -- the browser
+      # resolves it against the current page, which is already inside the
+      # mount, and rewriting it would move where the author pointed it.
       if (nzchar(mount)) {
-        # Internal absolute links: <a href="/x"> -> <a href="/<mount>/x">
         res$content <- gsub(
           '(<a\\b[^>]*?\\shref=")/(?!/)',
           paste0("\\1", mount, "/"),
@@ -391,15 +450,6 @@ brochureApp <- function(
           perl = TRUE
         )
       }
-      # Relative resource URLs (src/href="foo") -> "/<mount>/foo". Always
-      # needed, not only under a mount: on a nested page such as "/who/colin"
-      # they would otherwise resolve against "/who/" and 404.
-      res$content <- gsub(
-        '\\b(src|href)="(?![a-zA-Z][a-zA-Z0-9+.-]*:|//|/|#|\\?)',
-        paste0("\\1=\"", mount, "/"),
-        res$content,
-        perl = TRUE
-      )
       m <- regexpr("<head>", res$content, ignore.case = TRUE)
       if (m > 0) {
         at <- m + attr(m, "match.length")

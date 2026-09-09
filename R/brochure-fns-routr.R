@@ -109,6 +109,9 @@ redirect <- function(
 ) {
   # We need the redirect to be a specific HTTP code
   check_redirect_code(code)
+  # `to` is written straight into a Location header, so it is held to the same
+  # rule as `server_redirect()`: a CRLF here would append a header of its own.
+  check_redirect_to(to)
 
   with_class(
     list(
