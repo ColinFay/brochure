@@ -1,5 +1,13 @@
 # Package index
 
+## The package
+
+An overview, and where to start.
+
+- [`brochure`](https://github.com/ColinFay/brochure/reference/brochure-package.md)
+  [`brochure-package`](https://github.com/ColinFay/brochure/reference/brochure-package.md)
+  : brochure: Multipage 'Shiny' Apps
+
 ## Building an app
 
 The two functions that replace
@@ -37,7 +45,7 @@ page server.
   : Middleware to set cookies
 - [`parse_cookie_string()`](https://github.com/ColinFay/brochure/reference/cookies-server-side.md)
   [`get_cookies()`](https://github.com/ColinFay/brochure/reference/cookies-server-side.md)
-  : Parse the cookie string
+  : Read the cookies sent with a request
 
 ## golem
 

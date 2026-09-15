@@ -69,6 +69,65 @@ is the point rather than a limitation — it forces the data flowing
 between pages to be explicit — but it means state has to live somewhere
 shared: a cookie, a database, a disk cache.
 
+## Something on every page
+
+Anything passed to
+[`brochureApp()`](https://github.com/ColinFay/brochure/reference/brochureApp.md)
+that is not a
+[`page()`](https://github.com/ColinFay/brochure/reference/page.md) or a
+[`redirect()`](https://github.com/ColinFay/brochure/reference/redirect.md)
+is injected as it is into every page. That is where a stylesheet, a
+favicon or a `<script>` goes:
+
+``` r
+
+brochureApp(
+  tags$head(
+    tags$link(rel = "stylesheet", href = "/www/custom.css"),
+    tags$link(rel = "icon", href = "/www/favicon.ico")
+  ),
+  home(),
+  contact()
+)
+```
+
+Tags, tag lists, html dependencies and strings are accepted — a string
+too, so a stray value ends up rendered on every page. Anything else is
+an error naming the element it could not use.
+
+`wrapped` is the other half of “on every page”: a function applied to
+the UI of each page, which is where a common layout goes. Pass it
+`fluidPage` and every page becomes one, Bootstrap and all — the layout a
+single page app gets from its own
+[`fluidPage()`](https://rdrr.io/pkg/shiny/man/fluidPage.html) call:
+
+``` r
+
+brochureApp(
+  home(),
+  contact(),
+  wrapped = fluidPage
+)
+```
+
+Any function taking the ui and returning a ui works, so a navbar shared
+by the whole app is written once:
+
+``` r
+
+with_nav <- function(ui) {
+  fluidPage(
+    tags$nav(
+      tags$a(href = "/", "Home"),
+      tags$a(href = "/contact", "Contact")
+    ),
+    ui
+  )
+}
+
+brochureApp(home(), contact(), wrapped = with_nav)
+```
+
 ## How a url finds its page
 
 Matching a request to a page is done by the
@@ -103,6 +162,28 @@ brochureApp(
 
 Swap those two lines and `/who/:id` catches `/who/me` first: the page
 you wrote for it becomes unreachable, silently.
+
+## When no page matches
+
+A url matching none of your pages gets a 404, whose body is
+`content_404`:
+
+``` r
+
+brochureApp(
+  home(),
+  contact(),
+  content_404 = tagList(
+    h1("This page does not exist"),
+    tags$a(href = "/", "Back home")
+  )
+)
+```
+
+It is served as it is written, and unlike a page it is not rewritten for
+`basepath`. Under a prefix, `href = "/"` therefore points at the root of
+the domain rather than at your home page: write the prefix in yourself,
+`href = "/myapp/"`.
 
 ## Reading the parameters
 
@@ -217,7 +298,10 @@ mount is picked up on its own and `basepath` is not needed.
   the next.
 - [`vignette("deployment")`](https://github.com/ColinFay/brochure/articles/deployment.md)
   — serving the app under a prefix.
+- [`vignette("design")`](https://github.com/ColinFay/brochure/articles/design.md)
+  — what changes when an app is several pages, and where state goes once
+  no session is shared.
+- [`vignette("testing")`](https://github.com/ColinFay/brochure/articles/testing.md)
+  — testing the routing, the pages and the app.
 - [`vignette("golem")`](https://github.com/ColinFay/brochure/articles/golem.md)
   — building a brochure app as a golem package.
-
-The README covers the design patterns for sharing state between pages.

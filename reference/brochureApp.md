@@ -67,7 +67,13 @@ brochureApp(
 
   The content served when no
   [`page()`](https://github.com/ColinFay/brochure/reference/page.md)
-  matches the url.
+  matches the url. A string, or anything
+  [`as.character()`](https://rdrr.io/r/base/character.html) renders as
+  html, a
+  [`tagList()`](https://rstudio.github.io/htmltools/reference/tagList.html)
+  for example. It is sent as it is written: unlike a page it is not
+  rewritten for `basepath`, so a link in it has to carry the mount
+  itself.
 
 - basepath:
 
@@ -94,8 +100,13 @@ brochureApp(
 
 - wrapped:
 
-  A UI function wrapping the Brochure UI. Default is
-  [`shiny::tagList`](https://rstudio.github.io/htmltools/reference/tagList.html).
+  A function taking the UI of a page and returning the UI actually
+  served. This is how every page gets the same shell:
+  `wrapped = fluidPage` gives them all the Bootstrap layout and its
+  dependencies, and a function of your own can add a navbar or a footer
+  around each of them. Default is
+  [`shiny::tagList`](https://rstudio.github.io/htmltools/reference/tagList.html),
+  which adds nothing.
 
 ## Value
 

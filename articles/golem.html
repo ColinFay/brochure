@@ -39,7 +39,9 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/handlers.html">Request and response handlers</a></li>
     <li><a class="dropdown-item" href="../articles/cookies.html">Cookies and state between pages</a></li>
+    <li><a class="dropdown-item" href="../articles/design.html">Designing a multipage app</a></li>
     <li><a class="dropdown-item" href="../articles/deployment.html">Deploying behind a reverse proxy</a></li>
+    <li><a class="dropdown-item" href="../articles/testing.html">Testing a brochure app</a></li>
     <li><a class="dropdown-item" href="../articles/golem.html">Using brochure with golem</a></li>
   </ul>
 </li>
@@ -231,9 +233,8 @@ package.</p>
 <code>app_server()</code> to drive with
 <code><a href="https://rdrr.io/pkg/shiny/man/testServer.html" class="external-link">shiny::testServer()</a></code>. Test each page’s module server as you
 would any module, and drive the app’s routing through its
-<code>httpHandler</code> with a request built by hand — that is how
-brochure tests itself, in
-<code>tests/testthat/test-brochureApp.R</code>.</p>
+<code>httpHandler</code> with a request built by hand.
+<code><a href="../articles/testing.html">vignette("testing")</a></code> covers both.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

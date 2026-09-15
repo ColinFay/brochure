@@ -39,7 +39,9 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/handlers.html">Request and response handlers</a></li>
     <li><a class="dropdown-item" href="../articles/cookies.html">Cookies and state between pages</a></li>
+    <li><a class="dropdown-item" href="../articles/design.html">Designing a multipage app</a></li>
     <li><a class="dropdown-item" href="../articles/deployment.html">Deploying behind a reverse proxy</a></li>
+    <li><a class="dropdown-item" href="../articles/testing.html">Testing a brochure app</a></li>
     <li><a class="dropdown-item" href="../articles/golem.html">Using brochure with golem</a></li>
   </ul>
 </li>
@@ -132,6 +134,51 @@ but it means state has to live somewhere shared: a cookie, a database, a
 disk cache.</p>
 </div>
 <div class="section level2">
+<h2 id="something-on-every-page">Something on every page<a class="anchor" aria-label="anchor" href="#something-on-every-page"></a>
+</h2>
+<p>Anything passed to <code><a href="../reference/brochureApp.html">brochureApp()</a></code> that is not a
+<code><a href="../reference/page.html">page()</a></code> or a <code><a href="../reference/redirect.html">redirect()</a></code> is injected as it is
+into every page. That is where a stylesheet, a favicon or a
+<code>&lt;script&gt;</code> goes:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/brochureApp.html">brochureApp</a></span><span class="op">(</span></span>
+<span>  <span class="va">tags</span><span class="op">$</span><span class="fu">head</span><span class="op">(</span></span>
+<span>    <span class="va">tags</span><span class="op">$</span><span class="fu">link</span><span class="op">(</span>rel <span class="op">=</span> <span class="st">"stylesheet"</span>, href <span class="op">=</span> <span class="st">"/www/custom.css"</span><span class="op">)</span>,</span>
+<span>    <span class="va">tags</span><span class="op">$</span><span class="fu">link</span><span class="op">(</span>rel <span class="op">=</span> <span class="st">"icon"</span>, href <span class="op">=</span> <span class="st">"/www/favicon.ico"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  <span class="fu">home</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  <span class="fu">contact</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>Tags, tag lists, html dependencies and strings are accepted — a
+string too, so a stray value ends up rendered on every page. Anything
+else is an error naming the element it could not use.</p>
+<p><code>wrapped</code> is the other half of “on every page”: a function
+applied to the UI of each page, which is where a common layout goes.
+Pass it <code>fluidPage</code> and every page becomes one, Bootstrap and
+all — the layout a single page app gets from its own
+<code><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage()</a></code> call:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/brochureApp.html">brochureApp</a></span><span class="op">(</span></span>
+<span>  <span class="fu">home</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  <span class="fu">contact</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  wrapped <span class="op">=</span> <span class="va">fluidPage</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>Any function taking the ui and returning a ui works, so a navbar
+shared by the whole app is written once:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">with_nav</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">ui</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
+<span>    <span class="va">tags</span><span class="op">$</span><span class="fu">nav</span><span class="op">(</span></span>
+<span>      <span class="va">tags</span><span class="op">$</span><span class="fu">a</span><span class="op">(</span>href <span class="op">=</span> <span class="st">"/"</span>, <span class="st">"Home"</span><span class="op">)</span>,</span>
+<span>      <span class="va">tags</span><span class="op">$</span><span class="fu">a</span><span class="op">(</span>href <span class="op">=</span> <span class="st">"/contact"</span>, <span class="st">"Contact"</span><span class="op">)</span></span>
+<span>    <span class="op">)</span>,</span>
+<span>    <span class="va">ui</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/brochureApp.html">brochureApp</a></span><span class="op">(</span><span class="fu">home</span><span class="op">(</span><span class="op">)</span>, <span class="fu">contact</span><span class="op">(</span><span class="op">)</span>, wrapped <span class="op">=</span> <span class="va">with_nav</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="how-a-url-finds-its-page">How a url finds its page<a class="anchor" aria-label="anchor" href="#how-a-url-finds-its-page"></a>
 </h2>
 <p>Matching a request to a page is done by the <a href="https://routr.data-imaginist.com/" class="external-link"><code>{routr}</code></a>
@@ -183,7 +230,7 @@ is.</li>
 <p><strong>Pages are tried in the order you pass them, and the first
 match wins.</strong> When two hrefs can match the same url, the specific
 one has to come first:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/brochureApp.html">brochureApp</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="../reference/page.html">page</a></span><span class="op">(</span>href <span class="op">=</span> <span class="st">"/who/me"</span>, ui <span class="op">=</span> <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">tagList</a></span><span class="op">(</span><span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h1</a></span><span class="op">(</span><span class="st">"It's you"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="../reference/page.html">page</a></span><span class="op">(</span>href <span class="op">=</span> <span class="st">"/who/:id"</span>, ui <span class="op">=</span> <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">tagList</a></span><span class="op">(</span><span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h1</a></span><span class="op">(</span><span class="st">"Someone else"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
@@ -193,12 +240,31 @@ one has to come first:</p>
 unreachable, silently.</p>
 </div>
 <div class="section level2">
+<h2 id="when-no-page-matches">When no page matches<a class="anchor" aria-label="anchor" href="#when-no-page-matches"></a>
+</h2>
+<p>A url matching none of your pages gets a 404, whose body is
+<code>content_404</code>:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/brochureApp.html">brochureApp</a></span><span class="op">(</span></span>
+<span>  <span class="fu">home</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  <span class="fu">contact</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  content_404 <span class="op">=</span> <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">tagList</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h1</a></span><span class="op">(</span><span class="st">"This page does not exist"</span><span class="op">)</span>,</span>
+<span>    <span class="va">tags</span><span class="op">$</span><span class="fu">a</span><span class="op">(</span>href <span class="op">=</span> <span class="st">"/"</span>, <span class="st">"Back home"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>It is served as it is written, and unlike a page it is not rewritten
+for <code>basepath</code>. Under a prefix, <code>href = "/"</code>
+therefore points at the root of the domain rather than at your home
+page: write the prefix in yourself, <code>href = "/myapp/"</code>.</p>
+</div>
+<div class="section level2">
 <h2 id="reading-the-parameters">Reading the parameters<a class="anchor" aria-label="anchor" href="#reading-the-parameters"></a>
 </h2>
 <p>What <code>:name</code> and <code>*</code> captured is read with
 <code><a href="../reference/get_keys.html">get_keys()</a></code>: with no argument inside the server, and with
 the <code>request</code> the ui receives inside the ui.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/brochureApp.html">brochureApp</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="../reference/page.html">page</a></span><span class="op">(</span></span>
 <span>    href <span class="op">=</span> <span class="st">"/who/:id"</span>,</span>
@@ -222,7 +288,7 @@ in a key named <code>*1</code>, so <code>/files/*</code> matched against
 <div class="section level2">
 <h2 id="redirections">Redirections<a class="anchor" aria-label="anchor" href="#redirections"></a>
 </h2>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/brochureApp.html">brochureApp</a></span><span class="op">(</span></span>
 <span>  <span class="fu">home</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="../reference/redirect.html">redirect</a></span><span class="op">(</span>from <span class="op">=</span> <span class="st">"/index.html"</span>, to <span class="op">=</span> <span class="st">"/"</span><span class="op">)</span></span>
@@ -242,7 +308,7 @@ handlers run first, then those of the matched page.</p>
 <p>A <code>req_handler</code> returning an <code>httpResponse</code>
 short-circuits everything else, which is how you serve something that is
 not a page at all:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/brochureApp.html">brochureApp</a></span><span class="op">(</span></span>
 <span>  <span class="fu">home</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="../reference/page.html">page</a></span><span class="op">(</span></span>
@@ -254,7 +320,7 @@ not a page at all:</p>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>A <code>res_handler</code> is where you set a cookie:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/page.html">page</a></span><span class="op">(</span></span>
 <span>  href <span class="op">=</span> <span class="st">"/login"</span>,</span>
 <span>  ui <span class="op">=</span> <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">tagList</a></span><span class="op">(</span><span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h1</a></span><span class="op">(</span><span class="st">"Logged in"</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -270,7 +336,7 @@ not a page at all:</p>
 </h2>
 <p>If the app is not served at the root of its domain, tell it where it
 is mounted with <code>basepath</code>:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/brochureApp.html">brochureApp</a></span><span class="op">(</span></span>
 <span>  <span class="fu">home</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  basepath <span class="op">=</span> <span class="st">"myapp"</span></span>
@@ -294,11 +360,15 @@ carrying a session from one page to the next.</li>
 <code><a href="../articles/deployment.html">vignette("deployment")</a></code> — serving the app under a
 prefix.</li>
 <li>
+<code><a href="../articles/design.html">vignette("design")</a></code> — what changes when an app is
+several pages, and where state goes once no session is shared.</li>
+<li>
+<code><a href="../articles/testing.html">vignette("testing")</a></code> — testing the routing, the pages
+and the app.</li>
+<li>
 <code><a href="../articles/golem.html">vignette("golem")</a></code> — building a brochure app as a golem
 package.</li>
 </ul>
-<p>The README covers the design patterns for sharing state between
-pages.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

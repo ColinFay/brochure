@@ -5,9 +5,11 @@ articles:
   brochure: brochure.html
   cookies: cookies.html
   deployment: deployment.html
+  design: design.html
   golem: golem.html
   handlers: handlers.html
-last_built: 2026-09-15T13:52Z
+  testing: testing.html
+last_built: 2026-09-15T14:16Z
 urls:
   reference: https://github.com/ColinFay/brochure/reference
   article: https://github.com/ColinFay/brochure/articles

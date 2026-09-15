@@ -25,7 +25,9 @@ from a single Shiny application."></head><body>
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/handlers.html">Request and response handlers</a></li>
     <li><a class="dropdown-item" href="../articles/cookies.html">Cookies and state between pages</a></li>
+    <li><a class="dropdown-item" href="../articles/design.html">Designing a multipage app</a></li>
     <li><a class="dropdown-item" href="../articles/deployment.html">Deploying behind a reverse proxy</a></li>
+    <li><a class="dropdown-item" href="../articles/testing.html">Testing a brochure app</a></li>
     <li><a class="dropdown-item" href="../articles/golem.html">Using brochure with golem</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -103,7 +105,10 @@ for more information on bookmarking your app.</p></dd>
 
 
 <dt id="arg-content-">content_404<a class="anchor" aria-label="anchor" href="#arg-content-"></a></dt>
-<dd><p>The content served when no <code><a href="page.html">page()</a></code> matches the url.</p></dd>
+<dd><p>The content served when no <code><a href="page.html">page()</a></code> matches the url. A
+string, or anything <code><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character()</a></code> renders as html, a <code><a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">tagList()</a></code> for
+example. It is sent as it is written: unlike a page it is not rewritten for
+<code>basepath</code>, so a link in it has to carry the mount itself.</p></dd>
 
 
 <dt id="arg-basepath">basepath<a class="anchor" aria-label="anchor" href="#arg-basepath"></a></dt>
@@ -129,8 +134,10 @@ object before it is send to the browser. Each function must take a <code>res</co
 
 
 <dt id="arg-wrapped">wrapped<a class="anchor" aria-label="anchor" href="#arg-wrapped"></a></dt>
-<dd><p>A UI function wrapping the Brochure UI.
-Default is <code><a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">shiny::tagList</a></code>.</p></dd>
+<dd><p>A function taking the UI of a page and returning the UI
+actually served. This is how every page gets the same shell: <code>wrapped = fluidPage</code> gives them all the Bootstrap layout and its dependencies, and a
+function of your own can add a navbar or a footer around each of them.
+Default is <code><a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">shiny::tagList</a></code>, which adds nothing.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -694,6 +694,14 @@ still serve Single Page Applications.
 
 # Package index
 
+## The package
+
+An overview, and where to start.
+
+- [`brochure`](https://github.com/ColinFay/brochure/reference/brochure-package.md)
+  [`brochure-package`](https://github.com/ColinFay/brochure/reference/brochure-package.md)
+  : brochure: Multipage 'Shiny' Apps
+
 ## Building an app
 
 The two functions that replace
@@ -731,7 +739,7 @@ page server.
   : Middleware to set cookies
 - [`parse_cookie_string()`](https://github.com/ColinFay/brochure/reference/cookies-server-side.md)
   [`get_cookies()`](https://github.com/ColinFay/brochure/reference/cookies-server-side.md)
-  : Parse the cookie string
+  : Read the cookies sent with a request
 
 ## golem
 
@@ -755,7 +763,11 @@ Using brochure inside a golem application.
   handlers](https://github.com/ColinFay/brochure/articles/handlers.md):
 - [Cookies and state between
   pages](https://github.com/ColinFay/brochure/articles/cookies.md):
+- [Designing a multipage
+  app](https://github.com/ColinFay/brochure/articles/design.md):
 - [Deploying behind a reverse
   proxy](https://github.com/ColinFay/brochure/articles/deployment.md):
+- [Testing a brochure
+  app](https://github.com/ColinFay/brochure/articles/testing.md):
 - [Using brochure with
   golem](https://github.com/ColinFay/brochure/articles/golem.md):

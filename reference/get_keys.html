@@ -25,7 +25,9 @@ inside a page server, and pass it the request inside a page ui.'></head><body>
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/handlers.html">Request and response handlers</a></li>
     <li><a class="dropdown-item" href="../articles/cookies.html">Cookies and state between pages</a></li>
+    <li><a class="dropdown-item" href="../articles/design.html">Designing a multipage app</a></li>
     <li><a class="dropdown-item" href="../articles/deployment.html">Deploying behind a reverse proxy</a></li>
+    <li><a class="dropdown-item" href="../articles/testing.html">Testing a brochure app</a></li>
     <li><a class="dropdown-item" href="../articles/golem.html">Using brochure with golem</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -91,14 +93,14 @@ outside of a brochure page.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> {</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     h1(get_keys(request)$id)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x56161f2219f0&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55a35320e7b0&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $server</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> function (input, output, session) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> {</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     print(get_keys())</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x56161f2219f0&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55a35320e7b0&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $method</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "get"</span>

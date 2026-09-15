@@ -39,7 +39,9 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/handlers.html">Request and response handlers</a></li>
     <li><a class="dropdown-item" href="../articles/cookies.html">Cookies and state between pages</a></li>
+    <li><a class="dropdown-item" href="../articles/design.html">Designing a multipage app</a></li>
     <li><a class="dropdown-item" href="../articles/deployment.html">Deploying behind a reverse proxy</a></li>
+    <li><a class="dropdown-item" href="../articles/testing.html">Testing a brochure app</a></li>
     <li><a class="dropdown-item" href="../articles/golem.html">Using brochure with golem</a></li>
   </ul>
 </li>
@@ -190,6 +192,52 @@ see urls that match no page, and can answer them. Everything else — the
 page level handlers, and both levels of response handler — is skipped
 when nothing matches, and the request gets <code>content_404</code>
 directly.</p>
+</div>
+<div class="section level2">
+<h2 id="pages-that-answer-on-another-method">Pages that answer on another method<a class="anchor" aria-label="anchor" href="#pages-that-answer-on-another-method"></a>
+</h2>
+<p>A page answers <code>GET</code>. <code>method</code> changes that,
+which is how a form post or a webhook gets a page of its own:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">subscribe</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">req</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">fields</span> <span class="op">&lt;-</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/parseQueryString.html" class="external-link">parseQueryString</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/rawConversion.html" class="external-link">rawToChar</a></span><span class="op">(</span><span class="va">req</span><span class="op">$</span><span class="va">rook.input</span><span class="op">$</span><span class="fu">read</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"new subscriber: "</span>, <span class="va">fields</span><span class="op">$</span><span class="va">email</span><span class="op">)</span></span>
+<span>  <span class="va">req</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/brochureApp.html">brochureApp</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/page.html">page</a></span><span class="op">(</span></span>
+<span>    href <span class="op">=</span> <span class="st">"/"</span>,</span>
+<span>    ui <span class="op">=</span> <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">tagList</a></span><span class="op">(</span></span>
+<span>      <span class="va">tags</span><span class="op">$</span><span class="fu">form</span><span class="op">(</span></span>
+<span>        action <span class="op">=</span> <span class="st">"/subscribe"</span>,</span>
+<span>        method <span class="op">=</span> <span class="st">"post"</span>,</span>
+<span>        <span class="va">tags</span><span class="op">$</span><span class="fu">input</span><span class="op">(</span>type <span class="op">=</span> <span class="st">"email"</span>, name <span class="op">=</span> <span class="st">"email"</span><span class="op">)</span>,</span>
+<span>        <span class="va">tags</span><span class="op">$</span><span class="fu">input</span><span class="op">(</span>type <span class="op">=</span> <span class="st">"submit"</span>, value <span class="op">=</span> <span class="st">"Subscribe"</span><span class="op">)</span></span>
+<span>      <span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="../reference/page.html">page</a></span><span class="op">(</span></span>
+<span>    href <span class="op">=</span> <span class="st">"/subscribe"</span>,</span>
+<span>    method <span class="op">=</span> <span class="st">"POST"</span>,</span>
+<span>    ui <span class="op">=</span> <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">tagList</a></span><span class="op">(</span><span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h1</a></span><span class="op">(</span><span class="st">"Thanks"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    req_handlers <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">subscribe</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>The method takes part in the matching, so a <code>GET</code> on
+<code>/subscribe</code> matches nothing and gets
+<code>content_404</code>.</p>
+<p>What was posted is yours to read: the body is on the request, as
+<code>req$rook.input</code>, and brochure does not touch it. A request
+handler is the place for that, since it runs before the response is
+built.</p>
+<p>One thing to keep in mind: a page’s <em>session</em> is resolved on
+the path alone. The websocket handshake a browser opens is a
+<code>GET</code> whatever method the page was served on, so two pages
+declared at the same href with different methods both run the server of
+the first one declared.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

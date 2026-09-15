@@ -189,14 +189,18 @@ keeping the current page in shared state.
   CRAN release, and [uuid](https://www.rforge.net/uuid) and
   [fastmap](https://r-lib.github.io/fastmap/) are no longer needed.
 
-- Five vignettes and a pkgdown site.
+- Seven vignettes and a pkgdown site.
   [`vignette("brochure")`](https://github.com/ColinFay/brochure/articles/brochure.md)
   gets you started,
   [`vignette("handlers")`](https://github.com/ColinFay/brochure/articles/handlers.md)
   covers the request and response middleware,
   [`vignette("cookies")`](https://github.com/ColinFay/brochure/articles/cookies.md)
   the cookie API and carrying a session between pages,
+  [`vignette("design")`](https://github.com/ColinFay/brochure/articles/design.md)
+  what changes when an app is several pages,
   [`vignette("deployment")`](https://github.com/ColinFay/brochure/articles/deployment.md)
-  serving the app under a prefix, and
+  serving the app under a prefix,
+  [`vignette("testing")`](https://github.com/ColinFay/brochure/articles/testing.md)
+  testing the routing and the pages, and
   [`vignette("golem")`](https://github.com/ColinFay/brochure/articles/golem.md)
   building a brochure app as a golem package.

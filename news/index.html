@@ -21,7 +21,9 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/handlers.html">Request and response handlers</a></li>
     <li><a class="dropdown-item" href="../articles/cookies.html">Cookies and state between pages</a></li>
+    <li><a class="dropdown-item" href="../articles/design.html">Designing a multipage app</a></li>
     <li><a class="dropdown-item" href="../articles/deployment.html">Deploying behind a reverse proxy</a></li>
+    <li><a class="dropdown-item" href="../articles/testing.html">Testing a brochure app</a></li>
     <li><a class="dropdown-item" href="../articles/golem.html">Using brochure with golem</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -83,7 +85,7 @@
 <ul><li><p>The script brochure injects now only registers the handler behind <code><a href="../reference/server_redirect.html">server_redirect()</a></code>. It also used to rewrite the page’s <code>&lt;base&gt;</code>, on the premise that the websocket url was computed from it; shiny builds that url from <code>window.location.pathname</code> instead. Checked on a Posit Connect deployment: stripping the script from the response left a deep page with the same websocket url, the same rendered output and no failed request.</p></li>
 <li><p><code>get_mount()</code> reads the mount from the <code>RStudio-Connect-App-Base-URL</code> header only when the app really runs on Posit Connect, and keeps the extracted path to a plain path. Elsewhere any client could send that header and decide the prefix every url of the page is rewritten with.</p></li>
 <li><p>The <a href="https://routr.data-imaginist.com" class="external-link">routr</a> dependency is on the CRAN release, and <a href="https://www.rforge.net/uuid" class="external-link">uuid</a> and <a href="https://r-lib.github.io/fastmap/" class="external-link">fastmap</a> are no longer needed.</p></li>
-<li><p>Five vignettes and a pkgdown site. <code><a href="../articles/brochure.html">vignette("brochure")</a></code> gets you started, <code><a href="../articles/handlers.html">vignette("handlers")</a></code> covers the request and response middleware, <code><a href="../articles/cookies.html">vignette("cookies")</a></code> the cookie API and carrying a session between pages, <code><a href="../articles/deployment.html">vignette("deployment")</a></code> serving the app under a prefix, and <code><a href="../articles/golem.html">vignette("golem")</a></code> building a brochure app as a golem package.</p></li>
+<li><p>Seven vignettes and a pkgdown site. <code><a href="../articles/brochure.html">vignette("brochure")</a></code> gets you started, <code><a href="../articles/handlers.html">vignette("handlers")</a></code> covers the request and response middleware, <code><a href="../articles/cookies.html">vignette("cookies")</a></code> the cookie API and carrying a session between pages, <code><a href="../articles/design.html">vignette("design")</a></code> what changes when an app is several pages, <code><a href="../articles/deployment.html">vignette("deployment")</a></code> serving the app under a prefix, <code><a href="../articles/testing.html">vignette("testing")</a></code> testing the routing and the pages, and <code><a href="../articles/golem.html">vignette("golem")</a></code> building a brochure app as a golem package.</p></li>
 </ul></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

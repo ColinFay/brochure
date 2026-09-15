@@ -148,6 +148,6 @@ Testing changes a little: there is no single `app_server()` to drive
 with
 [`shiny::testServer()`](https://rdrr.io/pkg/shiny/man/testServer.html).
 Test each page’s module server as you would any module, and drive the
-app’s routing through its `httpHandler` with a request built by hand —
-that is how brochure tests itself, in
-`tests/testthat/test-brochureApp.R`.
+app’s routing through its `httpHandler` with a request built by hand.
+[`vignette("testing")`](https://github.com/ColinFay/brochure/articles/testing.md)
+covers both.

@@ -21,7 +21,9 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/handlers.html">Request and response handlers</a></li>
     <li><a class="dropdown-item" href="../articles/cookies.html">Cookies and state between pages</a></li>
+    <li><a class="dropdown-item" href="../articles/design.html">Designing a multipage app</a></li>
     <li><a class="dropdown-item" href="../articles/deployment.html">Deploying behind a reverse proxy</a></li>
+    <li><a class="dropdown-item" href="../articles/testing.html">Testing a brochure app</a></li>
     <li><a class="dropdown-item" href="../articles/golem.html">Using brochure with golem</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -40,6 +42,22 @@
     </div>
 
     <div class="section level2">
+      <h2 id="the-package">The package<a class="anchor" aria-label="anchor" href="#the-package"></a></h2>
+
+      <div class="section-desc"><p>An overview, and where to start.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="brochure-package.html">brochure</a></code> <code><a href="brochure-package.html">brochure-package</a></code>
+
+        </dt>
+        <dd>brochure: Multipage 'Shiny' Apps</dd>
+      </dl></div><div class="section level2">
       <h2 id="building-an-app">Building an app<a class="anchor" aria-label="anchor" href="#building-an-app"></a></h2>
 
       <div class="section-desc"><p>The two functions that replace <code><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp()</a></code> and organise its pages.</p></div>
@@ -123,7 +141,7 @@
           <code><a href="cookies-server-side.html">parse_cookie_string()</a></code> <code><a href="cookies-server-side.html">get_cookies()</a></code>
 
         </dt>
-        <dd>Parse the cookie string</dd>
+        <dd>Read the cookies sent with a request</dd>
       </dl></div><div class="section level2">
       <h2 id="golem">golem<a class="anchor" aria-label="anchor" href="#golem"></a></h2>
 
