@@ -1,8 +1,13 @@
 pandoc: 3.8.3
 pkgdown: 2.2.1
 pkgdown_sha: ~
-articles: {}
-last_built: 2026-09-15T11:13Z
+articles:
+  brochure: brochure.html
+  cookies: cookies.html
+  deployment: deployment.html
+  golem: golem.html
+  handlers: handlers.html
+last_built: 2026-09-15T13:52Z
 urls:
   reference: https://github.com/ColinFay/brochure/reference
   article: https://github.com/ColinFay/brochure/articles

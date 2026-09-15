@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">brochure</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9024</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -15,7 +15,15 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/brochure.html">Get started</a></li>
+<li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/handlers.html">Request and response handlers</a></li>
+    <li><a class="dropdown-item" href="../articles/cookies.html">Cookies and state between pages</a></li>
+    <li><a class="dropdown-item" href="../articles/deployment.html">Deploying behind a reverse proxy</a></li>
+    <li><a class="dropdown-item" href="../articles/golem.html">Using brochure with golem</a></li>
+  </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -33,10 +41,53 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.0.0.9000" id="brochure-0009000-to-100">brochure 0.0.0.9000 to 1.0.0<a class="anchor" aria-label="anchor" href="#brochure-0009000-to-100"></a></h2>
-<ul><li>First draft of the package</li>
+<h2 class="pkg-version" data-toc-text="1.0.0" id="brochure-100">brochure 1.0.0<a class="anchor" aria-label="anchor" href="#brochure-100"></a></h2>
+<p>First stable release. Routing is rewritten on top of <a href="https://routr.data-imaginist.com" class="external-link">routr</a>, which brings parameterised routes and per-method pages, and fixes a family of bugs that came from keeping the current page in shared state.</p>
+<div class="section level3">
+<h3 id="breaking-changes-1-0-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-1-0-0"></a></h3>
+<ul><li><p><code>keys</code> is gone. A parameterised page used to read its matched values from a <code>keys</code> object that <code><a href="../reference/brochureApp.html">brochureApp()</a></code> installed in the global environment: it shadowed any user object of that name and was invisible from a module, a golem app or any <code><a href="https://rdrr.io/r/base/eval.html" class="external-link">local()</a></code>. Use <code><a href="../reference/get_keys.html">get_keys()</a></code> instead — with no argument inside a page <code>server</code>, and <code>get_keys(request)</code> inside a page <code>ui</code>.</p></li>
+<li><p><code><a href="../reference/cookie-middleware.html">set_cookie()</a></code> now defaults to <code>http_only = TRUE</code> and <code>same_site = "Lax"</code>. Pass <code>http_only = FALSE</code> or <code>same_site = NULL</code> to get the previous header.</p></li>
+<li><p><code><a href="../reference/cookie-middleware.html">set_cookie()</a></code>, <code><a href="../reference/cookie-middleware.html">remove_cookie()</a></code> and <code><a href="../reference/server_redirect.html">server_redirect()</a></code> reject values they used to interpolate as is: a cookie name, value, domain or path outside the RFC 6265 charset, and a redirect target that is neither a path nor an <code>http(s)</code> URL.</p></li>
+<li><p><code>...</code> in <code><a href="../reference/brochureApp.html">brochureApp()</a></code> no longer accepts anything. It takes <code><a href="../reference/page.html">page()</a></code>s, <code><a href="../reference/redirect.html">redirect()</a></code>s, tags, tag lists, html dependencies and strings; anything else is an error rather than content silently injected into every page. A bare list of pages is spliced, so <code>brochureApp(list(page_1(), page_2()))</code> now builds two pages instead of injecting the list into each of them.</p></li>
+<li><p><code><a href="../reference/page.html">page()</a></code> and <code><a href="../reference/redirect.html">redirect()</a></code> gain a <code>method</code> argument, so a page can answer on something other than <code>GET</code>.</p></li>
 </ul></div>
-  </main></div>
+<div class="section level3">
+<h3 id="bug-fixes-1-0-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-0-0"></a></h3>
+<ul><li><p>Two people browsing two pages of the same app could each run the other’s server. The matched page was kept in a single per-app environment, written by the http handler and read back when the websocket opened. The page is now resolved per request in the ui, and per session in the server.</p></li>
+<li><p>An unknown url served the last page visited instead of <code>content_404</code>.</p></li>
+<li><p><code>req_handlers</code> and <code>res_handlers</code> passed to <code><a href="../reference/page.html">page()</a></code> were stored and never run: the documented <code>/healthcheck</code> endpoint and the per-page cookies of the README were silent no-ops.</p></li>
+<li><p>A page whose href had more than one segment (any parameterised route) loaded none of its assets: Shiny emits its dependencies as relative urls, and the browser resolved them against the parent path. With no <code>shiny.js</code> there was no websocket, so the page server never ran.</p></li>
+<li><p><code>basepath</code> is now removed from the incoming path, as documented, and not only prepended to the urls the app emits. Apps work behind a proxy that passes the mount through as well as behind one that strips it.</p></li>
+<li><p><code><a href="../reference/cookie-middleware.html">remove_cookie()</a></code> could not delete a cookie set with an explicit <code>path</code> or <code>domain</code>. A cookie is only replaced when name, path and domain all match, and the deletion header carried none of them, so the browser scoped it to the directory of the current request and left the original cookie alone. Behind a mount that directory is not <code>/</code>, so the documented login/logout pattern silently failed on Posit Connect. It now takes <code>path</code> and <code>domain</code>.</p></li>
+<li><p>Pages and redirects are matched in the order they were passed. Redirects were registered after every page whatever the order, so a <code><a href="../reference/redirect.html">redirect()</a></code> declared before a <code><a href="../reference/page.html">page()</a></code> at the same href never answered.</p></li>
+<li><p><code><a href="../reference/redirect.html">redirect()</a></code> accepts only the statuses a browser follows: 301, 302, 303, 307 and 308. The allow-list read <code>c(301:308, 310)</code>, which admitted 304, 305, 306 and 310 — none of which make a browser follow a <code>Location</code>.</p></li>
+<li><p><code>basepath</code> has to be a plain url path. It is interpolated into urls and into the injected javascript, where a quote in it closed the string literal.</p></li>
+<li><p>Mount rewriting is blind to capitalisation, so <code>&lt;IMG SRC="logo.png"&gt;</code> is rewritten like its lowercase equivalent.</p></li>
+<li><p>An explicit <code>basepath</code> now decides the mount even on Posit Connect. The header used to win, so an app that set <code>basepath</code> to pin the behaviour was stripping the incoming path with one mount and writing its urls with another.</p></li>
+<li><p><code><a href="../reference/server_redirect.html">server_redirect()</a></code> and <code><a href="../reference/redirect.html">redirect()</a></code> refuse a backslash anywhere in the target. A URL parser reads it as a slash, so <code>"\page2"</code> was the root and escaped the mount, which is only ever prefixed onto a <code>/</code>.</p></li>
+<li><p>Mount rewriting handles single quoted attributes, so <code>HTML("&lt;img src='logo.png'&gt;")</code> is rewritten like its double quoted equivalent.</p></li>
+<li><p>A page declared with a method other than <code>GET</code> can serve its document. Shiny’s UI handler answers <code>GET</code> alone unless the ui says otherwise, so such a page returned nothing unless a request handler answered for it.</p></li>
+<li><p><code><a href="../reference/server_redirect.html">server_redirect()</a></code> and <code><a href="../reference/redirect.html">redirect()</a></code> refuse an empty target, which is neither a path nor a url: the browser dropped it silently, and the HTTP redirect emitted an empty <code>Location</code>.</p></li>
+<li><p><code><a href="../reference/cookie-middleware.html">set_cookie()</a></code> checks <code>max_age</code>, the one part still interpolated into the header unexamined: <code>max_age = "0\r\nX-Injected: 1"</code> appended a header of its own.</p></li>
+<li><p><code><a href="../reference/server_redirect.html">server_redirect()</a></code> refuses a protocol relative target written with backslashes. A URL parser reads <code>\</code> as <code>/</code>, so <code>"\\host"</code> and <code>"/\host"</code> left the app exactly as <code>"//host"</code> did.</p></li>
+<li><p>Mount rewriting only touches real attributes, and covers form <code>action</code>. It matched anywhere in the response, so page text or inline javascript holding <code>src="logo.png"</code> was rewritten too; and a form posting to <code>/submit</code> under a mount went to the domain root.</p></li>
+<li><p><code><a href="../reference/redirect.html">redirect()</a></code> did not check <code>to</code>, which goes straight into a <code>Location</code> header: a CRLF in it appended a header of its own. It is now held to the same rule as <code><a href="../reference/server_redirect.html">server_redirect()</a></code>.</p></li>
+<li><p>An internal <code><a href="../reference/redirect.html">redirect()</a></code> sent the browser out of the app when it was mounted under a prefix. The redirect answers before anything is rewritten, so its <code>Location</code> was emitted unprefixed.</p></li>
+<li><p>A page declared with a method other than <code>GET</code> never ran its server. The websocket handshake is a <code>GET</code> whatever the page answers on, so it matched no route; sessions are now resolved against the path alone.</p></li>
+<li><p>A root absolute resource url such as <code>src="/img.png"</code> was left outside the app under a mount, while a relative navigation link such as <code>&lt;a href="contact"&gt;</code> was rewritten to <code>/contact</code>, moving where its author pointed it. Resource urls and navigation links are now treated separately.</p></li>
+<li><p>Two apps in the same R process shared their app level <code>req_handlers</code> and <code>res_handlers</code>, and the last one built won.</p></li>
+<li><p>Formulas now work as app level handlers, as the README says they do; only page level handlers converted them.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="other-1-0-0">Other<a class="anchor" aria-label="anchor" href="#other-1-0-0"></a></h3>
+<ul><li><p>The script brochure injects now only registers the handler behind <code><a href="../reference/server_redirect.html">server_redirect()</a></code>. It also used to rewrite the page’s <code>&lt;base&gt;</code>, on the premise that the websocket url was computed from it; shiny builds that url from <code>window.location.pathname</code> instead. Checked on a Posit Connect deployment: stripping the script from the response left a deep page with the same websocket url, the same rendered output and no failed request.</p></li>
+<li><p><code>get_mount()</code> reads the mount from the <code>RStudio-Connect-App-Base-URL</code> header only when the app really runs on Posit Connect, and keeps the extracted path to a plain path. Elsewhere any client could send that header and decide the prefix every url of the page is rewritten with.</p></li>
+<li><p>The <a href="https://routr.data-imaginist.com" class="external-link">routr</a> dependency is on the CRAN release, and <a href="https://www.rforge.net/uuid" class="external-link">uuid</a> and <a href="https://r-lib.github.io/fastmap/" class="external-link">fastmap</a> are no longer needed.</p></li>
+<li><p>Five vignettes and a pkgdown site. <code><a href="../articles/brochure.html">vignette("brochure")</a></code> gets you started, <code><a href="../articles/handlers.html">vignette("handlers")</a></code> covers the request and response middleware, <code><a href="../articles/cookies.html">vignette("cookies")</a></code> the cookie API and carrying a session between pages, <code><a href="../articles/deployment.html">vignette("deployment")</a></code> serving the app under a prefix, and <code><a href="../articles/golem.html">vignette("golem")</a></code> building a brochure app as a golem package.</p></li>
+</ul></div>
+</div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

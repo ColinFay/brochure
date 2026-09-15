@@ -1,6 +1,7 @@
 # A Brochure Page
 
-A Brochure Page
+A page is an url, a UI and a server function. Opening it starts a Shiny
+session of its own, separate from any other page of the app.
 
 ## Usage
 
@@ -10,6 +11,7 @@ page(
   ui = tagList(),
   server = function(input, output, session) {
  },
+  method = "GET",
   req_handlers = list(),
   res_handlers = list()
 )
@@ -19,7 +21,10 @@ page(
 
 - href:
 
-  The endpoint to serve the UI on
+  The endpoint to serve the UI on. It can carry parameters, as in
+  `"/who/:id"`, which are read back with
+  [`get_keys()`](https://github.com/ColinFay/brochure/reference/get_keys.md).
+  See details.
 
 - ui:
 
@@ -36,13 +41,17 @@ page(
   The function is called once for each session ensuring that each app is
   independent.
 
+- method:
+
+  The HTTP method the page answers to. Defaults to `"GET"`.
+
 - req_handlers:
 
   a list of functions that can manipulate the `req` object. These
   functions should take `req` as a parameters, and return the `req`
   object (potentially modified), or an object of class httpResponse. If
   any of the req_handlers return an httpResponse, this response will be
-  sent to the browser immeditately, stopping any other code.
+  sent to the browser immediately, stopping any other code.
 
 - res_handlers:
 
@@ -52,7 +61,46 @@ page(
 
 ## Value
 
-A list
+A `brochure_page` object, to be passed to
+[`brochureApp()`](https://github.com/ColinFay/brochure/reference/brochureApp.md).
+
+## Details
+
+Requests are matched against hrefs by the routr package, so an href is
+written the way routr writes a path:
+
+- `"/contact"` matches that path and nothing else.
+
+- `":name"` matches exactly one segment and captures it, so `"/who/:id"`
+  matches `/who/colin` but neither `/who` nor `/who/colin/edit`. Use
+  several of them if you need to: `"/pair/:a/:b"`.
+
+- `"*"` matches whatever is left, so `"/files/*"` matches
+  `/files/a/b/c`. The captured value is named `*1`.
+
+A trailing slash never matters: `/contact` and `/contact/` are the same
+page.
+
+Pages are tried in the order you passed them to
+[`brochureApp()`](https://github.com/ColinFay/brochure/reference/brochureApp.md),
+and the first match wins. That holds for the session a page opens as
+well, which is resolved on the path alone: the websocket handshake is a
+`GET` whatever `method` the page answers on, so two pages sharing an
+href run the server of the first one declared, whichever of them was
+served. That matters when two hrefs can match the same url: declared as
+`page("/who/me")` then `page("/who/:id")`, a request for `/who/me` gets
+the first; declared the other way round, the parameterised page catches
+it and the static one is never reached. Put the specific ones first.
+
+See the routr documentation at <https://routr.data-imaginist.com/> for
+the full path syntax.
+
+## See also
+
+[`get_keys()`](https://github.com/ColinFay/brochure/reference/get_keys.md)
+to read the parameters of an href, and
+[`vignette("handlers")`](https://github.com/ColinFay/brochure/articles/handlers.md)
+for `req_handlers` and `res_handlers`.
 
 ## Examples
 
@@ -76,7 +124,16 @@ page(
 #> function (input, output, session) 
 #> {
 #> }
-#> <environment: 0x555f2a4b2130>
+#> <environment: 0x561624f6c780>
+#> 
+#> $method
+#> [1] "get"
+#> 
+#> $req_handlers
+#> list()
+#> 
+#> $res_handlers
+#> list()
 #> 
 #> attr(,"class")
 #> [1] "brochure_page" "list"         

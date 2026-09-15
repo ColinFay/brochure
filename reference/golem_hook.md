@@ -17,7 +17,7 @@ golem_hook(path, package_name, ...)
 
 - package_name:
 
-  Package name to use. By default, golem uses `basename(path)`. If
+  Package name to use. By default, `{golem}` uses `basename(path)`. If
   `path == '.'` & `package_name` is not explicitly set, then
   `basename(getwd())` will be used.
 

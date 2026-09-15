@@ -16,11 +16,11 @@ set_cookie(
   domain = NULL,
   path = NULL,
   secure = NULL,
-  http_only = NULL,
-  same_site = NULL
+  http_only = TRUE,
+  same_site = "Lax"
 )
 
-remove_cookie(res, name)
+remove_cookie(res, name, path = NULL, domain = NULL)
 ```
 
 ## Arguments
@@ -61,7 +61,8 @@ remove_cookie(res, name)
 - path:
 
   A path that must exist in the requested URL, or the browser won't send
-  the Cookie header.
+  the Cookie header. `remove_cookie()` only deletes a cookie when it is
+  given the same `path` and `domain` that `set_cookie()` was given.
 
 - secure:
 
@@ -72,23 +73,30 @@ remove_cookie(res, name)
 - http_only:
 
   Forbids JavaScript from accessing the cookie, for example, through the
-  Document.cookie property.
+  Document.cookie property. Defaults to `TRUE`.
 
 - same_site:
 
   Controls whether a cookie is sent with cross-origin requests,
   providing some protection against cross-site request forgery attacks
-  (CSRF).
+  (CSRF). Defaults to `"Lax"`.
 
 ## Value
 
 the httpResponse, with a cookie header
 
+## See also
+
+[`get_cookies()`](https://github.com/ColinFay/brochure/reference/cookies-server-side.md)
+to read them back, and
+[`vignette("cookies")`](https://github.com/ColinFay/brochure/articles/cookies.md)
+for carrying a session across pages.
+
 ## Examples
 
 ``` r
 set_cookie(
-  shiny:::httpResponse(),
+  shiny::httpResponse(),
   "this",
   12
 )
@@ -106,7 +114,7 @@ set_cookie(
 #> [1] "nosniff"
 #> 
 #> $headers$`Set-Cookie`
-#> [1] "this=12;"
+#> [1] "this=12; HttpOnly; SameSite = Lax;"
 #> 
 #> 
 #> attr(,"class")

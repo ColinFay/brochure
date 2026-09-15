@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">brochure</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9024</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -15,7 +15,15 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/brochure.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/handlers.html">Request and response handlers</a></li>
+    <li><a class="dropdown-item" href="../articles/cookies.html">Cookies and state between pages</a></li>
+    <li><a class="dropdown-item" href="../articles/deployment.html">Deploying behind a reverse proxy</a></li>
+    <li><a class="dropdown-item" href="../articles/golem.html">Using brochure with golem</a></li>
+  </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -32,9 +40,9 @@
     </div>
 
     <div class="section level2">
-      <h2 id="all-functions">All functions<a class="anchor" aria-label="anchor" href="#all-functions"></a></h2>
+      <h2 id="building-an-app">Building an app<a class="anchor" aria-label="anchor" href="#building-an-app"></a></h2>
 
-
+      <div class="section-desc"><p>The two functions that replace <code><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp()</a></code> and organise its pages.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -50,40 +58,21 @@
 
         <dt>
 
-          <code><a href="cookie-middleware.html">set_cookie()</a></code> <code><a href="cookie-middleware.html">remove_cookie()</a></code>
-
-        </dt>
-        <dd>Middleware to set cookies</dd>
-
-        <dt>
-
-          <code><a href="cookies-server-side.html">parse_cookie_string()</a></code> <code><a href="cookies-server-side.html">get_cookies()</a></code>
-
-        </dt>
-        <dd>Parse the cookie string</dd>
-
-        <dt>
-
-          <code><a href="golem_hook.html">golem_hook()</a></code>
-
-        </dt>
-        <dd>Golem Hook function</dd>
-
-        <dt>
-
-          <code><a href="new_page.html">new_page()</a></code>
-
-        </dt>
-        <dd>Add page</dd>
-
-        <dt>
-
           <code><a href="page.html">page()</a></code>
 
         </dt>
         <dd>A Brochure Page</dd>
+      </dl></div><div class="section level2">
+      <h2 id="moving-between-pages">Moving between pages<a class="anchor" aria-label="anchor" href="#moving-between-pages"></a></h2>
 
-        <dt>
+      <div class="section-desc"><p>Sending the browser somewhere else, from the router or from the server.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
 
           <code><a href="redirect.html">redirect()</a></code>
 
@@ -96,8 +85,71 @@
 
         </dt>
         <dd>Do a server side redirection</dd>
+      </dl></div><div class="section level2">
+      <h2 id="reading-the-url">Reading the url<a class="anchor" aria-label="anchor" href="#reading-the-url"></a></h2>
+
+      <div class="section-desc"><p>The values a parameterised href matched.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="get_keys.html">get_keys()</a></code>
+
+        </dt>
+        <dd>Get the keys of a parameterised page</dd>
+      </dl></div><div class="section level2">
+      <h2 id="cookies">Cookies<a class="anchor" aria-label="anchor" href="#cookies"></a></h2>
+
+      <div class="section-desc"><p>Setting cookies from a response handler, and reading them back from a page server.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="cookie-middleware.html">set_cookie()</a></code> <code><a href="cookie-middleware.html">remove_cookie()</a></code>
+
+        </dt>
+        <dd>Middleware to set cookies</dd>
+
+        <dt>
+
+          <code><a href="cookies-server-side.html">parse_cookie_string()</a></code> <code><a href="cookies-server-side.html">get_cookies()</a></code>
+
+        </dt>
+        <dd>Parse the cookie string</dd>
+      </dl></div><div class="section level2">
+      <h2 id="golem">golem<a class="anchor" aria-label="anchor" href="#golem"></a></h2>
+
+      <div class="section-desc"><p>Using brochure inside a golem application.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="golem_hook.html">golem_hook()</a></code>
+
+        </dt>
+        <dd>Golem Hook function</dd>
+
+        <dt>
+
+          <code><a href="new_page.html">new_page()</a></code>
+
+        </dt>
+        <dd>Add page</dd>
       </dl></div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

@@ -1,7 +1,11 @@
 # Create a brochureApp
 
 This function is to be used in place of
-[`shinyApp()`](https://rdrr.io/pkg/shiny/man/shinyApp.html).
+[`shinyApp()`](https://rdrr.io/pkg/shiny/man/shinyApp.html). It takes a
+series of
+[`page()`](https://github.com/ColinFay/brochure/reference/page.md)s,
+each with its own url, UI and server function, and serves them from a
+single Shiny application.
 
 ## Usage
 
@@ -23,14 +27,18 @@ brochureApp(
 
 - ...:
 
-  a list of elements to inject in the brochureApp. **IMPORTANT NOTE**
-  all elements which are not of class `"brochure_*"` will be injected
-  **as is** in the page. In other word, if you use a function that
-  return a string, the string will be added as is to the pages. The only
-  elements that should be injected on top of
+  The
   [`page()`](https://github.com/ColinFay/brochure/reference/page.md)s
-  are HTML elements and/or `tagList/tags` that are invisible on screen
-  (for example a `<script></script>`).
+  and
+  [`redirect()`](https://github.com/ColinFay/brochure/reference/redirect.md)s
+  of the app, plus anything to inject **as is** into every page: tags,
+  tag lists, html dependencies and strings. That is how you add
+  something to all your pages at once, a `<script>` or the resources of
+  a `{golem}` app for example. Note that a string is injected too, so a
+  stray value ends up rendered on every page. Anything else is an error
+  naming the element it cannot use. A bare list is spliced, so
+  `brochureApp(list(page_1(), page_2()))` builds two pages rather than
+  injecting the list into each of them.
 
 - onStart:
 
@@ -57,16 +65,18 @@ brochureApp(
 
 - content_404:
 
-  The content to dislay when a 404 is sent
+  The content served when no
+  [`page()`](https://github.com/ColinFay/brochure/reference/page.md)
+  matches the url.
 
 - basepath:
 
-  The base path of your app. This pattern will be removed from the url,
-  so that it matches the href of your
-  [`page()`](https://github.com/ColinFay/brochure/reference/page.md).
-  For example, it you have an app at
-  `http://connect.thinkr.fr/brochure/`, and your page is names `page1`,
-  use `basepath = "brochure"`
+  The path your app is served under by a reverse proxy. It is removed
+  from the incoming url, so that what is left matches the href of your
+  [`page()`](https://github.com/ColinFay/brochure/reference/page.md),
+  and it is prepended to the urls the app emits. For example, if your
+  app is served at `http://connect.thinkr.fr/brochure/` and your page is
+  named `page1`, use `basepath = "brochure"`.
 
 - req_handlers:
 
@@ -74,7 +84,7 @@ brochureApp(
   functions should take `req` as a parameters, and return the `req`
   object (potentially modified), or an object of class httpResponse. If
   any of the req_handlers return an httpResponse, this response will be
-  sent to the browser immeditately, stopping any other code.
+  sent to the browser immediately, stopping any other code.
 
 - res_handlers:
 
@@ -90,3 +100,48 @@ brochureApp(
 ## Value
 
 A shiny.appobj
+
+## Details
+
+Behind a reverse proxy, `basepath` tells the app where it is mounted: it
+is removed from the incoming path, and prepended to the urls the app
+emits. On Posit Connect the mount is picked up on its own, from the
+`RStudio-Connect-App-Base-URL` header, and `basepath` is not needed.
+That header is not part of any published contract, so set `basepath` if
+you want the behaviour pinned. Brochure also injects a small script
+registering the handler
+[`server_redirect()`](https://github.com/ColinFay/brochure/reference/server_redirect.md)
+talks to, which prefixes internal targets with the mount.
+
+## See also
+
+[`page()`](https://github.com/ColinFay/brochure/reference/page.md) to
+declare a page,
+[`redirect()`](https://github.com/ColinFay/brochure/reference/redirect.md)
+to answer an url with a redirection, and
+[`vignette("deployment")`](https://github.com/ColinFay/brochure/articles/deployment.md)
+to serve the app under a prefix.
+
+## Examples
+
+``` r
+library(shiny)
+
+app <- brochureApp(
+  page(
+    href = "/",
+    ui = tagList(h1("Home")),
+    server = function(input, output, session) {}
+  ),
+  page(
+    href = "/contact",
+    ui = tagList(h1("Contact"))
+  ),
+  redirect(from = "/index.html", to = "/")
+)
+
+# Then run it as you would any Shiny app:
+if (interactive()) {
+  shiny::runApp(app)
+}
+```
