@@ -171,6 +171,10 @@ from keeping the current page in shared state.
   brochure to the Imports of the app it hooks -- the module template calls
   `page()`, so nothing the hook wrote could be loaded or tested without it.
 
+* `vignette("design")` says how a brochure app behaves with several visitors
+  at once: a session is one visitor on one page, they all share one R process,
+  and a page that blocks holds up every other page.
+
 * `vignette("handlers")` and `?page` say why a page on a method other than
   `GET` is unreachable when the app has a `www/` directory at its root: Shiny
   mounts it as a static path on `/`, and httpuv answers anything that is not a
