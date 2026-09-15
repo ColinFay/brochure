@@ -129,7 +129,7 @@ page(
 #> function (input, output, session) 
 #> {
 #> }
-#> <environment: 0x556dd8a7b188>
+#> <environment: 0x564abcada730>
 #> 
 #> $method
 #> [1] "get"
