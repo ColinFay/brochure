@@ -2,7 +2,7 @@ Package: brochure
 Title: Multipage 'Shiny' Apps
 Version: 1.0.0
 Authors@R:
-    person("Colin", "Fay", , "contact@colinfay.me", role = c("aut", "cre"),
+    person("Colin", "Fay", , "contact@colinfay.me", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0001-7343-1846"))
 Description: Build natively multi-page 'Shiny' applications, serving
     content on several endpoints instead of a single page. Pages are
@@ -11,8 +11,8 @@ Description: Build natively multi-page 'Shiny' applications, serving
     Redirections, request and response middleware, and helpers to read and
     set cookies are also provided.
 License: MIT + file LICENSE
-URL: https://github.com/colinfay/brochure
-BugReports: https://github.com/colinfay/brochure/issues
+URL: https://github.com/colinfay/brochure, https://github.com/ColinFay/brochure
+BugReports: https://github.com/ColinFay/brochure/issues
 Imports:
     attempt (>= 0.3.1),
     htmltools,
