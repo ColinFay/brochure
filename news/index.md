@@ -205,6 +205,14 @@ keeping the current page in shared state.
   CRAN release, and [uuid](https://www.rforge.net/uuid) and
   [fastmap](https://r-lib.github.io/fastmap/) are no longer needed.
 
+- [`golem_hook()`](https://github.com/ColinFay/brochure/reference/golem_hook.md)
+  leaves a tested app: it writes a test for the page it creates, along
+  with the testthat structure to run it under `R CMD check`, and adds
+  brochure to the Imports of the app it hooks – the module template
+  calls
+  [`page()`](https://github.com/ColinFay/brochure/reference/page.md), so
+  nothing the hook wrote could be loaded or tested without it.
+
 - [`vignette("handlers")`](https://github.com/ColinFay/brochure/articles/handlers.md)
   and [`?page`](https://github.com/ColinFay/brochure/reference/page.md)
   say why a page on a method other than `GET` is unreachable when the
