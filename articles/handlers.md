@@ -169,6 +169,16 @@ What was posted is yours to read: the body is on the request, as
 `req$rook.input`, and brochure does not touch it. A request handler is
 the place for that, since it runs before the response is built.
 
+A `www/` directory at the root of your app breaks those pages, and
+brochure cannot do anything about it:
+[`runApp()`](https://rdrr.io/pkg/shiny/man/runApp.html) mounts that
+directory as an httpuv static path on `/`, and httpuv answers anything
+that is not a `GET` or a `HEAD` from there with a 400 before R ever sees
+the request. The request handler never runs. Serve those files under a
+prefix instead — `addResourcePath("assets", "assets")` and
+`href = "assets/site.css"` — which is what a
+[golem](https://thinkr-open.github.io/golem/) app already does.
+
 One thing to keep in mind: a page’s *session* is resolved on the path
 alone. The websocket handshake a browser opens is a `GET` whatever
 method the page was served on, so two pages declared at the same href

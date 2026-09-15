@@ -169,6 +169,22 @@ keeping the current page in shared state.
 - Formulas now work as app level handlers, as the README says they do;
   only page level handlers converted them.
 
+- `/reactlog` is served again. Every path brochure did not route got
+  `content_404`, and Shiny’s own handler for that endpoint comes after
+  the app’s in the chain, so `options(shiny.reactlog = TRUE)` and
+  Ctrl+F3 answered
+
+  404. 
+
+- Two pages carrying two
+  [`bslib::bs_theme()`](https://rstudio.github.io/bslib/reference/bs_theme.html)s
+  no longer fight over one url. Shiny builds a dependency’s url prefix
+  from its name and version, and both themes ship `bootstrap` at the
+  same version from two different compiled directories: the page
+  rendered last took the prefix, and the browser then styled pages with
+  whichever css it had cached under it. Each source directory now gets
+  its own prefix.
+
 ### Other
 
 - The script brochure injects now only registers the handler behind
@@ -188,6 +204,13 @@ keeping the current page in shared state.
 - The [routr](https://routr.data-imaginist.com) dependency is on the
   CRAN release, and [uuid](https://www.rforge.net/uuid) and
   [fastmap](https://r-lib.github.io/fastmap/) are no longer needed.
+
+- [`vignette("handlers")`](https://github.com/ColinFay/brochure/articles/handlers.md)
+  and [`?page`](https://github.com/ColinFay/brochure/reference/page.md)
+  say why a page on a method other than `GET` is unreachable when the
+  app has a `www/` directory at its root: Shiny mounts it as a static
+  path on `/`, and httpuv answers anything that is not a `GET` or a
+  `HEAD` from there with a 400 before R sees the request.
 
 - Seven vignettes and a pkgdown site.
   [`vignette("brochure")`](https://github.com/ColinFay/brochure/articles/brochure.md)

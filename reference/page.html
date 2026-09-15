@@ -86,7 +86,12 @@ app is independent.</p></dd>
 
 
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
-<dd><p>The HTTP method the page answers to. Defaults to <code>"GET"</code>.</p></dd>
+<dd><p>The HTTP method the page answers to. Defaults to <code>"GET"</code>. A
+page on another method is unreachable if the app has a <code>www/</code> directory at
+its root: Shiny mounts it as a static path on <code>/</code>, and httpuv answers
+anything that is not a <code>GET</code> or a <code>HEAD</code> from there with a 400 before R sees
+the request. Serve those files under a prefix instead, with
+<code><a href="https://rdrr.io/pkg/shiny/man/resourcePaths.html" class="external-link">shiny::addResourcePath()</a></code>.</p></dd>
 
 
 <dt id="arg-req-handlers">req_handlers<a class="anchor" aria-label="anchor" href="#arg-req-handlers"></a></dt>
@@ -156,7 +161,7 @@ first.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> function (input, output, session) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> {</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55a35712fbb0&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x561bb62ca250&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $method</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "get"</span>

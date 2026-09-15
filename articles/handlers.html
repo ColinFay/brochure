@@ -233,6 +233,15 @@ which is how a form post or a webhook gets a page of its own:</p>
 <code>req$rook.input</code>, and brochure does not touch it. A request
 handler is the place for that, since it runs before the response is
 built.</p>
+<p>A <code>www/</code> directory at the root of your app breaks those
+pages, and brochure cannot do anything about it: <code><a href="https://rdrr.io/pkg/shiny/man/runApp.html" class="external-link">runApp()</a></code>
+mounts that directory as an httpuv static path on <code>/</code>, and
+httpuv answers anything that is not a <code>GET</code> or a
+<code>HEAD</code> from there with a 400 before R ever sees the request.
+The request handler never runs. Serve those files under a prefix instead
+— <code>addResourcePath("assets", "assets")</code> and
+<code>href = "assets/site.css"</code> — which is what a
+<a href="https://thinkr-open.github.io/golem/" class="external-link">golem</a> app already does.</p>
 <p>One thing to keep in mind: a page’s <em>session</em> is resolved on
 the path alone. The websocket handshake a browser opens is a
 <code>GET</code> whatever method the page was served on, so two pages
