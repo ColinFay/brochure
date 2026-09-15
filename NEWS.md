@@ -58,6 +58,19 @@ from keeping the current page in shared state.
   mount that directory is not `/`, so the documented login/logout pattern
   silently failed on Posit Connect. It now takes `path` and `domain`.
 
+* `set_cookie()` checks `max_age`, the one part still interpolated into the
+  header unexamined: `max_age = "0\r\nX-Injected: 1"` appended a header of its
+  own.
+
+* `server_redirect()` refuses a protocol relative target written with
+  backslashes. A URL parser reads `\` as `/`, so `"\\host"` and `"/\host"`
+  left the app exactly as `"//host"` did.
+
+* Mount rewriting only touches real attributes, and covers form `action`. It
+  matched anywhere in the response, so page text or inline javascript holding
+  `src="logo.png"` was rewritten too; and a form posting to `/submit` under a
+  mount went to the domain root.
+
 * `redirect()` did not check `to`, which goes straight into a `Location`
   header: a CRLF in it appended a header of its own. It is now held to the same
   rule as `server_redirect()`.

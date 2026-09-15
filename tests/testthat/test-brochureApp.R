@@ -251,3 +251,24 @@ test_that("resource urls go under the mount, navigation links keep their shape",
   expect_match(content, 'href="https://example.com"', fixed = TRUE)
   expect_match(content, 'src="https://example.com/x.png"', fixed = TRUE)
 })
+
+test_that("only real attributes are rewritten, forms included", {
+  app <- brochureApp(
+    page(href = "/", ui = shiny::tagList(
+      shiny::tags$p('src="logo.png"'),
+      shiny::tags$script('var a = \'src="inline.png"\';'),
+      shiny::tags$img(src = "real.png"),
+      shiny::tags$form(action = "/submit", method = "post")
+    )),
+    basepath = "myapp"
+  )
+  content <- app$httpHandler(mock_req("/myapp/"))$content
+
+  # Page text and inline script keep what their author wrote
+  expect_match(content, 'src="logo.png"', fixed = TRUE)
+  expect_match(content, 'src="inline.png"', fixed = TRUE)
+  # A real attribute still goes under the mount
+  expect_match(content, 'src="/myapp/real.png"', fixed = TRUE)
+  # A form posts inside the app rather than at the domain root
+  expect_match(content, 'action="/myapp/submit"', fixed = TRUE)
+})

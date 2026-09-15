@@ -3,17 +3,21 @@
 # app. Paths and http(s) URLs only. The browser handler applies the same rule,
 # since a custom message can also be sent from elsewhere.
 #
-# Whitespace and control characters are refused outright rather than trimmed:
+# Backslashes are read as slashes by a URL parser, and whitespace and control
+# characters are refused outright rather than trimmed:
 # a browser drops tabs, newlines and carriage returns anywhere in a url and
 # ignores leading spaces, so " javascript:alert(1)" and "java\nscript:" both
 # reach the parser as "javascript:" while reading, to a regular expression,
 # like something with no scheme at all.
 check_redirect_to <- function(to) {
   has_scheme <- grepl("^[a-zA-Z][a-zA-Z0-9+.-]*:", to)
+  # A URL parser reads a backslash as a slash, so "\\\\host" and "/\\host" are
+  # protocol relative too, and would leave the app just as "//host" does.
+  slashed <- gsub("\\\\", "/", to)
   attempt::stop_if_not(
     length(to) == 1 &&
       !grepl("[[:space:][:cntrl:]]", to) &&
-      !grepl("^//", to) &&
+      !grepl("^//", slashed) &&
       (!has_scheme || grepl("^https?:", to, ignore.case = TRUE)),
     isTRUE,
     "`to` must be a path or an http(s) URL, with no whitespace."

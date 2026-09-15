@@ -111,7 +111,8 @@ run_res_handlers <- function(res, req, handlers) {
 # `server_redirect()` (this replaces the old inst/redirect.js), prefixing
 # internal targets with the mount so a redirect to "/page2" works under a
 # proxy, and dropping any target that is neither a path nor an http(s) url, or
-# that carries whitespace or a control character -- a browser strips those out
+# that is protocol relative with either slash, or carries whitespace or a
+# control character -- a browser strips those out
 # of a url, which would turn "java\nscript:" back into a scheme it executes.
 #
 # It used to also promote the page's <base> to an absolute url, on the premise
@@ -122,7 +123,7 @@ run_res_handlers <- function(res, req, handlers) {
 # from the response, a deep page kept the same websocket url, the same rendered
 # output and no failed request. Connect ships its own <base> script, and
 # brochure already rewrites resource urls absolute server-side.
-brochure_client_js <- '(function(){var mount="%s";function reg(){if(window.Shiny&&Shiny.addCustomMessageHandler){Shiny.addCustomMessageHandler("redirect",function(to){if(typeof to!=="string"||!to||/[\\s\\u0000-\\u001f\\u007f]/.test(to)||/^\\/\\//.test(to))return;var sch=to.match(/^[a-zA-Z][a-zA-Z0-9+.-]*:/);if(sch&&!/^https?:$/i.test(sch[0]))return;if(!sch&&to.charAt(0)==="/"){to=mount+to;}window.location.href=to;});}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",reg);}else{reg();}})();/*__brochure_client__*/'
+brochure_client_js <- '(function(){var mount="%s";function reg(){if(window.Shiny&&Shiny.addCustomMessageHandler){Shiny.addCustomMessageHandler("redirect",function(to){if(typeof to!=="string"||!to||/[\\s\\u0000-\\u001f\\u007f]/.test(to)||/^[\\/\\\\]{2}/.test(to))return;var sch=to.match(/^[a-zA-Z][a-zA-Z0-9+.-]*:/);if(sch&&!/^https?:$/i.test(sch[0]))return;if(!sch&&to.charAt(0)==="/"){to=mount+to;}window.location.href=to;});}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",reg);}else{reg();}})();/*__brochure_client__*/'
 #' Create a brochureApp
 #'
 #' This function is to be used in place of `shinyApp()`. It takes a series of
@@ -422,29 +423,41 @@ brochureApp <- function(
       !is.null(res$content) &&
         !grepl("__brochure_client__", res$content, fixed = TRUE)
     ) {
-      # Resource urls have to end up under the mount whether they were written
-      # relative ("shiny.min.js", which a deep page would resolve against its
-      # own directory) or root absolute ("/img.png", which under a mount points
-      # outside the app). `src` on any tag, `href` on a <link>.
+      # Every pattern below anchors on an opening tag with no `>` in between,
+      # so it only ever matches a real attribute -- page text or inline script
+      # happening to contain `src="..."` is left alone.
+      #
+      # Resource urls go under the mount whether they were written relative
+      # ("shiny.min.js", which a deep page resolves against its own directory)
+      # or root absolute ("/img.png", which under a mount points outside the
+      # app). `src` on any tag, `href` on a <link>.
       res$content <- gsub(
-        '\\bsrc="(?![a-zA-Z][a-zA-Z0-9+.-]*:|//|#|\\?)/?',
-        paste0('src="', mount, "/"),
-        res$content,
-        perl = TRUE
-      )
-      res$content <- gsub(
-        '(<link\\b[^>]*?\\shref=")(?![a-zA-Z][a-zA-Z0-9+.-]*:|//|#|\\?)/?',
+        '(<[a-zA-Z][^<>]*?\\ssrc=")(?![a-zA-Z][a-zA-Z0-9+.-]*:|//|#|\\?)/?',
         paste0("\\1", mount, "/"),
         res$content,
         perl = TRUE
       )
-      # A navigation link is different: only a root absolute one needs the
+      res$content <- gsub(
+        '(<link\\b[^<>]*?\\shref=")(?![a-zA-Z][a-zA-Z0-9+.-]*:|//|#|\\?)/?',
+        paste0("\\1", mount, "/"),
+        res$content,
+        perl = TRUE
+      )
+      # A navigation target is different: only a root absolute one needs the
       # mount. A relative <a href="contact"> is left as written -- the browser
       # resolves it against the current page, which is already inside the
-      # mount, and rewriting it would move where the author pointed it.
+      # mount, and rewriting it would move where the author pointed it. A form
+      # `action` is a navigation target too, and posts to the domain root
+      # without this.
       if (nzchar(mount)) {
         res$content <- gsub(
-          '(<a\\b[^>]*?\\shref=")/(?!/)',
+          '(<a\\b[^<>]*?\\shref=")/(?!/)',
+          paste0("\\1", mount, "/"),
+          res$content,
+          perl = TRUE
+        )
+        res$content <- gsub(
+          '(<[a-zA-Z][^<>]*?\\s(?:form)?action=")/(?!/)',
           paste0("\\1", mount, "/"),
           res$content,
           perl = TRUE

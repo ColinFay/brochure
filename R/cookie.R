@@ -54,6 +54,18 @@ cookie_value_ok <- function(x) {
     !any(strsplit(x, "")[[1]] %in% c(",", ";", "\\", "\""))
 }
 
+# Max-Age is a number of seconds, and it is interpolated into the header like
+# everything else, so a string gets the same scrutiny as a cookie value.
+check_max_age <- function(max_age) {
+  seconds <- suppressWarnings(as.integer(max_age))
+  attempt::stop_if_not(
+    length(max_age) == 1 && !is.na(seconds),
+    isTRUE,
+    "`max_age` must be a number of seconds."
+  )
+  seconds
+}
+
 check_cookie_part <- function(x, arg, ok) {
   attempt::stop_if_not(
     length(x) == 1 && ok(x),
@@ -154,7 +166,7 @@ set_cookie <- function(
     cook <- sprintf(
       "%s Max-Age = %s;",
       cook,
-      max_age
+      check_max_age(max_age)
     )
   }
 

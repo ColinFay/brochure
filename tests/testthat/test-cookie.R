@@ -226,3 +226,15 @@ test_that("remove_cookie can repeat the path and domain of the cookie it deletes
   expect_error(remove_cookie(res, "this", path = "/x; HttpOnly"))
   expect_error(remove_cookie(res, "this", domain = "x; HttpOnly"))
 })
+
+test_that("max_age is a number of seconds, not free text", {
+  res <- shiny::httpResponse()
+
+  expect_match(set_cookie(res, "a", 1, max_age = 0)$headers$`Set-Cookie`, "Max-Age = 0;")
+  expect_match(set_cookie(res, "a", 1, max_age = "60")$headers$`Set-Cookie`, "Max-Age = 60;")
+
+  # It lands in the header like everything else, so it cannot carry a CRLF
+  expect_error(set_cookie(res, "a", 1, max_age = paste0("0", "\r\n", "X: 1")))
+  expect_error(set_cookie(res, "a", 1, max_age = "soon"))
+  expect_error(set_cookie(res, "a", 1, max_age = c(1, 2)))
+})

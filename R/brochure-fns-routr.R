@@ -23,7 +23,10 @@
 #' A trailing slash never matters: `/contact` and `/contact/` are the same page.
 #'
 #' Pages are tried in the order you passed them to [brochureApp()], and the
-#' first match wins. That matters when two hrefs can match the same url:
+#' first match wins. That holds for the session a page opens as well, which is
+#' resolved on the path alone: the websocket handshake is a `GET` whatever
+#' `method` the page answers on, so two pages sharing an href run the server of
+#' the first one declared, whichever of them was served. That matters when two hrefs can match the same url:
 #' declared as `page("/who/me")` then `page("/who/:id")`, a request for
 #' `/who/me` gets the first; declared the other way round, the parameterised
 #' page catches it and the static one is never reached. Put the specific ones

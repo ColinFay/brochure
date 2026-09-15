@@ -76,3 +76,13 @@ test_that("strip_basepath only drops a whole segment", {
   expect_equal(strip_basepath("/page2", "/brochure"), "/page2")
   expect_equal(strip_basepath("/page2", ""), "/page2")
 })
+
+test_that("server_redirect refuses a protocol relative target written with backslashes", {
+  # A URL parser reads "\" as "/", so each of these leaves the app
+  expect_error(check_redirect_to("\\\\evil.example"))
+  expect_error(check_redirect_to("/\\evil.example"))
+  expect_error(check_redirect_to("\\/evil.example"))
+
+  # A single leading backslash resolves to a path on the same origin
+  expect_equal(check_redirect_to("\\page2"), "\\page2")
+})
