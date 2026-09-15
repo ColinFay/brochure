@@ -44,7 +44,13 @@ const load = async (path) => {
   const uiKey = (await page.locator('#ui_key').count())
     ? await page.locator('#ui_key').textContent()
     : null;
-  return { page, probe, bad, extra, uiKey };
+  // Shiny renders a failed output into the page rather than the console, so
+  // nothing above would notice it
+  const shinyError = await page.evaluate(() => {
+    const e = document.querySelector('.shiny-output-error');
+    return e ? e.textContent.trim() : null;
+  });
+  return { page, probe, bad, extra, uiKey, shinyError };
 };
 
 console.log(`\n--- ${BASE}\n`);
@@ -62,6 +68,7 @@ for (const [path, marker] of [
   ok(`${path} runs its own server`, r.probe.server === marker, `got ${r.probe.server}`);
   ok(`${path} loads every asset`, r.bad.length === 0, r.bad.join(', '));
   ok(`${path} gets the injected extra content`, r.extra === true);
+  ok(`${path} renders every output`, r.shinyError === null, r.shinyError);
   await r.page.close();
 }
 

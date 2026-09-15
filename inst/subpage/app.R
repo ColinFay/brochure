@@ -29,7 +29,8 @@ probe_ui <- function() {
     # relative resource urls are not rewritten.
     textInput("dummy", "input", ""),
     tags$pre(id = "probe", textOutput("probe", container = tags$code)),
-    plotOutput("plot", height = "120px")
+    # Shiny's default height: a scatterplot matrix does not fit in less
+    plotOutput("plot")
   )
 }
 
