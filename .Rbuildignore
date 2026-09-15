@@ -5,5 +5,14 @@
 ^LICENSE\.md$
 ^\.github$
 ^dev$
+^inst/rsconnect$
+^inst/cache$
+^inst/complex\.R$
 ^\.here$
-^README\.html$
+^tests/playwright$
+^\.claude$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^doc$
+^Meta$

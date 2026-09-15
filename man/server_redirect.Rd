@@ -7,10 +7,31 @@
 server_redirect(to, session = shiny::getDefaultReactiveDomain())
 }
 \arguments{
-\item{to}{the destination of the redirection}
+\item{to}{the destination of the redirection: a path (\code{"/page2"}) or an
+\code{http(s)} URL. Other schemes are rejected.}
 
 \item{session}{shiny session object, default is \code{shiny::getDefaultReactiveDomain()}}
 }
+\value{
+Used for side effect
+}
 \description{
 Do a server side redirection
+}
+\examples{
+library(shiny)
+
+# `server_redirect()` is called from a page server, so it needs a session:
+page(
+  href = "/login",
+  ui = tagList(actionButton("go", "Take me home")),
+  server = function(input, output, session) {
+    observeEvent(input$go, {
+      server_redirect("/")
+    })
+  }
+)
+}
+\seealso{
+\code{\link[=redirect]{redirect()}} to answer an url with an HTTP redirection instead.
 }

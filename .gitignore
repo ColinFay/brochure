@@ -3,3 +3,10 @@
 .RData
 inst/cache/
 README.html
+dev/.posit/
+
+/doc/
+/Meta/
+inst/doc/
+rsconnect/
+docs/

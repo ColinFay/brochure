@@ -25,9 +25,10 @@ test_that("set_cookie works", {
   cook <- parse_cookie_string(
     output$headers$`Set-Cookie`
   )
+  # HttpOnly and SameSite = Lax are the defaults
   expect_equal(
     cook,
-    c(this = "12")
+    c(this = "12", HttpOnly = NA, SameSite = "Lax")
   )
 
   output <- set_cookie(
@@ -179,4 +180,61 @@ test_that("set_cookie works", {
       same_site = "gouigoui"
     )
   )
+})
+
+test_that("set_cookie rejects characters that would break out of the header", {
+  res <- shiny::httpResponse()
+  expect_error(
+    set_cookie(res, "sess", "abc\r\nSet-Cookie: admin=1")
+  )
+  expect_error(
+    set_cookie(res, "sess", "abc; HttpOnly")
+  )
+  expect_error(
+    set_cookie(res, "a name", 12)
+  )
+  expect_error(
+    set_cookie(res, "na=me", 12)
+  )
+  expect_error(
+    set_cookie(res, "sess", 12, domain = "x; HttpOnly")
+  )
+  expect_error(
+    set_cookie(res, "sess", 12, path = "/x; HttpOnly")
+  )
+  expect_error(
+    remove_cookie(res, "a\r\nX-Injected: 1")
+  )
+})
+
+test_that("remove_cookie can repeat the path and domain of the cookie it deletes", {
+  res <- shiny::httpResponse()
+
+  expect_equal(
+    remove_cookie(res, "this")$headers$`Set-Cookie`,
+    "this=; Max-Age=0;"
+  )
+  expect_equal(
+    remove_cookie(res, "this", path = "/")$headers$`Set-Cookie`,
+    "this=; Max-Age=0; Path = /;"
+  )
+  expect_equal(
+    remove_cookie(res, "this", path = "/sub", domain = "example.com")$headers$`Set-Cookie`,
+    "this=; Max-Age=0; Domain = example.com; Path = /sub;"
+  )
+
+  expect_error(remove_cookie(res, "this", path = "/x; HttpOnly"))
+  expect_error(remove_cookie(res, "this", domain = "x; HttpOnly"))
+})
+
+test_that("max_age is a number of seconds, not free text", {
+  res <- shiny::httpResponse()
+
+  expect_match(set_cookie(res, "a", 1, max_age = 0)$headers$`Set-Cookie`, "Max-Age = 0;")
+  expect_match(set_cookie(res, "a", 1, max_age = "60")$headers$`Set-Cookie`, "Max-Age = 60;")
+
+  # It lands in the header like everything else, so it cannot carry a CRLF
+  expect_error(set_cookie(res, "a", 1, max_age = paste0("0", "\r\n", "X: 1")))
+  expect_error(set_cookie(res, "a", 1, max_age = "soon"))
+  expect_error(set_cookie(res, "a", 1, max_age = c(1, 2)))
 })
