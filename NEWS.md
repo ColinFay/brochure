@@ -58,6 +58,14 @@ from keeping the current page in shared state.
   mount that directory is not `/`, so the documented login/logout pattern
   silently failed on Posit Connect. It now takes `path` and `domain`.
 
+* A page declared with a method other than `GET` can serve its document.
+  Shiny's UI handler answers `GET` alone unless the ui says otherwise, so such
+  a page returned nothing unless a request handler answered for it.
+
+* `server_redirect()` and `redirect()` refuse an empty target, which is neither
+  a path nor a url: the browser dropped it silently, and the HTTP redirect
+  emitted an empty `Location`.
+
 * `set_cookie()` checks `max_age`, the one part still interpolated into the
   header unexamined: `max_age = "0\r\nX-Injected: 1"` appended a header of its
   own.

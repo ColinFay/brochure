@@ -136,10 +136,10 @@ test_that("relative resource URLs are made absolute", {
 test_that("the client bootstrap is injected once", {
   app <- brochureApp(page(href = "/", ui = shiny::tagList()))
   content <- app$httpHandler(mock_req("/"))$content
-  expect_equal(
-    length(gregexpr("__brochure_client__", content, fixed = TRUE)[[1]]),
-    1
-  )
+  # gregexpr() answers -1, a vector of length one, when it matches nothing, so
+  # count the positions it actually found
+  found <- gregexpr("__brochure_client__", content, fixed = TRUE)[[1]]
+  expect_equal(sum(found > 0), 1)
 })
 
 test_that("a bare list of pages is spliced", {
@@ -250,6 +250,20 @@ test_that("resource urls go under the mount, navigation links keep their shape",
   # Nothing pointing elsewhere is touched
   expect_match(content, 'href="https://example.com"', fixed = TRUE)
   expect_match(content, 'src="https://example.com/x.png"', fixed = TRUE)
+})
+
+test_that("a page answering on POST serves its document", {
+  app <- brochureApp(
+    page(href = "/form", method = "POST", ui = shiny::tagList(shiny::h1("posted"))),
+    page(href = "/", ui = shiny::tagList(shiny::h1("home")))
+  )
+
+  res <- app$httpHandler(mock_req("/form", "POST"))
+  expect_equal(res$status, 200)
+  expect_match(res$content, "posted")
+
+  # The method still selects the page: a GET on it matches nothing
+  expect_equal(app$httpHandler(mock_req("/form"))$status, 404)
 })
 
 test_that("only real attributes are rewritten, forms included", {

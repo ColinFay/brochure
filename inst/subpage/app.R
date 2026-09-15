@@ -38,7 +38,11 @@ probe_ui <- function() {
 # shape is the same whether there are zero, one or several.
 cookies_as_object <- function() {
   cookies <- parse_cookie_string(get_cookies())
-  cookies <- cookies[nzchar(names(cookies) %||% "")]
+  named <- names(cookies)
+  if (is.null(named)) {
+    return(list())
+  }
+  cookies <- cookies[nzchar(named)]
   as.list(cookies)
 }
 

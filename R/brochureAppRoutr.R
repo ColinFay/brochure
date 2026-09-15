@@ -349,6 +349,17 @@ brochureApp <- function(
       )
     )
   }
+  # Shiny's UI handler answers GET and nothing else unless the ui declares
+  # otherwise, so a page served on another method would never get its document.
+  attr(ui, "http_methods_supported") <- unique(
+    c(
+      "GET",
+      toupper(
+        vapply(pages, function(page) page$method, character(1))
+      )
+    )
+  )
+
   server = function(
     input,
     output,

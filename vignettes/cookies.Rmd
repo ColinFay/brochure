@@ -36,7 +36,11 @@ page(
 ```
 
 `set_cookie()` defaults to `http_only = TRUE` and `same_site = "Lax"`, so the
-cookie is not readable from javascript and is not sent on cross-site requests.
+cookie is not readable from javascript, and is kept off cross-site subrequests
+— an image, a form post, a fetch from another site. `"Lax"` is not total
+isolation: the cookie still travels when someone follows a link to your app
+from elsewhere, which is what makes it usable for a session at all. Use
+`same_site = "Strict"` if even that is too much.
 Pass `secure = TRUE` in production, where the app is served over https.
 
 Names and values are checked against the character set cookies allow. A value

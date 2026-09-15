@@ -16,6 +16,7 @@ check_redirect_to <- function(to) {
   slashed <- gsub("\\\\", "/", to)
   attempt::stop_if_not(
     length(to) == 1 &&
+      nzchar(to) &&
       !grepl("[[:space:][:cntrl:]]", to) &&
       !grepl("^//", slashed) &&
       (!has_scheme || grepl("^https?:", to, ignore.case = TRUE)),
