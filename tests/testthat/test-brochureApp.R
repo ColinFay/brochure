@@ -300,3 +300,39 @@ test_that("single quoted attributes are rewritten too", {
   expect_match(content, "href='/myapp/contact'", fixed = TRUE)
   expect_match(content, "action='/myapp/submit'", fixed = TRUE)
 })
+
+test_that("basepath has to be a plain url path", {
+  # It is interpolated into urls and into a javascript string literal
+  expect_error(brochureApp(page(href = "/", ui = shiny::tagList()), basepath = 'a";alert(1);var x="'))
+  expect_error(brochureApp(page(href = "/", ui = shiny::tagList()), basepath = "a b"))
+  expect_error(brochureApp(page(href = "/", ui = shiny::tagList()), basepath = "a<b"))
+
+  expect_s3_class(
+    brochureApp(page(href = "/", ui = shiny::tagList()), basepath = "team/myapp"),
+    "shiny.appobj"
+  )
+})
+
+test_that("rewriting is blind to capitalisation", {
+  # Tag and attribute names are case insensitive
+  app <- brochureApp(
+    page(href = "/", ui = shiny::tagList(
+      shiny::HTML('<IMG SRC="logo.png"><A HREF="/contact">x</A>')
+    )),
+    basepath = "myapp"
+  )
+  content <- app$httpHandler(mock_req("/myapp/"))$content
+
+  expect_match(content, 'SRC="/myapp/logo.png"', fixed = TRUE)
+  expect_match(content, 'HREF="/myapp/contact"', fixed = TRUE)
+})
+
+test_that("only statuses a browser follows are accepted as redirect codes", {
+  for (code in c(301, 302, 303, 307, 308)) {
+    expect_s3_class(redirect(from = "/a", to = "/b", code = code), "redirect")
+  }
+  # 304 revalidates a cache, 305 is deprecated, 306 and 310 were never assigned
+  for (code in c(304, 305, 306, 310, 200, 404)) {
+    expect_error(redirect(from = "/a", to = "/b", code = code))
+  }
+})

@@ -58,6 +58,16 @@ from keeping the current page in shared state.
   mount that directory is not `/`, so the documented login/logout pattern
   silently failed on Posit Connect. It now takes `path` and `domain`.
 
+* `redirect()` accepts only the statuses a browser follows: 301, 302, 303, 307
+  and 308. The allow-list read `c(301:308, 310)`, which admitted 304, 305, 306
+  and 310 — none of which make a browser follow a `Location`.
+
+* `basepath` has to be a plain url path. It is interpolated into urls and into
+  the injected javascript, where a quote in it closed the string literal.
+
+* Mount rewriting is blind to capitalisation, so `<IMG SRC="logo.png">` is
+  rewritten like its lowercase equivalent.
+
 * An explicit `basepath` now decides the mount even on Posit Connect. The
   header used to win, so an app that set `basepath` to pin the behaviour was
   stripping the incoming path with one mount and writing its urls with another.

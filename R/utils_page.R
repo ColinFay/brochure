@@ -6,22 +6,17 @@ with_class <- function(res, pop_class) {
   res
 }
 
+# 304 revalidates a cache, 305 is deprecated, 306 and 310 were never assigned:
+# none of them make a browser follow a Location.
+redirect_codes <- c(301, 302, 303, 307, 308)
+
 check_redirect_code <- function(code) {
-  attempt::stop_if(
+  attempt::stop_if_not(
     code,
-    ~ !.x %in% c(
-      301:308,
-      310
-    ),
+    ~ length(.x) == 1 && .x %in% redirect_codes,
     sprintf(
       "Redirect code should be one of %s.",
-      paste(
-        c(
-          301:308,
-          310
-        ),
-        collapse = " "
-      )
+      paste(redirect_codes, collapse = " ")
     )
   )
 }

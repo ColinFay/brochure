@@ -1,11 +1,17 @@
-# "brochure", "/brochure/" and "/brochure" all mean the same mount.
+# "brochure", "/brochure/" and "/brochure" all mean the same mount. The result
+# is interpolated into urls and into a javascript string literal, so it is held
+# to a plain path -- the same shape the Connect header is held to.
 normalize_basepath <- function(basepath) {
   bp <- gsub("^/+|/+$", "", basepath)
-  if (nzchar(bp)) {
-    paste0("/", bp)
-  } else {
-    ""
+  if (!nzchar(bp)) {
+    return("")
   }
+  attempt::stop_if_not(
+    length(bp) == 1 && grepl("^[A-Za-z0-9/_-]+$", bp),
+    isTRUE,
+    "`basepath` must be a plain url path."
+  )
+  paste0("/", bp)
 }
 
 # Some reverse proxies strip the mount before forwarding (Posit Connect does),
@@ -445,7 +451,8 @@ brochureApp <- function(
       # Every pattern below anchors on an opening tag with no `>` in between,
       # so it only ever matches a real attribute -- page text or inline script
       # happening to contain `src="..."` is left alone. Both quote styles are
-      # matched: `HTML("<img src='logo.png'>")` is as valid as the other.
+      # matched, and so is any capitalisation: tag and attribute names are
+      # case insensitive, so `<IMG SRC="logo.png">` is as valid as the other.
       #
       # Resource urls go under the mount whether they were written relative
       # ("shiny.min.js", which a deep page resolves against its own directory)
@@ -455,13 +462,15 @@ brochureApp <- function(
         '(<[a-zA-Z][^<>]*?\\ssrc=["\'])(?![a-zA-Z][a-zA-Z0-9+.-]*:|//|#|\\?)/?',
         paste0("\\1", mount, "/"),
         res$content,
-        perl = TRUE
+        perl = TRUE,
+        ignore.case = TRUE
       )
       res$content <- gsub(
         '(<link\\b[^<>]*?\\shref=["\'])(?![a-zA-Z][a-zA-Z0-9+.-]*:|//|#|\\?)/?',
         paste0("\\1", mount, "/"),
         res$content,
-        perl = TRUE
+        perl = TRUE,
+        ignore.case = TRUE
       )
       # A navigation target is different: only a root absolute one needs the
       # mount. A relative <a href="contact"> is left as written -- the browser
@@ -474,13 +483,15 @@ brochureApp <- function(
           '(<a\\b[^<>]*?\\shref=["\'])/(?!/)',
           paste0("\\1", mount, "/"),
           res$content,
-          perl = TRUE
+          perl = TRUE,
+          ignore.case = TRUE
         )
         res$content <- gsub(
           '(<[a-zA-Z][^<>]*?\\s(?:form)?action=["\'])/(?!/)',
           paste0("\\1", mount, "/"),
           res$content,
-          perl = TRUE
+          perl = TRUE,
+          ignore.case = TRUE
         )
       }
       m <- regexpr("<head>", res$content, ignore.case = TRUE)

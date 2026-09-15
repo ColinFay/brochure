@@ -11,7 +11,7 @@ redirect(from, to, code = 301, method = "GET")
 
 \item{to}{the url to redirect to}
 
-\item{code}{redirecting http code (one of \code{c(301:308, 310)})}
+\item{code}{redirecting http code, one of 301, 302, 303, 307 or 308}
 
 \item{method}{The HTTP method the redirection answers to.
 Defaults to \code{"GET"}.}
