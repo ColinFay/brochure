@@ -65,6 +65,30 @@ golem_hook <- function(
     "tests/testthat.R"
   )
 
+  # `golem::use_recommended_tests()` writes a file testing `app_ui()` and
+  # `app_server()`, which this hook has just deleted -- and it errors rather
+  # than overwrite one that is already there. The brochure version goes in now,
+  # and the call in `dev/01_start.R` with it.
+  file.copy(
+    system.file(
+      "golem/test-golem-recommended.R",
+      package = "brochure"
+    ),
+    "tests/testthat/test-golem-recommended.R"
+  )
+  start_R <- readLines("dev/01_start.R")
+  start_R[
+    which(
+      grepl(
+        "golem::use_recommended_tests()",
+        start_R,
+        fixed = TRUE
+      )
+    )
+  ] <- "# brochure::golem_hook() already wrote tests/testthat/test-golem-recommended.R"
+  unlink("dev/01_start.R")
+  write(start_R, "dev/01_start.R")
+
   # The module template calls `page()`, so the app depends on brochure. Written
   # by hand rather than with `usethis::use_package()`: brochure does not depend
   # on usethis, and this hook runs before anything is installed.

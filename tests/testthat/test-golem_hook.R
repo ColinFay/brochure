@@ -35,6 +35,21 @@ test_that("golem_hook works", {
     file.exists("tests/testthat/test-mod_home.R")
   )
 
+  # The golem recommended tests test `app_ui()` and `app_server()`, which the
+  # hook deletes, and `use_recommended_tests()` errors on an existing file.
+  expect_true(
+    file.exists("tests/testthat/test-golem-recommended.R")
+  )
+  expect_false(
+    any(
+      grepl(
+        "golem::use_recommended_tests()",
+        readLines("dev/01_start.R"),
+        fixed = TRUE
+      )
+    )
+  )
+
   expect_equal(
     readLines("tests/testthat.R"),
     c(

@@ -171,6 +171,12 @@ from keeping the current page in shared state.
   brochure to the Imports of the app it hooks -- the module template calls
   `page()`, so nothing the hook wrote could be loaded or tested without it.
 
+* The golem recommended tests come in a brochure version, and
+  `golem::use_recommended_tests()` is taken out of `dev/01_start.R`. The ones
+  golem writes drive `app_ui()` and `app_server()`, which the hook deletes: a
+  freshly created app failed its own test suite. What replaces them is the app
+  object and the page it serves on `/`.
+
 * `vignette("design")` says how a brochure app behaves with several visitors
   at once: a session is one visitor on one page, they all share one R process,
   and a page that blocks holds up every other page.
