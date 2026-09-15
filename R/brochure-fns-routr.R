@@ -5,7 +5,12 @@
 #'
 #' @param href The endpoint to serve the UI on. It can carry parameters, as in
 #' `"/who/:id"`, which are read back with [get_keys()]. See details.
-#' @param method The HTTP method the page answers to. Defaults to `"GET"`.
+#' @param method The HTTP method the page answers to. Defaults to `"GET"`. A
+#' page on another method is unreachable if the app has a `www/` directory at
+#' its root: Shiny mounts it as a static path on `/`, and httpuv answers
+#' anything that is not a `GET` or a `HEAD` from there with a 400 before R sees
+#' the request. Serve those files under a prefix instead, with
+#' [shiny::addResourcePath()].
 #' @inheritParams brochureApp
 #' @inheritParams shiny::shinyApp
 #'

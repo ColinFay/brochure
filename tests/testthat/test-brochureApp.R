@@ -24,6 +24,16 @@ test_that("an unmatched path gets the 404 content", {
   expect_equal(res$content, "Nothing here")
 })
 
+test_that("a reactlog url is left to Shiny's own handler", {
+  app <- brochureApp(
+    page(href = "/", ui = shiny::tagList()),
+    content_404 = "Nothing here"
+  )
+
+  expect_null(app$httpHandler(mock_req("/reactlog")))
+  expect_null(app$httpHandler(mock_req("/reactlog/mark")))
+})
+
 test_that("a redirect answers with its code and Location", {
   app <- brochureApp(
     page(href = "/", ui = shiny::tagList()),
@@ -354,4 +364,38 @@ test_that("declaration order decides between a page and a redirect too", {
   res <- page_first$httpHandler(mock_req("/x"))
   expect_equal(res$status, 200)
   expect_match(res$content, "page")
+})
+
+test_that("two pages carrying one dependency name from two sources get two urls", {
+  src_one <- withr::local_tempdir()
+  src_two <- withr::local_tempdir()
+  writeLines("a{}", file.path(src_one, "t.css"))
+  writeLines("b{}", file.path(src_two, "t.css"))
+
+  themed <- function(src, title) {
+    htmltools::attachDependencies(
+      shiny::tagList(shiny::h1(title)),
+      htmltools::htmlDependency(
+        "theme",
+        "1.0",
+        src = c(file = src),
+        stylesheet = "t.css"
+      )
+    )
+  }
+
+  app <- brochureApp(
+    page(href = "/", ui = themed(src_one, "one")),
+    page(href = "/two", ui = themed(src_two, "two"))
+  )
+
+  res <- app$httpHandler(mock_req("/"))
+  expect_match(res$content, "/theme-1.0/t.css", fixed = TRUE)
+
+  res <- app$httpHandler(mock_req("/two"))
+  expect_match(res$content, "/theme-1.0.2/t.css", fixed = TRUE)
+
+  # The url of a page does not move when another page is rendered after it.
+  res <- app$httpHandler(mock_req("/"))
+  expect_match(res$content, "/theme-1.0/t.css", fixed = TRUE)
 })

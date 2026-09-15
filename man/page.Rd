@@ -28,7 +28,12 @@ a single argument function that returns the UI definition.}
 \code{session}. The function is called once for each session ensuring that each
 app is independent.}
 
-\item{method}{The HTTP method the page answers to. Defaults to \code{"GET"}.}
+\item{method}{The HTTP method the page answers to. Defaults to \code{"GET"}. A
+page on another method is unreachable if the app has a \verb{www/} directory at
+its root: Shiny mounts it as a static path on \code{/}, and httpuv answers
+anything that is not a \code{GET} or a \code{HEAD} from there with a 400 before R sees
+the request. Serve those files under a prefix instead, with
+\code{\link[shiny:addResourcePath]{shiny::addResourcePath()}}.}
 
 \item{req_handlers}{a list of functions that can manipulate the \code{req} object.
 These functions should take \code{req} as a parameters, and return the \code{req} object

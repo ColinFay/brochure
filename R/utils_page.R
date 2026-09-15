@@ -83,3 +83,43 @@ extract <- function(content, class) {
     logical(1)
   )
 }
+
+# Shiny turns the name and version of an html dependency into its url prefix,
+# and the last `addResourcePath()` for a prefix wins. Two pages carrying two
+# `bslib::bs_theme()`s both ship a dependency named "bootstrap" at the same
+# version, pointing at two different compiled directories: they share one url,
+# and the browser serves whichever css it has cached under it. Bumping the
+# version of every source directory but the first gives each one its own
+# prefix. `resolveDependencies()` keeps the highest version of a name, so the
+# copy returned here is the one rendered.
+unclash_dep <- function(dep, seen) {
+  if (is.null(dep$src$file)) {
+    return(NULL)
+  }
+  prefix <- paste0(dep$name, "-", dep$version)
+  files <- seen[[prefix]]
+  index <- match(dep$src$file, files)
+  if (is.na(index)) {
+    index <- length(files) + 1L
+    seen[[prefix]] <- c(files, dep$src$file)
+  }
+  if (index == 1L) {
+    return(NULL)
+  }
+  dep$version <- paste0(dep$version, ".", index)
+  dep
+}
+
+unclash_deps <- function(ui, seen) {
+  extra <- purrr::compact(
+    lapply(
+      htmltools::findDependencies(ui),
+      unclash_dep,
+      seen = seen
+    )
+  )
+  if (!length(extra)) {
+    return(ui)
+  }
+  htmltools::attachDependencies(ui, extra, append = TRUE)
+}

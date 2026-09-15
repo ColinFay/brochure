@@ -227,6 +227,9 @@ brochureApp <- function(
   wrapped = shiny::tagList
 ) {
   brochure_routes <- RouteStack$new()
+  # Source directories already seen behind a dependency url prefix, so that two
+  # pages never share one. See `unclash_deps()`.
+  dep_prefixes <- new.env(parent = emptyenv())
   # The websocket handshake is always a GET, whatever method the page itself
   # answers on, so a session is resolved against a stack keyed by path alone.
   session_routes <- RouteStack$new()
@@ -323,11 +326,14 @@ brochureApp <- function(
     }
     # Wrap with the user's `wrapped` and inject the extra content (deps, etc.)
     # on top of the page UI.
-    wrapped(
-      do.call(
-        shiny::tagList,
-        c(extra_content, list(ui))
-      )
+    unclash_deps(
+      wrapped(
+        do.call(
+          shiny::tagList,
+          c(extra_content, list(ui))
+        )
+      ),
+      dep_prefixes
     )
   }
   # Shiny's UI handler answers GET and nothing else unless the ui declares
@@ -388,6 +394,13 @@ brochureApp <- function(
     req$PATH_INFO <- strip_basepath(req$PATH_INFO, basepath)
     dispatched <- brochure_routes$dispatch_to_first_match(req)
     if (is.null(dispatched)) {
+      # Shiny's own http handlers come after this one, so answering 404 for
+      # everything we don't route hides the endpoints it serves itself.
+      # `/reactlog` is the only one that gets this far: `/session` and the
+      # resource paths are served before R ever sees the request.
+      if (grepl("^/reactlog(/|$)", req$PATH_INFO)) {
+        return(NULL)
+      }
       return(make_404(content_404))
     }
     if (!is.null(dispatched$redirect)) {
