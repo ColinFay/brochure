@@ -144,8 +144,10 @@ from keeping the current page in shared state.
 * The `{routr}` dependency is on the CRAN release, and `{uuid}` and `{fastmap}`
   are no longer needed.
 
-* Five vignettes and a pkgdown site. `vignette("brochure")` gets you started,
+* Seven vignettes and a pkgdown site. `vignette("brochure")` gets you started,
   `vignette("handlers")` covers the request and response middleware,
   `vignette("cookies")` the cookie API and carrying a session between pages,
-  `vignette("deployment")` serving the app under a prefix, and
+  `vignette("design")` what changes when an app is several pages,
+  `vignette("deployment")` serving the app under a prefix,
+  `vignette("testing")` testing the routing and the pages, and
   `vignette("golem")` building a brochure app as a golem package.

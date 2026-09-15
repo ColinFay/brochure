@@ -41,7 +41,10 @@ about the ideal height/width for the app.}
 any previous calls to  \code{\link[shiny:enableBookmarking]{enableBookmarking()}}. See \code{\link[shiny:enableBookmarking]{enableBookmarking()}}
 for more information on bookmarking your app.}
 
-\item{content_404}{The content served when no \code{page()} matches the url.}
+\item{content_404}{The content served when no \code{page()} matches the url. A
+string, or anything \code{as.character()} renders as html, a \code{tagList()} for
+example. It is sent as it is written: unlike a page it is not rewritten for
+\code{basepath}, so a link in it has to carry the mount itself.}
 
 \item{basepath}{The path your app is served under by a reverse proxy. It is
 removed from the incoming url, so that what is left matches the href of your
@@ -59,8 +62,10 @@ immediately, stopping any other code.}
 object before it is send to the browser. Each function must take a \code{res} and
 \code{req} parameter.}
 
-\item{wrapped}{A UI function wrapping the Brochure UI.
-Default is \code{shiny::tagList}.}
+\item{wrapped}{A function taking the UI of a page and returning the UI
+actually served. This is how every page gets the same shell: \code{wrapped = fluidPage} gives them all the Bootstrap layout and its dependencies, and a
+function of your own can add a navbar or a footer around each of them.
+Default is \code{shiny::tagList}, which adds nothing.}
 }
 \value{
 A shiny.appobj

@@ -1,9 +1,20 @@
-#' Parse the cookie string
+#' Read the cookies sent with a request
 #'
-#' @param cookie_string The cookie string to parse
+#' `get_cookies()` returns the raw `Cookie` header of the request the session
+#' was opened with, and `parse_cookie_string()` turns that header into a named
+#' vector.
+#'
+#' @param cookie_string The cookie string to parse, as `get_cookies()` returns
+#' it.
 #' @param session The `{shiny}` `session` object.
 #'
-#' @return a list of cookies and values
+#' @return For `get_cookies()`, the `Cookie` header as a single string, or
+#' `NULL` when the request carried none. For `parse_cookie_string()`, a named
+#' character vector of the cookies it holds, or `""` when given `NULL`. Index
+#' it with single brackets: a visitor arriving without a cookie gives nothing
+#' to index into, and `[[` errors where `[` returns `NA`.
+#' @seealso [set_cookie()] to set one from a response handler, and
+#' `vignette("cookies")` for carrying a session across pages.
 #' @rdname cookies-server-side
 #' @export
 #'

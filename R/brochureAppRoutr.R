@@ -153,8 +153,11 @@ brochure_client_js <- '(function(){var mount="%s";function reg(){if(window.Shiny
 #' Anything else is an error naming the element it cannot use. A bare list is
 #' spliced, so `brochureApp(list(page_1(), page_2()))` builds two pages rather
 #' than injecting the list into each of them.
-#' @param wrapped A UI function wrapping the Brochure UI.
-#' Default is `shiny::tagList`.
+#' @param wrapped A function taking the UI of a page and returning the UI
+#' actually served. This is how every page gets the same shell: `wrapped =
+#' fluidPage` gives them all the Bootstrap layout and its dependencies, and a
+#' function of your own can add a navbar or a footer around each of them.
+#' Default is `shiny::tagList`, which adds nothing.
 #' @param basepath The path your app is served under by a reverse proxy. It is
 #' removed from the incoming url, so that what is left matches the href of your
 #' `page()`, and it is prepended to the urls the app emits. For example, if your
@@ -168,7 +171,10 @@ brochure_client_js <- '(function(){var mount="%s";function reg(){if(window.Shiny
 #' @param res_handlers A list of functions that can manipulate the httpResponse
 #' object before it is send to the browser. Each function must take a `res` and
 #' `req` parameter.
-#' @param content_404 The content served when no `page()` matches the url.
+#' @param content_404 The content served when no `page()` matches the url. A
+#' string, or anything `as.character()` renders as html, a `tagList()` for
+#' example. It is sent as it is written: unlike a page it is not rewritten for
+#' `basepath`, so a link in it has to carry the mount itself.
 #'
 #' @details
 #' Behind a reverse proxy, `basepath` tells the app where it is mounted: it is

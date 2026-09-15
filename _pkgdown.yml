@@ -15,6 +15,11 @@ navbar:
     right: [search, github]
 
 reference:
+  - title: The package
+    desc: An overview, and where to start.
+    contents:
+      - brochure-package
+
   - title: Building an app
     desc: The two functions that replace `shinyApp()` and organise its pages.
     contents:
@@ -58,5 +63,7 @@ articles:
     contents:
       - handlers
       - cookies
+      - design
       - deployment
+      - testing
       - golem

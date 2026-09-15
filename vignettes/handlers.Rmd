@@ -127,3 +127,50 @@ they run before the request is matched at all, so they see urls that match no
 page, and can answer them. Everything else — the page level handlers, and both
 levels of response handler — is skipped when nothing matches, and the request
 gets `content_404` directly.
+
+## Pages that answer on another method
+
+A page answers `GET`. `method` changes that, which is how a form post or a
+webhook gets a page of its own:
+
+```{r}
+subscribe <- function(req) {
+  fields <- shiny::parseQueryString(
+    rawToChar(req$rook.input$read())
+  )
+  message("new subscriber: ", fields$email)
+  req
+}
+
+brochureApp(
+  page(
+    href = "/",
+    ui = tagList(
+      tags$form(
+        action = "/subscribe",
+        method = "post",
+        tags$input(type = "email", name = "email"),
+        tags$input(type = "submit", value = "Subscribe")
+      )
+    )
+  ),
+  page(
+    href = "/subscribe",
+    method = "POST",
+    ui = tagList(h1("Thanks")),
+    req_handlers = list(subscribe)
+  )
+)
+```
+
+The method takes part in the matching, so a `GET` on `/subscribe` matches
+nothing and gets `content_404`.
+
+What was posted is yours to read: the body is on the request, as
+`req$rook.input`, and brochure does not touch it. A request handler is the
+place for that, since it runs before the response is built.
+
+One thing to keep in mind: a page's *session* is resolved on the path alone.
+The websocket handshake a browser opens is a `GET` whatever method the page was
+served on, so two pages declared at the same href with different methods both
+run the server of the first one declared.

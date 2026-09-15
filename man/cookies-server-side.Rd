@@ -3,23 +3,34 @@
 \name{parse_cookie_string}
 \alias{parse_cookie_string}
 \alias{get_cookies}
-\title{Parse the cookie string}
+\title{Read the cookies sent with a request}
 \usage{
 parse_cookie_string(cookie_string)
 
 get_cookies(session = shiny::getDefaultReactiveDomain())
 }
 \arguments{
-\item{cookie_string}{The cookie string to parse}
+\item{cookie_string}{The cookie string to parse, as \code{get_cookies()} returns
+it.}
 
 \item{session}{The \code{{shiny}} \code{session} object.}
 }
 \value{
-a list of cookies and values
+For \code{get_cookies()}, the \code{Cookie} header as a single string, or
+\code{NULL} when the request carried none. For \code{parse_cookie_string()}, a named
+character vector of the cookies it holds, or \code{""} when given \code{NULL}. Index
+it with single brackets: a visitor arriving without a cookie gives nothing
+to index into, and \code{[[} errors where \code{[} returns \code{NA}.
 }
 \description{
-Parse the cookie string
+\code{get_cookies()} returns the raw \code{Cookie} header of the request the session
+was opened with, and \code{parse_cookie_string()} turns that header into a named
+vector.
 }
 \examples{
 parse_cookie_string("brochure_session=63422; brochure_cookie=3958")
+}
+\seealso{
+\code{\link[=set_cookie]{set_cookie()}} to set one from a response handler, and
+\code{vignette("cookies")} for carrying a session across pages.
 }

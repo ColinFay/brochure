@@ -1,0 +1,243 @@
+---
+title: "Testing a brochure app"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Testing a brochure app}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+```
+
+```{r}
+library(shiny)
+library(brochure)
+library(testthat)
+```
+
+A single page Shiny app has one server function, and `shiny::testServer()`
+drives it. A brochure app has one per page, plus the thing that decides which
+of them you get. That last part is new, it is where most of the bugs are, and
+it is the easiest of the three to test — no browser, no server, no reactivity.
+
+Three layers, three tools:
+
+| What you are testing | How |
+| --- | --- |
+| which page answers an url, and with what | call `app$httpHandler()` |
+| which server a session runs | call `app$serverFuncSource()` |
+| what a page computes | `testServer()`, on a module |
+| that it all works in a browser | a browser |
+
+## The routing
+
+`brochureApp()` returns a `shiny.appobj`, and its `httpHandler` is an ordinary
+function from a request to a response. Call it and look at what comes back:
+
+```{r}
+app <- brochureApp(
+  page(href = "/", ui = tagList(h1("Home"))),
+  page(href = "/contact", ui = tagList(h1("Contact"))),
+  redirect(from = "/index.html", to = "/"),
+  content_404 = "Nothing here"
+)
+
+res <- app$httpHandler(mock_req("/contact"))
+res$status
+#> [1] 200
+```
+
+A request is a Rook environment — what httpuv hands the app. It is small enough
+to write by hand, and four fields are enough to be dispatched:
+
+```{r}
+mock_req <- function(path, method = "GET") {
+  req <- new.env(parent = emptyenv())
+  req$REQUEST_METHOD <- method
+  req$PATH_INFO <- path
+  req$QUERY_STRING <- ""
+  # What makes the dispatch accept this as a request
+  req$rook.version <- "1.1-0"
+  req
+}
+```
+
+Keep it in `tests/testthat/helper-mock.R` and every routing test is two lines:
+
+```{r}
+test_that("each url reaches its own page", {
+  expect_match(app$httpHandler(mock_req("/"))$content, "Home")
+  expect_match(app$httpHandler(mock_req("/contact"))$content, "Contact")
+})
+
+test_that("an unknown url gets the 404", {
+  res <- app$httpHandler(mock_req("/nope"))
+  expect_equal(res$status, 404)
+  expect_equal(res$content, "Nothing here")
+})
+
+test_that("the old index redirects home", {
+  res <- app$httpHandler(mock_req("/index.html"))
+  expect_equal(res$status, 301)
+  expect_equal(res$headers$Location, "/")
+})
+```
+
+This is also where you check the order two hrefs were declared in — the rule
+that bites silently:
+
+```{r}
+test_that("/who/me is not caught by /who/:id", {
+  app <- brochureApp(
+    page(href = "/who/me", ui = tagList(h1("It's you"))),
+    page(href = "/who/:id", ui = tagList(h1("Someone else")))
+  )
+  expect_match(app$httpHandler(mock_req("/who/me"))$content, "It's you")
+})
+```
+
+## Everything else the response carries
+
+A response is a list, so anything a handler put on it is readable. Cookies:
+
+```{r}
+test_that("logging in sets the session cookie", {
+  app <- brochureApp(
+    page(
+      href = "/login",
+      ui = tagList(h1("Logged in")),
+      res_handlers = list(~ set_cookie(.x, "SESSION", "abc"))
+    )
+  )
+  res <- app$httpHandler(mock_req("/login"))
+  expect_match(res$headers$`Set-Cookie`, "SESSION=abc")
+})
+```
+
+A request handler answering on its own:
+
+```{r}
+test_that("the healthcheck answers 200 without Shiny", {
+  expect_equal(
+    app$httpHandler(mock_req("/healthcheck"))$status,
+    200
+  )
+})
+```
+
+And `basepath`, which is the one thing you cannot see locally and that breaks
+on deployment. Testing it costs a line, and saves the round trip:
+
+```{r}
+test_that("links stay inside the app under a mount", {
+  app <- brochureApp(
+    page(href = "/", ui = tagList(tags$a(href = "/contact", "Contact"))),
+    basepath = "myapp"
+  )
+  content <- app$httpHandler(mock_req("/myapp/"))$content
+  expect_match(content, 'href="/myapp/contact"', fixed = TRUE)
+})
+```
+
+## Which server a session runs
+
+The document and the session are two different requests. `app$serverFuncSource()`
+gives you the server function, and it picks the page from the request the
+session was opened with — the websocket handshake, which hits
+`<href>/websocket/`:
+
+```{r}
+mock_session <- function(path) {
+  list(
+    request = mock_req(path),
+    sendCustomMessage = function(type, message) NULL
+  )
+}
+
+test_that("a session runs the server of its own page", {
+  ran <- character()
+  app <- brochureApp(
+    page(href = "/", ui = tagList(), server = function(i, o, s) ran <<- c(ran, "home")),
+    page(href = "/page2", ui = tagList(), server = function(i, o, s) ran <<- c(ran, "page2"))
+  )
+  app$serverFuncSource()(NULL, NULL, mock_session("/page2/websocket/"))
+  expect_equal(ran, "page2")
+})
+```
+
+That tells you *which* server ran, not what it computed. It is worth a test
+when two pages could be confused for one another — a parameterised href next
+to a static one, or a page answering on `POST`, whose handshake is a `GET` like
+everyone else's.
+
+## What a page computes
+
+Here is the thing to know before you write that test: `get_keys()` and
+`get_cookies()` both read `session$request`, and a `MockShinySession` — what
+`testServer()` gives you — hands out a fresh empty environment every time you
+touch it. You cannot put keys or a cookie in it, and it will not let you
+replace it either.
+
+Which is a good reason to do what you would want to do anyway: read the url
+and the cookies at the page boundary, and pass plain values down.
+
+```{r}
+mod_profile_ui <- function(id) {
+  ns <- NS(id)
+  tagList(textOutput(ns("name")))
+}
+
+mod_profile_server <- function(id, user) {
+  moduleServer(id, function(input, output, session) {
+    output$name <- renderText(sprintf("Hello %s", user))
+  })
+}
+
+profile <- function() {
+  page(
+    href = "/who/:id",
+    ui = mod_profile_ui("profile"),
+    server = function(input, output, session) {
+      # The only line that needs a real session
+      mod_profile_server("profile", user = get_keys()$id)
+    }
+  )
+}
+```
+
+The page server is now three lines you can read, and everything worth testing
+takes arguments:
+
+```{r}
+test_that("the profile module greets the user", {
+  testServer(mod_profile_server, args = list(user = "colin"), {
+    expect_equal(output$name, "Hello colin")
+  })
+})
+```
+
+`testServer()` supplies the `id` itself, so `args` holds your own arguments
+only. From there it is module testing like any other: `session$setInputs()`,
+read `output`, drive time with `session$elapse()`.
+
+Do the same with a cookie: `get_cookies()` in the page server,
+`parse_cookie_string()` next to it, and the module below receives the session
+identifier — or the user it named — as an argument.
+
+## In a browser
+
+What none of the above sees: a link actually navigating, a plot actually
+drawing, `server_redirect()` actually landing somewhere. That needs a browser,
+and pages being real urls, any browser driver does the job — you point it at a
+url rather than clicking through one document.
+
+This is how brochure tests itself. `inst/simple/` holds a small app, and
+`tests/playwright/` drives it: a page per file, `page.goto("/page2")`, an
+assertion on what is rendered. `tests/testthat/test-playwright.R` runs the
+suite from `testthat` and skips it wherever `npx` or the installed suite is
+missing.
+
+Test there what only a browser can answer, and leave the rest above — it runs
+in milliseconds and tells you exactly which of the three layers broke.
