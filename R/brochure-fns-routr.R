@@ -98,7 +98,7 @@ page <- function(
 #'   to = "/"
 #' )
 #'
-#' # Anything but a temporary move deserves a code of its own
+#' # 301 says the move is permanent, 302 that it is temporary
 #' redirect(
 #'   from = "/old",
 #'   to = "/new",

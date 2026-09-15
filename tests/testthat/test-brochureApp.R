@@ -336,3 +336,22 @@ test_that("only statuses a browser follows are accepted as redirect codes", {
     expect_error(redirect(from = "/a", to = "/b", code = code))
   }
 })
+
+test_that("declaration order decides between a page and a redirect too", {
+  redirect_first <- brochureApp(
+    redirect(from = "/x", to = "/elsewhere"),
+    page(href = "/x", ui = shiny::tagList(shiny::h1("page")))
+  )
+  expect_equal(
+    redirect_first$httpHandler(mock_req("/x"))$headers$Location,
+    "/elsewhere"
+  )
+
+  page_first <- brochureApp(
+    page(href = "/x", ui = shiny::tagList(shiny::h1("page"))),
+    redirect(from = "/x", to = "/elsewhere")
+  )
+  res <- page_first$httpHandler(mock_req("/x"))
+  expect_equal(res$status, 200)
+  expect_match(res$content, "page")
+})

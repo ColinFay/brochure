@@ -58,6 +58,10 @@ from keeping the current page in shared state.
   mount that directory is not `/`, so the documented login/logout pattern
   silently failed on Posit Connect. It now takes `path` and `domain`.
 
+* Pages and redirects are matched in the order they were passed. Redirects were
+  registered after every page whatever the order, so a `redirect()` declared
+  before a `page()` at the same href never answered.
+
 * `redirect()` accepts only the statuses a browser follows: 301, 302, 303, 307
   and 308. The allow-list read `c(301:308, 310)`, which admitted 304, 305, 306
   and 310 — none of which make a browser follow a `Location`.

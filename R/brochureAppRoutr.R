@@ -232,59 +232,61 @@ brochureApp <- function(
   # Extracting the dots
   content <- check_content(splice_lists(list(...)))
 
-  # Separate the extra content from the pages
-  # This allows to add extra deps
-  are_pages <- extract(
-    content,
-    "brochure_page"
-  )
-
-  # Which one are page
-  pages <- content[are_pages]
-
-  extra <- content[!are_pages]
-  are_redirect <- extract(
-    extra,
-    "redirect"
-  )
-  redirect <- extra[are_redirect]
-  # Non-redirect extras (deps, scripts, golem resources, ...) are injected into
-  # every page on top of the page() content, as documented.
-  extra_content <- extra[!are_redirect]
+  # Pages and redirects are registered in one pass, in the order they were
+  # given, so that the rule the docs state -- first match wins -- holds between
+  # the two kinds as well. Everything else (deps, scripts, golem resources) is
+  # injected into every page on top of the page() content, as documented.
+  are_routes <- extract(content, "brochure_page") |
+    extract(content, "redirect")
+  pages <- content[extract(content, "brochure_page")]
+  extra_content <- content[!are_routes]
 
   purrr::iwalk(
-    pages,
-    function(page, index) {
+    content[are_routes],
+    function(item, index) {
       route <- routr::Route$new(
         ignore_trailing_slash = TRUE
       )
-      handler <- function(
-        request,
-        response,
-        keys,
-        ...
-      ) {
+
+      if (inherits(item, "redirect")) {
+        route$add_handler(
+          tolower(item$method),
+          item$from,
+          function(request, response, keys, ...) {
+            list(
+              redirect = httpResponse(
+                status = item$code,
+                headers = list(
+                  Location = item$to
+                )
+              )
+            )
+          }
+        )
+        brochure_routes$add_route(
+          route,
+          sprintf("route-%s", as.character(index))
+        )
+        return(invisible(NULL))
+      }
+
+      handler <- function(request, response, keys, ...) {
         list(
-          ui = page$ui,
-          server = page$server,
+          ui = item$ui,
+          server = item$server,
           keys = keys,
-          req_handlers = page$req_handlers,
-          res_handlers = page$res_handlers
+          req_handlers = item$req_handlers,
+          res_handlers = item$res_handlers
         )
       }
       route$add_handler(
-        tolower(
-          page$method
-        ),
-        page$href,
+        tolower(item$method),
+        item$href,
         handler
       )
       brochure_routes$add_route(
         route,
-        sprintf(
-          "page-%s",
-          as.character(index)
-        )
+        sprintf("route-%s", as.character(index))
       )
 
       session_route <- routr::Route$new(
@@ -292,53 +294,12 @@ brochureApp <- function(
       )
       session_route$add_handler(
         "all",
-        page$href,
+        item$href,
         handler
       )
       session_routes$add_route(
         session_route,
-        sprintf(
-          "page-%s",
-          as.character(index)
-        )
-      )
-    }
-  )
-
-  purrr::iwalk(
-    redirect,
-    function(page, index) {
-      route <- routr::Route$new(
-        ignore_trailing_slash = TRUE
-      )
-      route$add_handler(
-        tolower(
-          page$method
-        ),
-        page$from,
-        function(
-          request,
-          response,
-          keys,
-          ...
-        ) {
-          list(
-            redirect = httpResponse(
-              status = page$code,
-              headers = list(
-                Location = page$to
-              )
-            )
-          )
-        }
-      )
-
-      brochure_routes$add_route(
-        route,
-        sprintf(
-          "redirect-%s",
-          as.character(index)
-        )
+        sprintf("route-%s", as.character(index))
       )
     }
   )
@@ -439,10 +400,10 @@ brochureApp <- function(
     # App level res handlers first, then the ones of the matched page.
     res <- run_res_handlers(res, req, res_handlers)
     res <- run_res_handlers(res, req, dispatched$res_handlers)
-    # Make the page work under a reverse-proxy mount. We rewrite resource URLs
-    # and internal links to be absolute to the mount (immune to the browser
-    # preload scanner, unlike a client-side <base> swap), and inject a tiny
-    # script that fixes the <base> for the Shiny websocket only.
+    # Make the page work under a reverse-proxy mount, and on a deep route at
+    # all: resource urls and internal links are made absolute to the mount,
+    # which is immune to the browser preload scanner. The script injected after
+    # them registers the handler `server_redirect()` talks to.
     mount <- get_mount(req, basepath)
     if (
       !is.null(res$content) &&
