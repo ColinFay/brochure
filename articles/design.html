@@ -250,6 +250,26 @@ and runs one page’s worth of server. A visitor reading the contact page
 is not holding the dashboard’s reactive graph open.</p>
 </div>
 <div class="section level2">
+<h2 id="several-visitors-at-once">Several visitors at once<a class="anchor" aria-label="anchor" href="#several-visitors-at-once"></a>
+</h2>
+<p>A session is one visitor on one page: two people reading
+<code>/dashboard</code> are two sessions, and one person with
+<code>/dashboard</code> and <code>/admin</code> open in two tabs is two
+sessions as well. That is Shiny’s usual arrangement, and brochure does
+not change it.</p>
+<p>What it does not change either is that all of them live in one R
+process. Pages are not processes: a page that blocks holds up every
+other page and every other visitor. On a two page app where
+<code>/slow</code> takes five seconds to render, <code>/fast</code>
+answers in 0.2s on its own and in 4.8s when it is opened while
+<code>/slow</code> is rendering.</p>
+<p>So the reasons to reach for <a href="https://rstudio.github.io/promises/" class="external-link">promises</a> and
+<a href="https://future.futureverse.org" class="external-link">future</a> in a Shiny app are the same ones here, and
+splitting an app into pages is not one of them. One thing to keep in
+mind when you do: a navigation ends the session, so a future still
+running when the visitor leaves has nowhere left to deliver.</p>
+</div>
+<div class="section level2">
 <h2 id="when-not-to-reach-for-brochure">When not to reach for brochure<a class="anchor" aria-label="anchor" href="#when-not-to-reach-for-brochure"></a>
 </h2>
 <p>An app whose screens genuinely interact — a filter in a sidebar

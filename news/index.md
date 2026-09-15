@@ -224,6 +224,11 @@ keeping the current page in shared state.
   [`page()`](https://github.com/ColinFay/brochure/reference/page.md), so
   nothing the hook wrote could be loaded or tested without it.
 
+- [`vignette("design")`](https://github.com/ColinFay/brochure/articles/design.md)
+  says how a brochure app behaves with several visitors at once: a
+  session is one visitor on one page, they all share one R process, and
+  a page that blocks holds up every other page.
+
 - [`vignette("handlers")`](https://github.com/ColinFay/brochure/articles/handlers.md)
   and [`?page`](https://github.com/ColinFay/brochure/reference/page.md)
   say why a page on a method other than `GET` is unreachable when the

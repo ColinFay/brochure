@@ -159,6 +159,26 @@ The upside of the same design: a session loads one page’s worth of UI
 and runs one page’s worth of server. A visitor reading the contact page
 is not holding the dashboard’s reactive graph open.
 
+## Several visitors at once
+
+A session is one visitor on one page: two people reading `/dashboard`
+are two sessions, and one person with `/dashboard` and `/admin` open in
+two tabs is two sessions as well. That is Shiny’s usual arrangement, and
+brochure does not change it.
+
+What it does not change either is that all of them live in one R
+process. Pages are not processes: a page that blocks holds up every
+other page and every other visitor. On a two page app where `/slow`
+takes five seconds to render, `/fast` answers in 0.2s on its own and in
+4.8s when it is opened while `/slow` is rendering.
+
+So the reasons to reach for
+[promises](https://rstudio.github.io/promises/) and
+[future](https://future.futureverse.org) in a Shiny app are the same
+ones here, and splitting an app into pages is not one of them. One thing
+to keep in mind when you do: a navigation ends the session, so a future
+still running when the visitor leaves has nowhere left to deliver.
+
 ## When not to reach for brochure
 
 An app whose screens genuinely interact — a filter in a sidebar feeding
