@@ -44,14 +44,14 @@ page(
 #> {
 #>     h1(get_keys(request)$id)
 #> }
-#> <environment: 0x55fc9d352de8>
+#> <environment: 0x55d008018ca0>
 #> 
 #> $server
 #> function (input, output, session) 
 #> {
 #>     print(get_keys())
 #> }
-#> <environment: 0x55fc9d352de8>
+#> <environment: 0x55d008018ca0>
 #> 
 #> $method
 #> [1] "get"

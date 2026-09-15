@@ -57,7 +57,7 @@ page(
 #>         server_redirect("/")
 #>     })
 #> }
-#> <environment: 0x55fca0f236e8>
+#> <environment: 0x55d00afa6c48>
 #> 
 #> $method
 #> [1] "get"
