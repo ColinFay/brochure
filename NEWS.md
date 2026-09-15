@@ -127,6 +127,16 @@ from keeping the current page in shared state.
 * Formulas now work as app level handlers, as the README says they do; only
   page level handlers converted them.
 
+* An app behind a proxy that passes its mount through -- shinyProxy, or an
+  nginx `proxy_pass` without a trailing slash -- loaded none of its assets.
+  Shiny's resource paths are served by httpuv before R and matched against the
+  raw path, so `/myapp/jquery-3.7.1/jquery.min.js` matched no static path and
+  landed on brochure, which answered `content_404`. Without `shiny.js` there
+  was no websocket, so no page was ever interactive. Such a request now falls
+  through to the handler Shiny keeps for it. Checked from a browser against
+  `inst/subpage` behind both kinds of proxy: 41 checks pass on each, where the
+  pass-through one failed on the first page.
+
 * `/reactlog` is served again. Every path brochure did not route got
   `content_404`, and Shiny's own handler for that endpoint comes after the
   app's in the chain, so `options(shiny.reactlog = TRUE)` and Ctrl+F3 answered

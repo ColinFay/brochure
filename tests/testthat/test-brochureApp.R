@@ -34,6 +34,29 @@ test_that("a reactlog url is left to Shiny's own handler", {
   expect_null(app$httpHandler(mock_req("/reactlog/mark")))
 })
 
+test_that("a resource path under the mount is left to Shiny's own handler", {
+  # Behind a proxy that passes its mount through, httpuv matches the static
+  # paths against `/myapp/brochuretest-assets/...` and finds none, so the
+  # request lands on the app handler rather than being served before R.
+  shiny::addResourcePath("brochuretest-assets", withr::local_tempdir())
+  withr::defer(shiny::removeResourcePath("brochuretest-assets"))
+
+  app <- brochureApp(
+    page(href = "/", ui = shiny::tagList()),
+    basepath = "myapp",
+    content_404 = "Nothing here"
+  )
+
+  expect_null(
+    app$httpHandler(mock_req("/myapp/brochuretest-assets/style.css"))
+  )
+
+  # A path that is not a resource path still gets the 404 content.
+  res <- app$httpHandler(mock_req("/myapp/nope"))
+  expect_equal(res$status, 404)
+  expect_equal(res$content, "Nothing here")
+})
+
 test_that("a redirect answers with its code and Location", {
   app <- brochureApp(
     page(href = "/", ui = shiny::tagList()),

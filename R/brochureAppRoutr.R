@@ -395,10 +395,12 @@ brochureApp <- function(
     dispatched <- brochure_routes$dispatch_to_first_match(req)
     if (is.null(dispatched)) {
       # Shiny's own http handlers come after this one, so answering 404 for
-      # everything we don't route hides the endpoints it serves itself.
-      # `/reactlog` is the only one that gets this far: `/session` and the
-      # resource paths are served before R ever sees the request.
-      if (grepl("^/reactlog(/|$)", req$PATH_INFO)) {
+      # everything we don't route hides the endpoints it serves itself:
+      # `/reactlog`, and a resource path that reached R rather than httpuv.
+      if (
+        grepl("^/reactlog(/|$)", req$PATH_INFO) ||
+          is_resource_path(req$PATH_INFO)
+      ) {
         return(NULL)
       }
       return(make_404(content_404))
