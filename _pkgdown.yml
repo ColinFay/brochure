@@ -1,11 +1,7 @@
-url: https://colinfay.me/brochure/
+url: https://github.com/ColinFay/brochure
 
 template:
-  bootstrap: 5
-  bslib:
-    primary: "#1c3b5a"
-    base_font: {google: "Inter"}
-    code_font: {google: "JetBrains Mono"}
+  package: golemversetemplate
 
 home:
   title: Multipage Shiny apps
