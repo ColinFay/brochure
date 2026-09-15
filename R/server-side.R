@@ -11,17 +11,19 @@
 # like something with no scheme at all.
 check_redirect_to <- function(to) {
   has_scheme <- grepl("^[a-zA-Z][a-zA-Z0-9+.-]*:", to)
-  # A URL parser reads a backslash as a slash, so "\\\\host" and "/\\host" are
-  # protocol relative too, and would leave the app just as "//host" does.
-  slashed <- gsub("\\\\", "/", to)
+  # A URL parser reads a backslash as a slash, so "\\\\host" is protocol
+  # relative and "\\page2" is the root. Neither belongs in a target a caller
+  # wrote, and refusing them keeps this check and the parser reading the same
+  # string -- the mount prefixing downstream only ever looks for "/".
   attempt::stop_if_not(
     length(to) == 1 &&
       nzchar(to) &&
       !grepl("[[:space:][:cntrl:]]", to) &&
-      !grepl("^//", slashed) &&
+      !grepl("\\\\", to) &&
+      !grepl("^//", to) &&
       (!has_scheme || grepl("^https?:", to, ignore.case = TRUE)),
     isTRUE,
-    "`to` must be a path or an http(s) URL, with no whitespace."
+    "`to` must be a path or an http(s) URL, with no whitespace or backslash."
   )
   to
 }

@@ -15,6 +15,7 @@ Imports:
     brochure (>= 0.0.0.9001),
     glouton (>= 0.0.0.9000),
     cachem (>= 0.0.0.9000),
+    openssl,
     pkgload
 Encoding: UTF-8
 LazyData: true

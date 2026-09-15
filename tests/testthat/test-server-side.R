@@ -83,6 +83,28 @@ test_that("server_redirect refuses a protocol relative target written with backs
   expect_error(check_redirect_to("/\\evil.example"))
   expect_error(check_redirect_to("\\/evil.example"))
 
-  # A single leading backslash resolves to a path on the same origin
-  expect_equal(check_redirect_to("\\page2"), "\\page2")
+  # A single one is refused too: it reads as the root to a URL parser, while
+  # the mount prefixing downstream only ever looks for "/"
+  expect_error(check_redirect_to("\\page2"))
+})
+
+test_that("a backslash has no place in a redirect target", {
+  # "\\host" is protocol relative and "\page2" is the root to a URL parser,
+  # while the mount prefixing downstream only ever looks for "/"
+  expect_error(check_redirect_to("\\page2"))
+  expect_error(check_redirect_to("/page\\2"))
+  expect_error(check_redirect_to(""))
+})
+
+test_that("an explicit basepath wins over the Connect header", {
+  req <- new.env()
+  req$HTTP_RSTUDIO_CONNECT_APP_BASE_URL <- "https://connect.example/content/abc-123"
+
+  withr::with_envvar(c(RSTUDIO_PRODUCT = "CONNECT"), {
+    # Without one, the header is what tells the app where it is
+    expect_equal(get_mount(req), "/content/abc-123")
+    # With one, it is the mount the incoming path is stripped with too, so it
+    # has to be the mount the outgoing urls are written with
+    expect_equal(get_mount(req, "myapp"), "/myapp")
+  })
 })

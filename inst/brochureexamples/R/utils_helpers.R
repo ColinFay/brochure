@@ -24,8 +24,11 @@ cache_system <- cachem::cache_disk(
 fetch_brochure_cookie <- function() {
   cook <- fetch_cookies()
   if (is.null(cook$brochure_cookie)) {
-    session_id <- paste0(
-      sample(c(letters, 0:9), 16, replace = TRUE),
+    # From the system's cryptographic source: this identifier is the only
+    # thing standing between a visitor and someone else's cached data, and
+    # `sample()` draws from a generator whose state is recoverable.
+    session_id <- paste(
+      sprintf("%02x", as.integer(openssl::rand_bytes(16))),
       collapse = ""
     )
     add_cookie("brochure_cookie", session_id)

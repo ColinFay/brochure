@@ -37,6 +37,14 @@ on_connect <- function() {
 # is the only source Connect gives us. Falls back to the `basepath` argument,
 # then to "" (app served at the domain root, e.g. local dev).
 get_mount <- function(req, basepath = "") {
+  # An explicit basepath wins. It is what pins the behaviour for anyone who
+  # would rather not depend on the header, and it is also the mount the
+  # incoming path is stripped with, so letting the header override it here
+  # would leave the app reading one mount and writing another.
+  basepath <- normalize_basepath(basepath)
+  if (nzchar(basepath)) {
+    return(basepath)
+  }
   base_url <- req[["HTTP_RSTUDIO_CONNECT_APP_BASE_URL"]]
   # The header is only believed when the app really runs on Connect: anywhere
   # else a client sends it at will, and it decides the prefix every URL of the
@@ -111,8 +119,8 @@ run_res_handlers <- function(res, req, handlers) {
 # `server_redirect()` (this replaces the old inst/redirect.js), prefixing
 # internal targets with the mount so a redirect to "/page2" works under a
 # proxy, and dropping any target that is neither a path nor an http(s) url, or
-# that is protocol relative with either slash, or carries whitespace or a
-# control character -- a browser strips those out
+# that is protocol relative, or carries a backslash, whitespace or a control
+# character -- a browser strips those out
 # of a url, which would turn "java\nscript:" back into a scheme it executes.
 #
 # It used to also promote the page's <base> to an absolute url, on the premise
@@ -123,7 +131,7 @@ run_res_handlers <- function(res, req, handlers) {
 # from the response, a deep page kept the same websocket url, the same rendered
 # output and no failed request. Connect ships its own <base> script, and
 # brochure already rewrites resource urls absolute server-side.
-brochure_client_js <- '(function(){var mount="%s";function reg(){if(window.Shiny&&Shiny.addCustomMessageHandler){Shiny.addCustomMessageHandler("redirect",function(to){if(typeof to!=="string"||!to||/[\\s\\u0000-\\u001f\\u007f]/.test(to)||/^[\\/\\\\]{2}/.test(to))return;var sch=to.match(/^[a-zA-Z][a-zA-Z0-9+.-]*:/);if(sch&&!/^https?:$/i.test(sch[0]))return;if(!sch&&to.charAt(0)==="/"){to=mount+to;}window.location.href=to;});}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",reg);}else{reg();}})();/*__brochure_client__*/'
+brochure_client_js <- '(function(){var mount="%s";function reg(){if(window.Shiny&&Shiny.addCustomMessageHandler){Shiny.addCustomMessageHandler("redirect",function(to){if(typeof to!=="string"||!to||/[\\s\\\\\\u0000-\\u001f\\u007f]/.test(to)||/^\\/\\//.test(to))return;var sch=to.match(/^[a-zA-Z][a-zA-Z0-9+.-]*:/);if(sch&&!/^https?:$/i.test(sch[0]))return;if(!sch&&to.charAt(0)==="/"){to=mount+to;}window.location.href=to;});}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",reg);}else{reg();}})();/*__brochure_client__*/'
 #' Create a brochureApp
 #'
 #' This function is to be used in place of `shinyApp()`. It takes a series of
@@ -436,20 +444,21 @@ brochureApp <- function(
     ) {
       # Every pattern below anchors on an opening tag with no `>` in between,
       # so it only ever matches a real attribute -- page text or inline script
-      # happening to contain `src="..."` is left alone.
+      # happening to contain `src="..."` is left alone. Both quote styles are
+      # matched: `HTML("<img src='logo.png'>")` is as valid as the other.
       #
       # Resource urls go under the mount whether they were written relative
       # ("shiny.min.js", which a deep page resolves against its own directory)
       # or root absolute ("/img.png", which under a mount points outside the
       # app). `src` on any tag, `href` on a <link>.
       res$content <- gsub(
-        '(<[a-zA-Z][^<>]*?\\ssrc=")(?![a-zA-Z][a-zA-Z0-9+.-]*:|//|#|\\?)/?',
+        '(<[a-zA-Z][^<>]*?\\ssrc=["\'])(?![a-zA-Z][a-zA-Z0-9+.-]*:|//|#|\\?)/?',
         paste0("\\1", mount, "/"),
         res$content,
         perl = TRUE
       )
       res$content <- gsub(
-        '(<link\\b[^<>]*?\\shref=")(?![a-zA-Z][a-zA-Z0-9+.-]*:|//|#|\\?)/?',
+        '(<link\\b[^<>]*?\\shref=["\'])(?![a-zA-Z][a-zA-Z0-9+.-]*:|//|#|\\?)/?',
         paste0("\\1", mount, "/"),
         res$content,
         perl = TRUE
@@ -462,13 +471,13 @@ brochureApp <- function(
       # without this.
       if (nzchar(mount)) {
         res$content <- gsub(
-          '(<a\\b[^<>]*?\\shref=")/(?!/)',
+          '(<a\\b[^<>]*?\\shref=["\'])/(?!/)',
           paste0("\\1", mount, "/"),
           res$content,
           perl = TRUE
         )
         res$content <- gsub(
-          '(<[a-zA-Z][^<>]*?\\s(?:form)?action=")/(?!/)',
+          '(<[a-zA-Z][^<>]*?\\s(?:form)?action=["\'])/(?!/)',
           paste0("\\1", mount, "/"),
           res$content,
           perl = TRUE

@@ -286,3 +286,17 @@ test_that("only real attributes are rewritten, forms included", {
   # A form posts inside the app rather than at the domain root
   expect_match(content, 'action="/myapp/submit"', fixed = TRUE)
 })
+
+test_that("single quoted attributes are rewritten too", {
+  app <- brochureApp(
+    page(href = "/", ui = shiny::tagList(
+      shiny::HTML("<img src='logo.png'><a href='/contact'>x</a><form action='/submit'></form>")
+    )),
+    basepath = "myapp"
+  )
+  content <- app$httpHandler(mock_req("/myapp/"))$content
+
+  expect_match(content, "src='/myapp/logo.png'", fixed = TRUE)
+  expect_match(content, "href='/myapp/contact'", fixed = TRUE)
+  expect_match(content, "action='/myapp/submit'", fixed = TRUE)
+})

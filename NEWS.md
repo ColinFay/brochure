@@ -58,6 +58,17 @@ from keeping the current page in shared state.
   mount that directory is not `/`, so the documented login/logout pattern
   silently failed on Posit Connect. It now takes `path` and `domain`.
 
+* An explicit `basepath` now decides the mount even on Posit Connect. The
+  header used to win, so an app that set `basepath` to pin the behaviour was
+  stripping the incoming path with one mount and writing its urls with another.
+
+* `server_redirect()` and `redirect()` refuse a backslash anywhere in the
+  target. A URL parser reads it as a slash, so `"\page2"` was the root and
+  escaped the mount, which is only ever prefixed onto a `/`.
+
+* Mount rewriting handles single quoted attributes, so `HTML("<img
+  src='logo.png'>")` is rewritten like its double quoted equivalent.
+
 * A page declared with a method other than `GET` can serve its document.
   Shiny's UI handler answers `GET` alone unless the ui says otherwise, so such
   a page returned nothing unless a request handler answered for it.
