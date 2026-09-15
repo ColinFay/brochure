@@ -44,6 +44,44 @@ golem_hook <- function(
     "R/mod_home.R"
   )
 
+  # The test structure is written here rather than left to
+  # `golem::use_recommended_tests()`, which only builds it when `tests/` is
+  # missing and would find this directory already there.
+  dir.create("tests/testthat", recursive = TRUE, showWarnings = FALSE)
+  file.copy(
+    system.file(
+      "golem/test-mod_home.R",
+      package = "brochure"
+    ),
+    "tests/testthat/test-mod_home.R"
+  )
+  write(
+    c(
+      "library(testthat)",
+      sprintf("library(%s)", package_name),
+      "",
+      sprintf('test_check("%s")', package_name)
+    ),
+    "tests/testthat.R"
+  )
+
+  # The module template calls `page()`, so the app depends on brochure. Written
+  # by hand rather than with `usethis::use_package()`: brochure does not depend
+  # on usethis, and this hook runs before anything is installed.
+  description <- readLines("DESCRIPTION")
+  description <- append(
+    description,
+    "    brochure,",
+    after = grep("^Imports:", description)
+  )
+  description <- c(
+    description,
+    "Suggests: ",
+    "    testthat (>= 3.0.0)",
+    "Config/testthat/edition: 3"
+  )
+  write(description, "DESCRIPTION")
+
   dev_R <- readLines(
     "dev/02_dev.R"
   )

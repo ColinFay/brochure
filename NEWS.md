@@ -156,6 +156,11 @@ from keeping the current page in shared state.
 * The `{routr}` dependency is on the CRAN release, and `{uuid}` and `{fastmap}`
   are no longer needed.
 
+* `golem_hook()` leaves a tested app: it writes a test for the page it creates,
+  along with the testthat structure to run it under `R CMD check`, and adds
+  brochure to the Imports of the app it hooks -- the module template calls
+  `page()`, so nothing the hook wrote could be loaded or tested without it.
+
 * `vignette("handlers")` and `?page` say why a page on a method other than
   `GET` is unreachable when the app has a `www/` directory at its root: Shiny
   mounts it as a static path on `/`, and httpuv answers anything that is not a

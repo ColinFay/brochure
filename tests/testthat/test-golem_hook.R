@@ -32,6 +32,28 @@ test_that("golem_hook works", {
   )
 
   expect_true(
+    file.exists("tests/testthat/test-mod_home.R")
+  )
+
+  expect_equal(
+    readLines("tests/testthat.R"),
+    c(
+      "library(testthat)",
+      "library(testgolembrochure)",
+      "",
+      'test_check("testgolembrochure")'
+    )
+  )
+
+  # The module template calls `page()`, so the app has to depend on brochure.
+  expect_true(
+    grepl(
+      "brochure",
+      paste(readLines("DESCRIPTION"), collapse = " ")
+    )
+  )
+
+  expect_true(
     grepl(
       "brochure",
       paste(readLines("dev/02_dev.R"), collapse = " ")
