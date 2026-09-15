@@ -8,7 +8,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/colinfay/brochure/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/colinfay/brochure/blob/v1.0.0/DESCRIPTION)
 
 Fay C (2026). *brochure: Multipage 'Shiny' Apps*. R package version
 1.0.0, <https://github.com/colinfay/brochure>.
