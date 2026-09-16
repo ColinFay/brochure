@@ -36,4 +36,5 @@ Used for side effect
 if (requireNamespace("golem") & interactive()) {
   golem::create_golem("myapp", project_hook = golem_hook)
 }
+#> Loading required namespace: golem
 ```

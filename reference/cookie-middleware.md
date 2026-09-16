@@ -1,8 +1,8 @@
 # Middleware to set cookies
 
 Please read
-https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie for
-more information. Description of parameters is taken from this page.
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie
+for more information. Description of parameters is taken from this page.
 
 ## Usage
 

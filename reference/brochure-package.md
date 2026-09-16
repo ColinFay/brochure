@@ -19,9 +19,9 @@ to get started.
 ## Author
 
 **Maintainer**: Colin Fay <contact@colinfay.me>
-([ORCID](https://orcid.org/0000-0001-7343-1846))
+([ORCID](https://orcid.org/0000-0001-7343-1846)) \[copyright holder\]
 
 Authors:
 
 - Colin Fay <contact@colinfay.me>
-  ([ORCID](https://orcid.org/0000-0001-7343-1846))
+  ([ORCID](https://orcid.org/0000-0001-7343-1846)) \[copyright holder\]

@@ -18,6 +18,7 @@
 ">
 <meta property="og:description" content="Build Shiny applications that serve content on several endpoints, each page with its own UI and its own server function.
 ">
+<meta property="og:image" content="https://github.com/ColinFay/brochure/logo.png">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -55,7 +56,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
 </form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/colinfay/brochure/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item"><a class="nav-link" href="https://github.com/ColinFay/brochure/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -64,47 +65,46 @@
 </nav><div class="container template-home">
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
-<div class="page-header"><h1 id="brochure">brochure<a class="anchor" aria-label="anchor" href="#brochure"></a>
-</h1></div>
+<div class="page-header">
+<img src="logo.png" class="logo" alt=""><h1 id="brochure-">brochure <a class="anchor" aria-label="anchor" href="#brochure-"></a>
+</h1>
+</div>
 <!-- badges: start -->
 
-<p>The goal of <a href="https://github.com/colinfay/brochure" class="external-link">brochure</a> is to provide a mechanism for creating natively multi-page <a href="https://shiny.posit.co/" class="external-link">shiny</a> applications, <em>i.e</em> that can serve content on multiple endpoints.</p>
-<p><strong>Disclaimer</strong>: the way you will build app with <a href="https://github.com/colinfay/brochure" class="external-link">brochure</a> is different from the way you usually build <a href="https://shiny.posit.co/" class="external-link">shiny</a> apps, as we no longer operate under the single page app paradigm. Please read the “Design Pattern” of this README for more info.</p>
+<blockquote>
+<p>Build natively multi-page <a href="https://shiny.posit.co/" class="external-link">shiny</a> applications.</p>
+</blockquote>
+<p>A <a href="https://shiny.posit.co/" class="external-link">shiny</a> app is a single page: one url, one UI, one server function. <a href="https://github.com/colinfay/brochure" class="external-link">brochure</a> makes it several. You declare a <code><a href="reference/page.html">page()</a></code> with its own href, its own UI and its own server function, and the request is dispatched to it by <a href="https://routr.data-imaginist.com/" class="external-link"><code>{routr}</code></a> — including parameterised routes such as <code>/user/:id</code>. Redirections, request and response middleware, and cookie helpers come with it.</p>
+<p><strong>Disclaimer</strong>: building an app with <a href="https://github.com/colinfay/brochure" class="external-link">brochure</a> is different from the way you usually build <a href="https://shiny.posit.co/" class="external-link">shiny</a> apps, as you no longer operate under the single page app paradigm. <code><a href="articles/design.html">vignette("design")</a></code> covers what changes.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You can install the dev version of <a href="https://github.com/colinfay/brochure" class="external-link">brochure</a> with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"ColinFay/brochure"</span><span class="op">)</span></span></code></pre></div>
+<p><a href="https://github.com/colinfay/brochure" class="external-link">brochure</a> exports <code><a href="reference/page.html">page()</a></code>, which masks <code><a href="https://rdrr.io/r/utils/page.html" class="external-link">utils::page()</a></code>:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/colinfay/brochure" class="external-link">brochure</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Attaching package: 'brochure'</span></span>
 <span><span class="co">#&gt; The following object is masked from 'package:utils':</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     page</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shiny.posit.co/" class="external-link">shiny</a></span><span class="op">)</span></span></code></pre></div>
+<span><span class="co">#&gt;     page</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="minimal-brochure-app">Minimal <code>{brochure}</code> App<a class="anchor" aria-label="anchor" href="#minimal-brochure-app"></a>
+<h2 id="a-minimal-app">A minimal app<a class="anchor" aria-label="anchor" href="#a-minimal-app"></a>
 </h2>
-<div class="section level3">
-<h3 id="page">
-<code>page()</code><a class="anchor" aria-label="anchor" href="#page"></a>
-</h3>
-<p>A <code>brochureApp</code> is a series of <code>page</code>s that are defined by an <code>href</code> (the path/endpoint where the page is available), a <a href="https://shiny.posit.co/" class="external-link">shiny</a> UI, a <code>server</code> function, and the HTTP <code>method</code> to access the page.</p>
-<p>This is conceptually important: <strong>each page has its own shiny session, its own UI, and its own server</strong>.</p>
-<p>Note that the server is optional if you want to display a static page.</p>
+<p>Each page has its own url, its own UI, its own server function, and its own Shiny session. The server is optional if the page is static.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shiny.posit.co/" class="external-link">shiny</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/colinfay/brochure" class="external-link">brochure</a></span><span class="op">)</span></span>
+<span></span>
 <span><span class="fu"><a href="reference/brochureApp.html">brochureApp</a></span><span class="op">(</span></span>
-<span>  <span class="co"># First page</span></span>
 <span>  <span class="fu"><a href="reference/page.html">page</a></span><span class="op">(</span></span>
 <span>    href <span class="op">=</span> <span class="st">"/"</span>,</span>
 <span>    ui <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
-<span>      <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h1</a></span><span class="op">(</span><span class="st">"This is my first page"</span><span class="op">)</span>,</span>
-<span>      <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/plotOutput.html" class="external-link">plotOutput</a></span><span class="op">(</span><span class="st">"plot"</span><span class="op">)</span></span>
+<span>      <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h1</a></span><span class="op">(</span><span class="st">"Home"</span><span class="op">)</span>,</span>
+<span>      <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/plotOutput.html" class="external-link">plotOutput</a></span><span class="op">(</span><span class="st">"plot"</span><span class="op">)</span>,</span>
+<span>      <span class="va">tags</span><span class="op">$</span><span class="fu">a</span><span class="op">(</span>href <span class="op">=</span> <span class="st">"/contact"</span>, <span class="st">"Contact us"</span><span class="op">)</span></span>
 <span>    <span class="op">)</span>,</span>
 <span>    server <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
 <span>      <span class="va">output</span><span class="op">$</span><span class="va">plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderPlot.html" class="external-link">renderPlot</a></span><span class="op">(</span><span class="op">{</span></span>
@@ -112,506 +112,77 @@
 <span>      <span class="op">}</span><span class="op">)</span></span>
 <span>    <span class="op">}</span></span>
 <span>  <span class="op">)</span>,</span>
-<span>  <span class="co"># Second page, without any server-side function</span></span>
 <span>  <span class="fu"><a href="reference/page.html">page</a></span><span class="op">(</span></span>
-<span>    href <span class="op">=</span> <span class="st">"/page2"</span>,</span>
+<span>    href <span class="op">=</span> <span class="st">"/contact"</span>,</span>
 <span>    ui <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
-<span>      <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h1</a></span><span class="op">(</span><span class="st">"This is my second page"</span><span class="op">)</span>,</span>
-<span>      <span class="va">tags</span><span class="op">$</span><span class="fu">p</span><span class="op">(</span><span class="st">"There is no server function in this one"</span><span class="op">)</span></span>
+<span>      <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h1</a></span><span class="op">(</span><span class="st">"Contact"</span><span class="op">)</span>,</span>
+<span>      <span class="va">tags</span><span class="op">$</span><span class="fu">p</span><span class="op">(</span><span class="st">"No server function in this one."</span><span class="op">)</span></span>
 <span>    <span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="reference/redirect.html">redirect</a></span><span class="op">(</span>from <span class="op">=</span> <span class="st">"/index.html"</span>, to <span class="op">=</span> <span class="st">"/"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>You can now navigate to <code>/</code>, and to <code>/page2</code> inside your browser.</p>
-</div>
-<div class="section level3">
-<h3 id="about-routing">About routing<a class="anchor" aria-label="anchor" href="#about-routing"></a>
-</h3>
-<p>Matching a request to a page is done by the <a href="https://routr.data-imaginist.com/" class="external-link"><code>{routr}</code></a> package, so an href is written the way routr writes a path: <code>:name</code> captures exactly one segment, <code>*</code> captures whatever is left, and a trailing slash never makes a difference. Pages are tried in the order you pass them, and the first match wins — so a specific href goes before a parameterised one that could also match it.</p>
-<p>This is what lets you build parametrized routes <em>à la</em> express, like this:</p>
+<p>Run it as you would any Shiny app, then navigate to <code>/</code> and to <code>/contact</code>. Moving from one page to the other is a plain link: the browser leaves the first page and opens a new session on the second one.</p>
+<p>A parameterised href matches one segment, and the page reads what it matched with <code><a href="reference/get_keys.html">get_keys()</a></code>:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shiny.posit.co/" class="external-link">shiny</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/colinfay/brochure" class="external-link">brochure</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/brochureApp.html">brochureApp</a></span><span class="op">(</span></span>
-<span>  <span class="co"># First page</span></span>
-<span>  <span class="fu"><a href="reference/page.html">page</a></span><span class="op">(</span></span>
-<span>    href <span class="op">=</span> <span class="st">"/"</span>,</span>
-<span>    ui <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
-<span>      <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h1</a></span><span class="op">(</span><span class="st">"This is my first page"</span><span class="op">)</span>,</span>
-<span>      <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/plotOutput.html" class="external-link">plotOutput</a></span><span class="op">(</span><span class="st">"plot"</span><span class="op">)</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    server <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
-<span>      <span class="va">output</span><span class="op">$</span><span class="va">plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderPlot.html" class="external-link">renderPlot</a></span><span class="op">(</span><span class="op">{</span></span>
-<span>        <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">iris</span><span class="op">)</span></span>
-<span>      <span class="op">}</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  <span class="fu"><a href="reference/page.html">page</a></span><span class="op">(</span></span>
-<span>    href <span class="op">=</span> <span class="st">"/who/:id"</span>,</span>
-<span>    ui <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">request</span><span class="op">)</span> <span class="op">{</span></span>
-<span>      <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
-<span>        <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h1</a></span><span class="op">(</span><span class="st">"This is your page"</span><span class="op">)</span>,</span>
-<span>        <span class="va">tags</span><span class="op">$</span><span class="fu">p</span><span class="op">(</span></span>
-<span>          <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span></span>
-<span>            <span class="st">"Hello %s"</span>,</span>
-<span>            <span class="fu"><a href="reference/get_keys.html">get_keys</a></span><span class="op">(</span><span class="va">request</span><span class="op">)</span><span class="op">$</span><span class="va">id</span></span>
-<span>          <span class="op">)</span></span>
-<span>        <span class="op">)</span></span>
-<span>      <span class="op">)</span></span>
-<span>    <span class="op">}</span>,</span>
-<span>    server <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
-<span>      <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="reference/get_keys.html">get_keys</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  <span class="fu"><a href="reference/page.html">page</a></span><span class="op">(</span></span>
-<span>    href <span class="op">=</span> <span class="st">"/this/:name/:surname"</span>,</span>
-<span>    ui <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
-<span>      <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h1</a></span><span class="op">(</span><span class="st">"This is your page"</span><span class="op">)</span>,</span>
-<span>      <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/textOutput.html" class="external-link">textOutput</a></span><span class="op">(</span><span class="st">"who"</span><span class="op">)</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    server <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
-<span>      <span class="va">output</span><span class="op">$</span><span class="va">who</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderPrint.html" class="external-link">renderText</a></span><span class="op">(</span><span class="op">{</span></span>
-<span>        <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span></span>
-<span>          <span class="st">"Hello %s %s"</span>,</span>
-<span>          <span class="fu"><a href="reference/get_keys.html">get_keys</a></span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">name</span>,</span>
-<span>          <span class="fu"><a href="reference/get_keys.html">get_keys</a></span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">surname</span></span>
-<span>        <span class="op">)</span></span>
-<span>      <span class="op">}</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span>  <span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="reference/page.html">page</a></span><span class="op">(</span></span>
+<span>  href <span class="op">=</span> <span class="st">"/user/:id"</span>,</span>
+<span>  ui <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">request</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span><span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h1</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"User"</span>, <span class="fu"><a href="reference/get_keys.html">get_keys</a></span><span class="op">(</span><span class="va">request</span><span class="op">)</span><span class="op">$</span><span class="va">id</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="op">}</span>,</span>
+<span>  server <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Serving user "</span>, <span class="fu"><a href="reference/get_keys.html">get_keys</a></span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">id</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>You can now move to <code>who/colin</code> &amp; <code>this/colin/fay</code> and see your parameters displayed here.</p>
-<p>The matched values are read with <code><a href="reference/get_keys.html">get_keys()</a></code>: with no argument inside a page <code>server</code>, and with the <code>request</code> the page <code>ui</code> receives when you need them in the UI.</p>
-</div>
-<div class="section level3">
-<h3 id="redirect">
-<code>redirect()</code><a class="anchor" aria-label="anchor" href="#redirect"></a>
-</h3>
-<p>Redirections can be used to redirect from one endpoint to the other:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/colinfay/brochure" class="external-link">brochure</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/brochureApp.html">brochureApp</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="reference/page.html">page</a></span><span class="op">(</span></span>
-<span>    href <span class="op">=</span> <span class="st">"/"</span>,</span>
-<span>    ui <span class="op">=</span> <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">tagList</a></span><span class="op">(</span></span>
-<span>      <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h1</a></span><span class="op">(</span><span class="st">"This is my first page"</span><span class="op">)</span></span>
-<span>    <span class="op">)</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  <span class="fu"><a href="reference/page.html">page</a></span><span class="op">(</span></span>
-<span>    href <span class="op">=</span> <span class="st">"/there"</span>,</span>
-<span>    ui <span class="op">=</span> <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">tagList</a></span><span class="op">(</span></span>
-<span>      <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h1</a></span><span class="op">(</span><span class="st">"This is there"</span><span class="op">)</span></span>
-<span>    <span class="op">)</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  <span class="fu"><a href="reference/redirect.html">redirect</a></span><span class="op">(</span></span>
-<span>    from <span class="op">=</span> <span class="st">"/nothere"</span>,</span>
-<span>    to <span class="op">=</span> <span class="st">"/there"</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>You can now navigate to <code>/nothere</code>, you’ll be redirected to <code>/there</code>.</p>
-<blockquote>
-<p>Note that depending on the code you’ve used for the redirection, your browser might cache the redirection.</p>
-</blockquote>
-<p><strong>IMPORTANT NOTE</strong> on top of <code><a href="reference/page.html">page()</a></code>s and <code><a href="reference/redirect.html">redirect()</a></code>s, <code>...</code> accepts tags, tag lists, html dependencies and strings, and injects them <strong>as is</strong> into every page. That is how you add something to all your pages at once — a <code>&lt;script&gt;</code>, a favicon, the resources of a <a href="https://thinkr-open.github.io/golem/" class="external-link">golem</a> app. It also means a stray value ends up rendered:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># "x" is added to every page, which is probably not what you meant</span></span>
-<span><span class="fu"><a href="reference/brochureApp.html">brochureApp</a></span><span class="op">(</span></span>
-<span>  <span class="st">"x"</span>,</span>
-<span>  <span class="fu"><a href="reference/page.html">page</a></span><span class="op">(</span></span>
-<span>    href <span class="op">=</span> <span class="st">"/"</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>Anything else — a data frame, a number, a function — is an error naming the element it cannot use, rather than something odd showing up on screen. A bare list is spliced, so <code>brochureApp(list(page_1(), page_2()))</code> builds two pages instead of injecting the list into each of them.</p>
-</div>
 </div>
 <div class="section level2">
-<h2 id="req_handlers--res_handlers">
-<code>req_handlers</code> &amp; <code>res_handlers</code>
-<a class="anchor" aria-label="anchor" href="#req_handlers--res_handlers"></a>
+<h2 id="user-documentation">User documentation<a class="anchor" aria-label="anchor" href="#user-documentation"></a>
 </h2>
-<div class="section level3">
-<h3 id="sorry-what">Sorry what?<a class="anchor" aria-label="anchor" href="#sorry-what"></a>
-</h3>
-<p>Each page, and the global app, have a <code>req_handlers</code> and <code>res_handlers</code> parameters, that can take a <strong>list of functions</strong>.</p>
-<p>An <code>*_handler</code> is a function that takes as parameter(s):</p>
+<p>Everything lives at <a href="https://colinfay.me/brochure/" class="external-link uri">https://colinfay.me/brochure/</a>.</p>
 <ul>
-<li><p>For <code>req_handlers</code>, <code>req</code>, which is the request object (see below for when these objects are created). For example <code>function(req){ print(req$PATH_INFO); return(req)}</code>.</p></li>
-<li><p>For <code>res_handlers</code>, <code>res</code>, the response object, &amp; <code>req</code>. For example <code>function(res, req){ print(res$content); return(res)}</code>.</p></li>
+<li>
+<a href="https://colinfay.me/brochure/articles/brochure.html" class="external-link">Get started</a> — pages, routing, what every page shares, and reading url parameters</li>
+<li>
+<a href="https://colinfay.me/brochure/articles/handlers.html" class="external-link">Handlers</a> — the request and response middleware, logging, healthchecks, answering before Shiny</li>
+<li>
+<a href="https://colinfay.me/brochure/articles/cookies.html" class="external-link">Cookies</a> — setting, reading and removing cookies, and carrying a session between pages</li>
+<li>
+<a href="https://colinfay.me/brochure/articles/deployment.html" class="external-link">Deployment</a> — serving the app under a prefix, behind a reverse proxy or on Posit Connect</li>
+<li>
+<a href="https://colinfay.me/brochure/articles/golem.html" class="external-link">golem</a> — building a brochure app as a <a href="https://thinkr-open.github.io/golem/" class="external-link">golem</a> package</li>
 </ul>
-<p><code>req_handlers</code> <strong>must</strong> return <code>req</code> &amp; <code>res_handlers</code> <strong>must</strong> return <code>res</code>. Both can be potentially modified.</p>
-<p>They can be used to register log, or to modify the objects, or any kind of things you can think of. If you are familiar with <code>express.js</code>, you can think of <code>req_handlers</code> as what express calls “middleware”. These functions are run when R is building the HTTP response to send to the browser (i.e, no server code has been run yet), following this process:</p>
-<ol style="list-style-type: decimal">
-<li>R receives a <code>GET</code> request from the browser, creating a request object, called <code>req</code>
+</div>
+<div class="section level2">
+<h2 id="technical-documentation">Technical documentation<a class="anchor" aria-label="anchor" href="#technical-documentation"></a>
+</h2>
+<ul>
+<li><a href="https://colinfay.me/brochure/reference/index.html" class="external-link">Function reference</a></li>
+<li>
+<a href="https://colinfay.me/brochure/articles/design.html" class="external-link">Design</a> — what changes when an app is several pages: where state goes, what a navigation costs, and when not to reach for <a href="https://github.com/colinfay/brochure" class="external-link">brochure</a>
 </li>
-<li>The app level <code>req_handlers</code> are run using this <code>req</code> object</li>
-<li>The request is matched against your <code><a href="reference/page.html">page()</a></code>s</li>
-<li>The matched page’s <code>req_handlers</code> are run</li>
-<li>R creates an <code>httpResponse</code>, using this <code>req</code> and how you defined the UI</li>
-<li>The <code>res_handlers</code> are run on this <code>httpResponse</code> (first app level <code>res_handlers</code>, then page level <code>res_handlers</code>)</li>
-<li>The <code>httpResponse</code> is sent back to the browser</li>
-</ol>
-<p>Note that if any <code>req_handlers</code> returns an <code>httpResponse</code> object, it will be returned to the browser immediately, without any further computation. This early <code>httpResponse</code> will not be passed to the <code>res_handlers</code> of the app or the page. This process can for example be used to send custom <code>httpResponse</code>, as shown below with the <code>healthcheck</code> endpoint.</p>
-<p>You can use formulas inside your handlers. <code>.x</code> and <code>..1</code> will be <code>req</code> for req_handlers, <code>.x</code> and <code>..1</code> will be <code>res</code> &amp; <code>.y</code> and <code>..2</code> will be <code>req</code> for res_handlers.</p>
-<p>Design pattern side-note: you’d probably want to define the handlers outside of the app, for better code organization (as with <code>log_where</code> below).</p>
-</div>
-<div class="section level3">
-<h3 id="example-logging-with-req_handlers-and-building-a-healthcheck-point">Example: Logging with <code>req_handlers()</code>, and building a healthcheck point<a class="anchor" aria-label="anchor" href="#example-logging-with-req_handlers-and-building-a-healthcheck-point"></a>
-</h3>
-<p>In this app, we’ll log to the console every page and the time it is called, using the <code>log_where()</code> function.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">log_where</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">req</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu">cli</span><span class="fu">::</span><span class="fu"><a href="https://cli.r-lib.org/reference/cat_line.html" class="external-link">cat_rule</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span></span>
-<span>      <span class="st">"%s - %s"</span>,</span>
-<span>      <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>      <span class="va">req</span><span class="op">$</span><span class="va">PATH_INFO</span></span>
-<span>    <span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
-<span>  <span class="va">req</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-<p>We’ll also build an <code>healthcheck</code> endpoint that simply returns a <code>httpResponse</code> with the 200 HTTP code.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Reusing the pages from before</span></span>
-<span><span class="fu"><a href="reference/brochureApp.html">brochureApp</a></span><span class="op">(</span></span>
-<span>  req_handlers <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    <span class="va">log_where</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  <span class="co"># Pages</span></span>
-<span>  <span class="fu">page_1</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  <span class="fu">page_2</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  <span class="fu">page_contact</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  <span class="fu"><a href="reference/page.html">page</a></span><span class="op">(</span></span>
-<span>    href <span class="op">=</span> <span class="st">"/healthcheck"</span>,</span>
-<span>    <span class="co"># As this is a pure backend exchange,</span></span>
-<span>    <span class="co"># We don't need a UI</span></span>
-<span>    ui <span class="op">=</span> <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">tagList</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>    <span class="co"># As this req_handler returns an httpResponse,</span></span>
-<span>    <span class="co"># This response will be returned directly to the browser,</span></span>
-<span>    <span class="co"># without passing through the usual shiny http dance</span></span>
-<span>    req_handlers <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>      <span class="co"># See ?shiny::httpResponse</span></span>
-<span>      <span class="op">~</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/httpResponse.html" class="external-link">httpResponse</a></span><span class="op">(</span><span class="fl">200</span>, content <span class="op">=</span> <span class="st">"OK"</span><span class="op">)</span></span>
-<span>    <span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>If you navigate to each page, you’ll see this in the console:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>Listening on http<span class="sc">:</span><span class="er">//</span><span class="dv">127</span>.<span class="dv">0</span>.<span class="fl">0.1</span><span class="sc">:</span><span class="dv">4879</span></span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>── <span class="dv">2021-02-17</span> <span class="dv">21</span><span class="sc">:</span><span class="dv">52</span><span class="sc">:</span><span class="dv">16</span> <span class="sc">-</span> <span class="er">/</span> ──────────────────────────────</span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>── <span class="dv">2021-02-17</span> <span class="dv">21</span><span class="sc">:</span><span class="dv">52</span><span class="sc">:</span><span class="dv">17</span> <span class="sc">-</span> <span class="er">/</span>page2 ─────────────────────────</span>
-<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>── <span class="dv">2021-02-17</span> <span class="dv">21</span><span class="sc">:</span><span class="dv">52</span><span class="sc">:</span><span class="dv">19</span> <span class="sc">-</span> <span class="er">/</span>contact ───────────────────────</span></code></pre></div>
-<p>If you go to another R session, you can check that you’ve got a 200 on <code>healthcheck</code></p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="sc">&gt;</span> httr<span class="sc">::</span><span class="fu">GET</span>(<span class="st">"http://127.0.0.1:4879/healthcheck"</span>)</span>
-<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>Response [http<span class="sc">:</span><span class="er">//</span><span class="dv">127</span>.<span class="dv">0</span>.<span class="fl">0.1</span><span class="sc">:</span><span class="dv">4879</span><span class="sc">/</span>healthcheck]</span>
-<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  Date<span class="sc">:</span> <span class="dv">2021-02-17</span> <span class="dv">21</span><span class="sc">:</span><span class="dv">55</span></span>
-<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>  Status<span class="sc">:</span> <span class="dv">200</span></span>
-<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>  Content<span class="sc">-</span>Type<span class="sc">:</span> text<span class="sc">/</span>html; charset<span class="ot">=</span>UTF<span class="dv">-8</span></span>
-<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>  Size<span class="sc">:</span> <span class="dv">2</span> B</span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="handling-cookies-using-res_handlers">Handling cookies using <code>res_handlers</code>
-<a class="anchor" aria-label="anchor" href="#handling-cookies-using-res_handlers"></a>
-</h3>
-<p><code>res_handlers</code> can be used to set cookies, by adding a <code>Set-Cookie</code> header, using both the <code><a href="reference/cookie-middleware.html">set_cookie()</a></code> and <code><a href="reference/cookie-middleware.html">remove_cookie()</a></code> functions.</p>
-<p>Note that you can get them from the server with <code><a href="reference/cookies-server-side.html">get_cookies()</a></code>, and parse the cookie string using <code>parse_cookie_string</code>.</p>
-<p>Give <code><a href="reference/cookie-middleware.html">remove_cookie()</a></code> the same <code>path</code> and <code>domain</code> you gave <code><a href="reference/cookie-middleware.html">set_cookie()</a></code>: a browser only replaces a cookie when all three match, so a deletion sent without them quietly leaves the cookie in place. This shows up once the app is served under a prefix, where the default path is the mount rather than <code>/</code>.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/cookies-server-side.html">parse_cookie_string</a></span><span class="op">(</span><span class="st">"a=12;session=blabla"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;        a  session </span></span>
-<span><span class="co">#&gt;     "12" "blabla"</span></span></code></pre></div>
-<p>In the example, we’ll also use <code>brochure::server_redirect("/")</code> to redirect the user after login.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Creating a navlink</span></span>
-<span><span class="va">nav_links</span> <span class="op">&lt;-</span> <span class="va">tags</span><span class="op">$</span><span class="fu">ul</span><span class="op">(</span></span>
-<span>  <span class="va">tags</span><span class="op">$</span><span class="fu">li</span><span class="op">(</span></span>
-<span>    <span class="va">tags</span><span class="op">$</span><span class="fu">a</span><span class="op">(</span>href <span class="op">=</span> <span class="st">"/"</span>, <span class="st">"home"</span><span class="op">)</span>,</span>
-<span>  <span class="op">)</span>,</span>
-<span>  <span class="va">tags</span><span class="op">$</span><span class="fu">li</span><span class="op">(</span></span>
-<span>    <span class="va">tags</span><span class="op">$</span><span class="fu">a</span><span class="op">(</span>href <span class="op">=</span> <span class="st">"/login"</span>, <span class="st">"login"</span><span class="op">)</span>,</span>
-<span>  <span class="op">)</span>,</span>
-<span>  <span class="va">tags</span><span class="op">$</span><span class="fu">li</span><span class="op">(</span></span>
-<span>    <span class="va">tags</span><span class="op">$</span><span class="fu">a</span><span class="op">(</span>href <span class="op">=</span> <span class="st">"/logout"</span>, <span class="st">"logout"</span><span class="op">)</span>,</span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">home</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="reference/page.html">page</a></span><span class="op">(</span></span>
-<span>    href <span class="op">=</span> <span class="st">"/"</span>,</span>
-<span>    ui <span class="op">=</span> <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">tagList</a></span><span class="op">(</span></span>
-<span>      <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h1</a></span><span class="op">(</span><span class="st">"This is my first page"</span><span class="op">)</span>,</span>
-<span>      <span class="va">tags</span><span class="op">$</span><span class="fu">p</span><span class="op">(</span><span class="st">"It will contain BROCHURECOOKIE depending on the last page you've visited (/login or /logout)"</span><span class="op">)</span>,</span>
-<span>      <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/textOutput.html" class="external-link">verbatimTextOutput</a></span><span class="op">(</span><span class="st">"cookie"</span><span class="op">)</span>,</span>
-<span>      <span class="va">nav_links</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    server <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
-<span>      <span class="va">output</span><span class="op">$</span><span class="va">cookie</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderPrint.html" class="external-link">renderPrint</a></span><span class="op">(</span><span class="op">{</span></span>
-<span>        <span class="fu"><a href="reference/cookies-server-side.html">parse_cookie_string</a></span><span class="op">(</span></span>
-<span>          <span class="fu"><a href="reference/cookies-server-side.html">get_cookies</a></span><span class="op">(</span><span class="op">)</span></span>
-<span>        <span class="op">)</span></span>
-<span>      <span class="op">}</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="va">login</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="reference/page.html">page</a></span><span class="op">(</span></span>
-<span>    href <span class="op">=</span> <span class="st">"/login"</span>,</span>
-<span>    ui <span class="op">=</span> <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">tagList</a></span><span class="op">(</span></span>
-<span>      <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h1</a></span><span class="op">(</span><span class="st">"You've just logged!"</span><span class="op">)</span>,</span>
-<span>      <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/textOutput.html" class="external-link">verbatimTextOutput</a></span><span class="op">(</span><span class="st">"cookie"</span><span class="op">)</span>,</span>
-<span>      <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/actionButton.html" class="external-link">actionButton</a></span><span class="op">(</span><span class="st">"redirect"</span>, <span class="st">"Redirect to the home page"</span><span class="op">)</span>,</span>
-<span>      <span class="va">nav_links</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    server <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
-<span>      <span class="va">output</span><span class="op">$</span><span class="va">cookie</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderPrint.html" class="external-link">renderPrint</a></span><span class="op">(</span><span class="op">{</span></span>
-<span>        <span class="fu"><a href="reference/cookies-server-side.html">parse_cookie_string</a></span><span class="op">(</span></span>
-<span>          <span class="fu"><a href="reference/cookies-server-side.html">get_cookies</a></span><span class="op">(</span><span class="op">)</span></span>
-<span>        <span class="op">)</span></span>
-<span>      <span class="op">}</span><span class="op">)</span></span>
-<span>      <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/observeEvent.html" class="external-link">observeEvent</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">redirect</span>, <span class="op">{</span></span>
-<span>        <span class="co"># Using brochure to redirect to another page</span></span>
-<span>        <span class="fu"><a href="reference/server_redirect.html">server_redirect</a></span><span class="op">(</span><span class="st">"/"</span><span class="op">)</span></span>
-<span>      <span class="op">}</span><span class="op">)</span></span>
-<span>    <span class="op">}</span>,</span>
-<span>    res_handlers <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>      <span class="co"># We'll add a cookie here</span></span>
-<span>      <span class="op">~</span> <span class="fu"><a href="reference/cookie-middleware.html">set_cookie</a></span><span class="op">(</span><span class="va">.x</span>, <span class="st">"BROCHURECOOKIE"</span>, <span class="fl">12</span><span class="op">)</span></span>
-<span>      <span class="co"># If you had to do it yourself</span></span>
-<span>      <span class="co"># function(res, req){</span></span>
-<span>      <span class="co">#   res$headers$`Set-Cookie` &lt;- "BROCHURECOOKIE=12; HttpOnly; SameSite = Lax;"</span></span>
-<span>      <span class="co">#   res</span></span>
-<span>      <span class="co"># }</span></span>
-<span>    <span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="va">logout</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="reference/page.html">page</a></span><span class="op">(</span></span>
-<span>    href <span class="op">=</span> <span class="st">"/logout"</span>,</span>
-<span>    ui <span class="op">=</span> <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">tagList</a></span><span class="op">(</span></span>
-<span>      <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h1</a></span><span class="op">(</span><span class="st">"You've logged out"</span><span class="op">)</span>,</span>
-<span>      <span class="va">nav_links</span>,</span>
-<span>      <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/textOutput.html" class="external-link">verbatimTextOutput</a></span><span class="op">(</span><span class="st">"cookie"</span><span class="op">)</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    server <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
-<span>      <span class="va">output</span><span class="op">$</span><span class="va">cookie</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderPrint.html" class="external-link">renderPrint</a></span><span class="op">(</span><span class="op">{</span></span>
-<span>        <span class="fu"><a href="reference/cookies-server-side.html">parse_cookie_string</a></span><span class="op">(</span></span>
-<span>          <span class="fu"><a href="reference/cookies-server-side.html">get_cookies</a></span><span class="op">(</span><span class="op">)</span></span>
-<span>        <span class="op">)</span></span>
-<span>      <span class="op">}</span><span class="op">)</span></span>
-<span>    <span class="op">}</span>,</span>
-<span>    res_handlers <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>      <span class="co"># We'll remove the cookie here</span></span>
-<span>      <span class="op">~</span> <span class="fu"><a href="reference/cookie-middleware.html">remove_cookie</a></span><span class="op">(</span><span class="va">.x</span>, <span class="st">"BROCHURECOOKIE"</span><span class="op">)</span></span>
-<span>      <span class="co"># If you had to do it yourself</span></span>
-<span>      <span class="co"># function(res, req){</span></span>
-<span>      <span class="co">#   res$headers$`Set-Cookie` &lt;- "BROCHURECOOKIE=''; Max-Age = 0;"</span></span>
-<span>      <span class="co">#   res</span></span>
-<span>      <span class="co"># }</span></span>
-<span>    <span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="fu"><a href="reference/brochureApp.html">brochureApp</a></span><span class="op">(</span></span>
-<span>  <span class="co"># Pages</span></span>
-<span>  <span class="fu">home</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  <span class="fu">login</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  <span class="fu">logout</span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-</div>
-</div>
-<div class="section level2">
-<h2 id="design-pattern">Design pattern<a class="anchor" aria-label="anchor" href="#design-pattern"></a>
-</h2>
-<p>Note that every time you open a new page, a <strong>new shiny session is launched</strong>. This is different from what you usually do when you are building a <a href="https://shiny.posit.co/" class="external-link">shiny</a> app that works as a single page application. This is no longer the case in <a href="https://github.com/colinfay/brochure" class="external-link">brochure</a>.</p>
-<p>What that means is that there is no data persistence in R when navigating from one page to the other. That might seem like a downside, but I believe that it will actually be for the best: it will make developers think more carefully about the data flow of their application.</p>
-<p>That being said, how do we keep track of a user though pages, so that if they do something in a page, it’s reflected on another?</p>
-<p>To do that, you’d need to add a form of session identifier, like a cookie: this can for example be done using the <a href="https://github.com/colinfay/glouton" class="external-link"><code>{glouton}</code></a> package if you want to manage it with JS. You can also use the cookie example from before.</p>
-<p>You’ll also need a form of backend storage (here in the example, we use <a href="https://github.com/r-lib/cachem" class="external-link"><code>{cachem}</code></a>, but you can also use an external DB like SQLite or MongoDB).</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">glouton</span><span class="op">)</span></span>
-<span><span class="co"># Creating a storage system</span></span>
-<span><span class="va">cache_system</span> <span class="op">&lt;-</span> <span class="fu">cachem</span><span class="fu">::</span><span class="fu"><a href="https://cachem.r-lib.org/reference/cache_disk.html" class="external-link">cache_disk</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">nav_links</span> <span class="op">&lt;-</span> <span class="va">tags</span><span class="op">$</span><span class="fu">ul</span><span class="op">(</span></span>
-<span>  <span class="va">tags</span><span class="op">$</span><span class="fu">li</span><span class="op">(</span></span>
-<span>    <span class="va">tags</span><span class="op">$</span><span class="fu">a</span><span class="op">(</span>href <span class="op">=</span> <span class="st">"/"</span>, <span class="st">"home"</span><span class="op">)</span>,</span>
-<span>  <span class="op">)</span>,</span>
-<span>  <span class="va">tags</span><span class="op">$</span><span class="fu">li</span><span class="op">(</span></span>
-<span>    <span class="va">tags</span><span class="op">$</span><span class="fu">a</span><span class="op">(</span>href <span class="op">=</span> <span class="st">"/page2"</span>, <span class="st">"page2"</span><span class="op">)</span>,</span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">cookie_set</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">r</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactiveValues.html" class="external-link">reactiveValues</a></span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/observeEvent.html" class="external-link">observeEvent</a></span><span class="op">(</span></span>
-<span>    <span class="cn">TRUE</span>,</span>
-<span>    <span class="op">{</span></span>
-<span>      <span class="co"># Fetch the cookies using {glouton}</span></span>
-<span>      <span class="va">r</span><span class="op">$</span><span class="va">cook</span> <span class="op">&lt;-</span> <span class="fu">fetch_cookies</span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span>      <span class="co"># If there is no stored cookie for {brochure}, we generate it</span></span>
-<span>      <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">r</span><span class="op">$</span><span class="va">cook</span><span class="op">$</span><span class="va">brochure_cookie</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="co"># Generate a random id</span></span>
-<span>        <span class="va">session_id</span> <span class="op">&lt;-</span> <span class="fu">digest</span><span class="fu">::</span><span class="fu"><a href="https://eddelbuettel.github.io/digest/man/sha1.html" class="external-link">sha1</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">letters</span>, <span class="fl">16</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span>        <span class="co"># Add this id as a cookie</span></span>
-<span>        <span class="fu">add_cookie</span><span class="op">(</span><span class="st">"brochure_cookie"</span>, <span class="va">session_id</span><span class="op">)</span></span>
-<span>        <span class="co"># Store in in the reactiveValues list</span></span>
-<span>        <span class="va">r</span><span class="op">$</span><span class="va">cook</span><span class="op">$</span><span class="va">brochure_cookie</span> <span class="op">&lt;-</span> <span class="va">session_id</span></span>
-<span>      <span class="op">}</span></span>
-<span>      <span class="co"># For debugging purpose</span></span>
-<span>      <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">r</span><span class="op">$</span><span class="va">cook</span><span class="op">$</span><span class="va">brochure_cookie</span><span class="op">)</span></span>
-<span>    <span class="op">}</span>,</span>
-<span>    once <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span>  <span class="op">)</span></span>
-<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="va">page_1</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="reference/page.html">page</a></span><span class="op">(</span></span>
-<span>    href <span class="op">=</span> <span class="st">"/"</span>,</span>
-<span>    ui <span class="op">=</span> <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">tagList</a></span><span class="op">(</span></span>
-<span>      <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h1</a></span><span class="op">(</span><span class="st">"This is my first page"</span><span class="op">)</span>,</span>
-<span>      <span class="va">nav_links</span>,</span>
-<span>      <span class="co"># The text enter on page 1 will be available on page 2, using</span></span>
-<span>      <span class="co"># a session cookie and a storage system</span></span>
-<span>      <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/textInput.html" class="external-link">textInput</a></span><span class="op">(</span><span class="st">"textenter"</span>, <span class="st">"Enter a text"</span><span class="op">)</span>,</span>
-<span>      <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/actionButton.html" class="external-link">actionButton</a></span><span class="op">(</span><span class="st">"save"</span>, <span class="st">"Save my text and go to page2"</span><span class="op">)</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    server <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
-<span>      <span class="va">r</span> <span class="op">&lt;-</span> <span class="fu">cookie_set</span><span class="op">(</span><span class="op">)</span></span>
-<span>      <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/observeEvent.html" class="external-link">observeEvent</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">save</span>, <span class="op">{</span></span>
-<span>        <span class="co"># Use the session id to save on the cache system</span></span>
-<span>        <span class="va">cache_system</span><span class="op">$</span><span class="fu">set</span><span class="op">(</span></span>
-<span>          <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span></span>
-<span>            <span class="va">r</span><span class="op">$</span><span class="va">cook</span><span class="op">$</span><span class="va">brochure_cookie</span>,</span>
-<span>            <span class="st">"text"</span></span>
-<span>          <span class="op">)</span>,</span>
-<span>          <span class="va">input</span><span class="op">$</span><span class="va">textenter</span></span>
-<span>        <span class="op">)</span></span>
-<span>        <span class="fu"><a href="reference/server_redirect.html">server_redirect</a></span><span class="op">(</span><span class="st">"/page2"</span><span class="op">)</span></span>
-<span>      <span class="op">}</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="va">page_2</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="reference/page.html">page</a></span><span class="op">(</span></span>
-<span>    href <span class="op">=</span> <span class="st">"/page2"</span>,</span>
-<span>    ui <span class="op">=</span> <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">tagList</a></span><span class="op">(</span></span>
-<span>      <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h1</a></span><span class="op">(</span><span class="st">"This is my second page"</span><span class="op">)</span>,</span>
-<span>      <span class="va">nav_links</span>,</span>
-<span>      <span class="co"># The text enter on page 1 will be available here, reading</span></span>
-<span>      <span class="co"># the storage system</span></span>
-<span>      <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/textOutput.html" class="external-link">verbatimTextOutput</a></span><span class="op">(</span><span class="st">"textdisplay"</span><span class="op">)</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    server <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
-<span>      <span class="va">r</span> <span class="op">&lt;-</span> <span class="fu">cookie_set</span><span class="op">(</span><span class="op">)</span></span>
-<span>      <span class="va">output</span><span class="op">$</span><span class="va">textdisplay</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderPrint.html" class="external-link">renderPrint</a></span><span class="op">(</span><span class="op">{</span></span>
-<span>        <span class="co"># Getting the content value based on the session cookie</span></span>
-<span>        <span class="va">cache_system</span><span class="op">$</span><span class="fu">get</span><span class="op">(</span></span>
-<span>          <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span></span>
-<span>            <span class="va">r</span><span class="op">$</span><span class="va">cook</span><span class="op">$</span><span class="va">brochure_cookie</span>,</span>
-<span>            <span class="st">"text"</span></span>
-<span>          <span class="op">)</span></span>
-<span>        <span class="op">)</span></span>
-<span>      <span class="op">}</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="fu"><a href="reference/brochureApp.html">brochureApp</a></span><span class="op">(</span></span>
-<span>  <span class="co"># Setting {glouton} globally</span></span>
-<span>  <span class="fu">use_glouton</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  <span class="co"># Pages</span></span>
-<span>  <span class="fu">page_1</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  <span class="fu">page_2</span><span class="op">(</span><span class="op">)</span></span>
-<span>  <span class="co"># Redirections</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="with-golem">With <code>{golem}</code>
-<a class="anchor" aria-label="anchor" href="#with-golem"></a>
-</h2>
-<div class="section level3">
-<h3 id="fresh-golem-app">Fresh <code>{golem}</code> App<a class="anchor" aria-label="anchor" href="#fresh-golem-app"></a>
-</h3>
-<p>You can set up a <a href="https://github.com/colinfay/brochure" class="external-link">brochure</a> based app with <a href="https://thinkr-open.github.io/golem/" class="external-link">golem</a> using the <code><a href="reference/golem_hook.html">brochure::golem_hook()</a></code> function.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">golem</span><span class="fu">::</span><span class="fu"><a href="https://thinkr-open.github.io/golem/reference/create_golem.html" class="external-link">create_golem</a></span><span class="op">(</span><span class="st">"mapmyrace"</span>, project_hook <span class="op">=</span> <span class="fu">brochure</span><span class="fu">::</span><span class="va"><a href="reference/golem_hook.html">golem_hook</a></span><span class="op">)</span></span></code></pre></div>
-<p>You can also use the module_template function to create a <a href="https://github.com/colinfay/brochure" class="external-link">brochure</a> module :</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">golem</span><span class="fu">::</span><span class="fu"><a href="https://thinkr-open.github.io/golem/reference/add_module.html" class="external-link">add_module</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"pouet"</span>, module_template <span class="op">=</span> <span class="fu">brochure</span><span class="fu">::</span><span class="va"><a href="reference/new_page.html">new_page</a></span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="adapt-old-app">Adapt old app<a class="anchor" aria-label="anchor" href="#adapt-old-app"></a>
-</h3>
-<p>To adapt your <a href="https://thinkr-open.github.io/golem/" class="external-link">golem</a> based application to <a href="https://github.com/colinfay/brochure" class="external-link">brochure</a>, here are the two steps to follow:</p>
-<ul>
-<li><p>Remove the app_server.R file, and the top of app_ui =&gt; You’ll still need <code>golem_add_external_resources()</code>.</p></li>
-<li><p>Build the pages inside separate R scripts, following the example from this <code>README</code>.</p></li>
+<li>
+<a href="https://colinfay.me/brochure/articles/testing.html" class="external-link">Testing</a> — testing the routing, the responses and the page servers</li>
+<li><a href="https://colinfay.me/brochure/news/index.html" class="external-link">Changelog</a></li>
+<li>
+<a href="https://github.com/ColinFay/brochure">Source</a> and <a href="https://github.com/ColinFay/brochure/issues">issues</a>
+</li>
 </ul>
-<!-- --><div class="sourceCode" id="cb16"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a>.</span>
-<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a>├── DESCRIPTION</span>
-<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a>├── NAMESPACE</span>
-<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a>├── R</span>
-<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a>│   ├── app_config.R</span>
-<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a>│   ├── home.R <span class="do">### YOUR PAGE</span></span>
-<span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a>│   ├── login.R <span class="do">### YOUR PAGE</span></span>
-<span id="cb16-8"><a href="#cb16-8" tabindex="-1"></a>│   ├── logout.R <span class="do">### YOUR PAGE</span></span>
-<span id="cb16-9"><a href="#cb16-9" tabindex="-1"></a>│   └── run_app.R <span class="do">### YOUR PAGE</span></span>
-<span id="cb16-10"><a href="#cb16-10" tabindex="-1"></a>├── dev</span>
-<span id="cb16-11"><a href="#cb16-11" tabindex="-1"></a>│   ├── <span class="dv">01</span>_start.R</span>
-<span id="cb16-12"><a href="#cb16-12" tabindex="-1"></a>│   ├── <span class="dv">02</span>_dev.R</span>
-<span id="cb16-13"><a href="#cb16-13" tabindex="-1"></a>│   ├── <span class="dv">03</span>_deploy.R</span>
-<span id="cb16-14"><a href="#cb16-14" tabindex="-1"></a>│   └── run_dev.R</span>
-<span id="cb16-15"><a href="#cb16-15" tabindex="-1"></a>├── inst</span>
-<span id="cb16-16"><a href="#cb16-16" tabindex="-1"></a>│   ├── app</span>
-<span id="cb16-17"><a href="#cb16-17" tabindex="-1"></a>│   │   └── www</span>
-<span id="cb16-18"><a href="#cb16-18" tabindex="-1"></a>│   │       ├── favicon.ico</span>
-<span id="cb16-19"><a href="#cb16-19" tabindex="-1"></a>│   └── golem<span class="sc">-</span>config.yml</span>
-<span id="cb16-20"><a href="#cb16-20" tabindex="-1"></a>├── man</span>
-<span id="cb16-21"><a href="#cb16-21" tabindex="-1"></a>│   └── run_app.Rd</span></code></pre></div>
-<ul>
-<li>Replace <code>shinyApp</code> with <code>brochureApp</code> in <code>run_app()</code>, add the external resources, then your pages.</li>
-</ul>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">run_app</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span></span>
-<span>    <span class="va">onStart</span> <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>    <span class="va">options</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>    <span class="va">enableBookmarking</span> <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>    <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu">with_golem_options</span><span class="op">(</span></span>
-<span>    app <span class="op">=</span> <span class="fu"><a href="reference/brochureApp.html">brochureApp</a></span><span class="op">(</span></span>
-<span>      <span class="co"># Putting the resources here</span></span>
-<span>      <span class="fu">golem_add_external_resources</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>      <span class="fu">home</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>      <span class="fu">login</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>      <span class="fu">logout</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>      onStart <span class="op">=</span> <span class="va">onStart</span>,</span>
-<span>      options <span class="op">=</span> <span class="va">options</span>,</span>
-<span>      enableBookmarking <span class="op">=</span> <span class="va">enableBookmarking</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    golem_opts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-</div>
 </div>
 <div class="section level2">
 <h2 id="previous-work">Previous work<a class="anchor" aria-label="anchor" href="#previous-work"></a>
 </h2>
-<p>Other packages that implements features that are closed to what <a href="https://github.com/colinfay/brochure" class="external-link">brochure</a> does:</p>
+<p>Other packages implement features that are close to what <a href="https://github.com/colinfay/brochure" class="external-link">brochure</a> does:</p>
 <ul>
-<li><p><a href="https://appsilon.com/shiny-router-020/" class="external-link"><code>{shiny.router}</code></a></p></li>
-<li><p><a href="https://github.com/nteetor/blaze" class="external-link"><code>{blaze}</code></a></p></li>
+<li><a href="https://www.appsilon.com/post/shiny-router-020" class="external-link"><code>{shiny.router}</code></a></li>
+<li><a href="https://github.com/nteetor/blaze" class="external-link"><code>{blaze}</code></a></li>
 </ul>
-<p>As far as I can tell, these packages doesn’t serve the same goal as what <a href="https://github.com/colinfay/brochure" class="external-link">brochure</a> does, as they both still serve Single Page Applications.</p>
+<p>As far as I can tell, they do not serve the same goal, as they both still serve Single Page Applications.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
-<li><a href="https://github.com/colinfay/brochure/" class="external-link">Browse source code</a></li>
-<li><a href="https://github.com/colinfay/brochure/issues" class="external-link">Report a bug</a></li>
+<li><a href="https://github.com/ColinFay/brochure/">Browse source code</a></li>
+<li><a href="https://github.com/ColinFay/brochure/issues">Report a bug</a></li>
 </ul>
 </div>
 
@@ -634,7 +205,7 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Colin Fay <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0001-7343-1846" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
+<li>Colin Fay <br><small class="roles"> Author, maintainer, copyright holder </small> <a href="https://orcid.org/0000-0001-7343-1846" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 </ul>
 </div>
 

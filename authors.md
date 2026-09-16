@@ -2,13 +2,13 @@
 
 ## Authors
 
-- **Colin Fay**. Author, maintainer.
+- **Colin Fay**. Author, maintainer, copyright holder.
   [](https://orcid.org/0000-0001-7343-1846)
 
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/colinfay/brochure/blob/v1.0.0/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/ColinFay/brochure/blob/main/DESCRIPTION)
 
 Fay C (2026). *brochure: Multipage 'Shiny' Apps*. R package version
 1.0.0, <https://github.com/colinfay/brochure>.

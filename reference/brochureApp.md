@@ -81,8 +81,8 @@ brochureApp(
   from the incoming url, so that what is left matches the href of your
   [`page()`](https://github.com/ColinFay/brochure/reference/page.md),
   and it is prepended to the urls the app emits. For example, if your
-  app is served at `http://connect.thinkr.fr/brochure/` and your page is
-  named `page1`, use `basepath = "brochure"`.
+  app is served at `https://connect.thinkr.fr/brochure/` and your page
+  is named `page1`, use `basepath = "brochure"`.
 
 - req_handlers:
 
