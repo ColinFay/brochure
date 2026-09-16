@@ -13,11 +13,11 @@ Build natively multi-page 'Shiny' applications, serving content on several endpo
 \code{vignette("brochure")} to get started.
 }
 \author{
-\strong{Maintainer}: Colin Fay \email{contact@colinfay.me} (\href{https://orcid.org/0000-0001-7343-1846}{ORCID})
+\strong{Maintainer}: Colin Fay \email{contact@colinfay.me} (\href{https://orcid.org/0000-0001-7343-1846}{ORCID}) [copyright holder]
 
 Authors:
 \itemize{
-  \item Colin Fay \email{contact@colinfay.me} (\href{https://orcid.org/0000-0001-7343-1846}{ORCID})
+  \item Colin Fay \email{contact@colinfay.me} (\href{https://orcid.org/0000-0001-7343-1846}{ORCID}) [copyright holder]
 }
 
 }

@@ -49,7 +49,7 @@ example. It is sent as it is written: unlike a page it is not rewritten for
 \item{basepath}{The path your app is served under by a reverse proxy. It is
 removed from the incoming url, so that what is left matches the href of your
 \code{page()}, and it is prepended to the urls the app emits. For example, if your
-app is served at \verb{http://connect.thinkr.fr/brochure/} and your page is named
+app is served at \verb{https://connect.thinkr.fr/brochure/} and your page is named
 \code{page1}, use \code{basepath = "brochure"}.}
 
 \item{req_handlers}{a list of functions that can manipulate the \code{req} object.

@@ -161,7 +161,7 @@ brochure_client_js <- '(function(){var mount="%s";function reg(){if(window.Shiny
 #' @param basepath The path your app is served under by a reverse proxy. It is
 #' removed from the incoming url, so that what is left matches the href of your
 #' `page()`, and it is prepended to the urls the app emits. For example, if your
-#' app is served at `http://connect.thinkr.fr/brochure/` and your page is named
+#' app is served at `https://connect.thinkr.fr/brochure/` and your page is named
 #' `page1`, use `basepath = "brochure"`.
 #' @param req_handlers a list of functions that can manipulate the `req` object.
 #' These functions should take `req` as a parameters, and return the `req` object

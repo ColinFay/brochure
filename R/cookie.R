@@ -91,7 +91,7 @@ check_cookie_part <- function(x, arg, ok) {
 
 #' Middleware to set cookies
 #'
-#' Please read https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
+#' Please read https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie
 #' for more information.
 #' Description of parameters is taken from this page.
 #'

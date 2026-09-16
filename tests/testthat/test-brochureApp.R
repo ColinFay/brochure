@@ -35,6 +35,7 @@ test_that("a reactlog url is left to Shiny's own handler", {
 })
 
 test_that("a resource path under the mount is left to Shiny's own handler", {
+  skip_if_not_installed("withr")
   # Behind a proxy that passes its mount through, httpuv matches the static
   # paths against `/myapp/brochuretest-assets/...` and finds none, so the
   # request lands on the app handler rather than being served before R.
@@ -390,6 +391,7 @@ test_that("declaration order decides between a page and a redirect too", {
 })
 
 test_that("two pages carrying one dependency name from two sources get two urls", {
+  skip_if_not_installed("withr")
   src_one <- withr::local_tempdir()
   src_two <- withr::local_tempdir()
   writeLines("a{}", file.path(src_one, "t.css"))

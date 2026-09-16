@@ -28,6 +28,7 @@ test_that("server_redirect refuses whitespace hiding a scheme", {
 })
 
 test_that("get_mount only trusts the Connect header on Connect", {
+  skip_if_not_installed("withr")
   req <- new.env()
   # The value observed on a real Connect deployment
   req$HTTP_RSTUDIO_CONNECT_APP_BASE_URL <-
@@ -97,6 +98,7 @@ test_that("a backslash has no place in a redirect target", {
 })
 
 test_that("an explicit basepath wins over the Connect header", {
+  skip_if_not_installed("withr")
   req <- new.env()
   req$HTTP_RSTUDIO_CONNECT_APP_BASE_URL <- "https://connect.example/content/abc-123"
 
