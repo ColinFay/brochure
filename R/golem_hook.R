@@ -8,52 +8,52 @@
 #'
 #' @examples
 #' if (requireNamespace("golem") & interactive()) {
-#'   golem::create_golem("myapp", project_hook = golem_hook)
+#'   golem::create_golem(file.path(tempdir(), "myapp"), project_hook = golem_hook)
 #' }
 golem_hook <- function(
   path,
   package_name,
   ...
 ) {
-  unlink("R/run_app.R", TRUE, TRUE)
-  unlink("R/app_ui.R", TRUE, TRUE)
-  unlink("R/app_server.R", TRUE, TRUE)
+  unlink(file.path(path, "R/run_app.R"), TRUE, TRUE)
+  unlink(file.path(path, "R/app_ui.R"), TRUE, TRUE)
+  unlink(file.path(path, "R/app_server.R"), TRUE, TRUE)
   file.copy(
     system.file(
       "golem/run_app.R",
       package = "brochure"
     ),
-    "R/run_app.R"
+    file.path(path, "R/run_app.R")
   )
 
   run_app <- readLines(
-    "R/run_app.R"
+    file.path(path, "R/run_app.R")
   )
   run_app <- gsub(
     "REPLACEME",
     package_name,
     run_app
   )
-  write(run_app, "R/run_app.R")
+  write(run_app, file.path(path, "R/run_app.R"))
 
   file.copy(
     system.file(
       "golem/mod_home.R",
       package = "brochure"
     ),
-    "R/mod_home.R"
+    file.path(path, "R/mod_home.R")
   )
 
   # The test structure is written here rather than left to
   # `golem::use_recommended_tests()`, which only builds it when `tests/` is
   # missing and would find this directory already there.
-  dir.create("tests/testthat", recursive = TRUE, showWarnings = FALSE)
+  dir.create(file.path(path, "tests/testthat"), recursive = TRUE, showWarnings = FALSE)
   file.copy(
     system.file(
       "golem/test-mod_home.R",
       package = "brochure"
     ),
-    "tests/testthat/test-mod_home.R"
+    file.path(path, "tests/testthat/test-mod_home.R")
   )
   write(
     c(
@@ -62,7 +62,7 @@ golem_hook <- function(
       "",
       sprintf('test_check("%s")', package_name)
     ),
-    "tests/testthat.R"
+    file.path(path, "tests/testthat.R")
   )
 
   # `golem::use_recommended_tests()` writes a file testing `app_ui()` and
@@ -74,9 +74,9 @@ golem_hook <- function(
       "golem/test-golem-recommended.R",
       package = "brochure"
     ),
-    "tests/testthat/test-golem-recommended.R"
+    file.path(path, "tests/testthat/test-golem-recommended.R")
   )
-  start_R <- readLines("dev/01_start.R")
+  start_R <- readLines(file.path(path, "dev/01_start.R"))
   start_R[
     which(
       grepl(
@@ -86,13 +86,13 @@ golem_hook <- function(
       )
     )
   ] <- "# brochure::golem_hook() already wrote tests/testthat/test-golem-recommended.R"
-  unlink("dev/01_start.R")
-  write(start_R, "dev/01_start.R")
+  unlink(file.path(path, "dev/01_start.R"))
+  write(start_R, file.path(path, "dev/01_start.R"))
 
   # The module template calls `page()`, so the app depends on brochure. Written
   # by hand rather than with `usethis::use_package()`: brochure does not depend
   # on usethis, and this hook runs before anything is installed.
-  description <- readLines("DESCRIPTION")
+  description <- readLines(file.path(path, "DESCRIPTION"))
   description <- append(
     description,
     "    brochure,",
@@ -104,10 +104,10 @@ golem_hook <- function(
     "    testthat (>= 3.0.0)",
     "Config/testthat/edition: 3"
   )
-  write(description, "DESCRIPTION")
+  write(description, file.path(path, "DESCRIPTION"))
 
   dev_R <- readLines(
-    "dev/02_dev.R"
+    file.path(path, "dev/02_dev.R")
   )
   dev_R[
     which(
@@ -126,6 +126,6 @@ golem_hook <- function(
       )
     )
   ] <- 'golem::add_module(name = "name_of_module2", with_test = TRUE, module_template = brochure::new_page) # Name of the module'
-  unlink("dev/02_dev.R")
-  write(dev_R, "dev/02_dev.R")
+  unlink(file.path(path, "dev/02_dev.R"))
+  write(dev_R, file.path(path, "dev/02_dev.R"))
 }

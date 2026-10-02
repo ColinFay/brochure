@@ -7,7 +7,8 @@ test_that("golem_hook works", {
   old <- setwd(tempdir())
   on.exit(setwd(old))
   unlink("testgolembrochure", TRUE, TRUE)
-  golem::create_golem("testgolembrochure", project_hook = brochure::golem_hook)
+  golem::create_golem(file.path(tempdir(), "testgolembrochure"), project_hook = brochure::golem_hook)
+  setwd(file.path(tempdir(), "testgolembrochure"))
   expect_true(
     file.exists("R/mod_home.R")
   )
@@ -102,7 +103,8 @@ test_that("new_page adds a brochure page module", {
   old <- setwd(tempdir())
   on.exit(setwd(old))
   unlink("testgolembrochure", TRUE, TRUE)
-  golem::create_golem("testgolembrochure", project_hook = brochure::golem_hook)
+  golem::create_golem(file.path(tempdir(), "testgolembrochure"), project_hook = brochure::golem_hook)
+  setwd(file.path(tempdir(), "testgolembrochure"))
   golem::add_module(name = "pouet", module_template = brochure::new_page, open = FALSE)
   expect_true(
     file.exists("R/mod_pouet.R")

@@ -76,7 +76,8 @@ test_that("golem_hook works", {
   old <- setwd(tempdir())
   on.exit(setwd(old))
   unlink("testgolembrochure", TRUE, TRUE)
-  golem::create_golem("testgolembrochure", project_hook = brochure::golem_hook)
+  golem::create_golem(file.path(tempdir(), "testgolembrochure"), project_hook = brochure::golem_hook)
+  setwd(file.path(tempdir(), "testgolembrochure"))
   setwd("testgolembrochure")
   golem::add_module(name = "pouet", module_template = brochure::new_page)
   expect_true(

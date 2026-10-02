@@ -25,6 +25,6 @@ Golem Hook function
 }
 \examples{
 if (requireNamespace("golem") & interactive()) {
-  golem::create_golem("myapp", project_hook = golem_hook)
+  golem::create_golem(file.path(tempdir(), "myapp"), project_hook = golem_hook)
 }
 }
