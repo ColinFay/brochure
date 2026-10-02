@@ -28,7 +28,7 @@ to reach every page.
 
 ``` r
 
-golem::create_golem("myapp", project_hook = brochure::golem_hook)
+golem::create_golem(file.path(tempdir(), "myapp"), project_hook = brochure::golem_hook)
 ```
 
 The hook removes `app_ui.R` and `app_server.R`, writes a `run_app()`
